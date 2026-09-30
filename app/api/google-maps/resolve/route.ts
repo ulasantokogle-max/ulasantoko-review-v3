@@ -1,23 +1,32 @@
 import { NextResponse } from "next/server";
 
-function extractSearchText(url: string) {
+function getMapsData(url: string) {
   try {
     const parsed = new URL(url);
 
-    // Contoh: https://www.google.com/maps?q=Nama+Bisnis
-    const q = parsed.searchParams.get("q");
-    if (q) return q;
+    // Nama bisnis dari /maps/place/NAMA/
+    const placeMatch = parsed.pathname.match(/\/maps\/place\/([^/]+)/);
+    const name = placeMatch?.[1]
+      ? decodeURIComponent(placeMatch[1]).replace(/\+/g, " ")
+      : null;
 
-    // Contoh: /maps/place/Nama+Bisnis/...
-    const match = parsed.pathname.match(/\/place\/([^/]+)/);
+    // Koordinat dari /@LAT,LNG
+    const coordMatch = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
 
-    if (match?.[1]) {
-      return decodeURIComponent(match[1]).replace(/\+/g, " ");
-    }
+    const latitude = coordMatch ? Number(coordMatch[1]) : null;
+    const longitude = coordMatch ? Number(coordMatch[2]) : null;
 
-    return null;
+    return {
+      name,
+      latitude,
+      longitude,
+    };
   } catch {
-    return null;
+    return {
+      name: null,
+      latitude: null,
+      longitude: null,
+    };
   }
 }
 
@@ -55,7 +64,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Follow short Google Maps links
+    // Resolve short maps.app.goo.gl URL
     const redirectResponse = await fetch(mapsUrl, {
       redirect: "follow",
       headers: {
@@ -65,9 +74,9 @@ export async function POST(request: Request) {
 
     const finalUrl = redirectResponse.url || mapsUrl;
 
-    const searchText = extractSearchText(finalUrl);
+    const mapsData = getMapsData(finalUrl);
 
-    if (!searchText) {
+    if (!mapsData.name) {
       return NextResponse.json(
         {
           success: false,
@@ -78,6 +87,27 @@ export async function POST(request: Request) {
       );
     }
 
+    const requestBody: Record<string, unknown> = {
+      textQuery: mapsData.name,
+      maxResultCount: 5,
+    };
+
+    // Kalau URL Maps punya koordinat, jadikan location bias.
+    if (
+      mapsData.latitude !== null &&
+      mapsData.longitude !== null
+    ) {
+      requestBody.locationBias = {
+        circle: {
+          center: {
+            latitude: mapsData.latitude,
+            longitude: mapsData.longitude,
+          },
+          radius: 1000,
+        },
+      };
+    }
+
     const googleResponse = await fetch(
       "https://places.googleapis.com/v1/places:searchText",
       {
@@ -86,11 +116,9 @@ export async function POST(request: Request) {
           "Content-Type": "application/json",
           "X-Goog-Api-Key": apiKey,
           "X-Goog-FieldMask":
-            "places.id,places.displayName,places.formattedAddress",
+            "places.id,places.displayName,places.formattedAddress,places.location",
         },
-        body: JSON.stringify({
-          textQuery: searchText,
-        }),
+        body: JSON.stringify(requestBody),
       }
     );
 
@@ -107,39 +135,61 @@ export async function POST(request: Request) {
       );
     }
 
-    const place = googleData?.places?.[0];
+    const places = googleData?.places ?? [];
 
-    if (!place?.id) {
+    if (!places.length) {
       return NextResponse.json(
         {
           success: false,
           message: "Place not found",
-          search_text: searchText,
+          search_text: mapsData.name,
         },
         { status: 404 }
       );
     }
 
+    /*
+     * Bila Google Maps URL punya koordinat, Places API sudah
+     * dipersempit ke area sekitar titik tersebut.
+     */
+    const place = places[0];
+
     return NextResponse.json({
       success: true,
+
       maps_url: mapsUrl,
       final_url: finalUrl,
-      search_text: searchText,
+
+      search_text: mapsData.name,
+
+      source_location: {
+        latitude: mapsData.latitude,
+        longitude: mapsData.longitude,
+      },
 
       place_id: place.id,
 
-      business_name: place.displayName?.text ?? null,
+      business_name:
+        place.displayName?.text ?? null,
 
-      formatted_address: place.formattedAddress ?? null,
+      formatted_address:
+        place.formattedAddress ?? null,
 
-      review_url: `https://search.google.com/local/writereview?placeid=${place.id}`,
+      location:
+        place.location ?? null,
+
+      review_url:
+        `https://search.google.com/local/writereview?placeid=${place.id}`,
     });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         message: "Resolver failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unknown error",
       },
       { status: 500 }
     );
