@@ -85,10 +85,11 @@ begin
   )
   returning id into v_feedback_id;
 
-  insert into public.analytics_events (
+  insert into public.interaction_events (
     organization_id,
     business_id,
     card_id,
+    session_id,
     event_type,
     source,
     metadata
@@ -97,6 +98,7 @@ begin
     v_business.organization_id,
     v_business.id,
     v_card.id,
+    null,
     'feedback_submit',
     'public_card',
     jsonb_build_object(
