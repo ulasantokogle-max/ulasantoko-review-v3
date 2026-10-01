@@ -167,6 +167,11 @@ export default function GoogleReviewDashboardPage() {
         return;
       }
 
+      if (!businessId) {
+        setSetupError("Bisnis belum dipilih.");
+        return;
+      }
+
       const response = await fetch("/api/google-review/setup", {
         method: "POST",
         headers: {
@@ -174,7 +179,7 @@ export default function GoogleReviewDashboardPage() {
           Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
-          business_id: DEMO_BUSINESS_ID,
+          business_id: businessId,
           maps_url: mapsUrl,
         }),
       });
