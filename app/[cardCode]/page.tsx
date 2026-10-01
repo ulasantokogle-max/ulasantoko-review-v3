@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
+import RatingFlow from "./RatingFlow";
 
 type AnyObject = Record<string, any>;
 
@@ -39,6 +40,22 @@ function getBlockUrl(block: AnyObject) {
     block.content?.url,
     block.content?.href
   );
+}
+
+function getWhatsAppUrl(blocks: AnyObject[]) {
+  for (const block of blocks) {
+    const url = getBlockUrl(block);
+    if (
+      url &&
+      (url.includes("wa.me/") ||
+        url.includes("whatsapp.com/") ||
+        url.includes("api.whatsapp.com/"))
+    ) {
+      return url;
+    }
+  }
+
+  return null;
 }
 
 export default async function PublicCardPage({
@@ -88,9 +105,9 @@ export default async function PublicCardPage({
 
   const businessName =
     firstString(
+      googleReview.business_name,
       business.name,
       business.business_name,
-      googleReview.business_name,
       payload.business_name
     ) ?? "UlasanToko";
 
@@ -109,6 +126,8 @@ export default async function PublicCardPage({
     googleReview.maps_url,
     payload.maps_url
   );
+
+  const whatsappUrl = getWhatsAppUrl(blocks);
 
   const pageTitle =
     firstString(
@@ -198,48 +217,34 @@ export default async function PublicCardPage({
           {pageDescription}
         </p>
 
-        <div style={{ display: "grid", gap: 12 }}>
-          {reviewUrl && (
-            <a
-              href={reviewUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: "block",
-                textAlign: "center",
-                textDecoration: "none",
-                background: "#111827",
-                color: "#ffffff",
-                padding: "14px 16px",
-                borderRadius: 12,
-                fontWeight: 800,
-              }}
-            >
-              Beri Ulasan di Google
-            </a>
-          )}
+        <RatingFlow
+          cardCode={cardCode}
+          businessName={businessName}
+          reviewUrl={reviewUrl}
+          whatsappUrl={whatsappUrl}
+        />
 
-          {mapsUrl && (
-            <a
-              href={mapsUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                display: "block",
-                textAlign: "center",
-                textDecoration: "none",
-                background: "#ffffff",
-                color: "#111827",
-                padding: "13px 16px",
-                borderRadius: 12,
-                fontWeight: 700,
-                border: "1px solid #d1d5db",
-              }}
-            >
-              Lihat di Google Maps
-            </a>
-          )}
-        </div>
+        {mapsUrl && (
+          <a
+            href={mapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: "block",
+              marginTop: 16,
+              textAlign: "center",
+              textDecoration: "none",
+              background: "#ffffff",
+              color: "#111827",
+              padding: "13px 16px",
+              borderRadius: 12,
+              fontWeight: 700,
+              border: "1px solid #d1d5db",
+            }}
+          >
+            Lihat di Google Maps
+          </a>
+        )}
 
         {blocks.length > 0 && (
           <div
