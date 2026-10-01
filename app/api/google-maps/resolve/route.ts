@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 const MAX_MAPS_URL_LENGTH = 2048;
 const MAX_REDIRECTS = 5;
@@ -125,6 +126,55 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    const authorization = request.headers.get("authorization");
+
+    if (!authorization?.startsWith("Bearer ")) {
+      return NextResponse.json(
+        { success: false, message: "Authentication required" },
+        { status: 401 }
+      );
+    }
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { success: false, message: "Supabase environment variables are missing" },
+        { status: 500 }
+      );
+    }
+
+    const token = authorization.slice("Bearer ".length).trim();
+    const authClient = createClient(supabaseUrl, supabaseKey);
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return NextResponse.json(
+        { success: false, message: "Invalid or expired session" },
+        { status: 401 }
+      );
+    }
+
+    const scopedClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authorization } },
+    });
+
+    const { data: limitData, error: limitError } = await scopedClient.rpc(
+      "v3_check_google_maps_resolver_rate_limit"
+    );
+
+    if (limitError) {
+      return NextResponse.json(
+        { success: false, message: "Unable to verify request limit" },
+        { status: 400 }
+      );
+    }
+
+    if (limitData?.success === false) {
+      return NextResponse.json(limitData, { status: 429 });
+    }
+
     const body = await request.json();
     const mapsUrl = body?.maps_url;
 
