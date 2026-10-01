@@ -2,8 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-
-const DEMO_BUSINESS_ID = "99438efc-aeb4-436a-b0c6-90b0a1832674";
+import { useBusinessContext } from "../../../lib/useBusinessContext";
 
 type FeedbackRow = {
   id: string;
@@ -29,6 +28,14 @@ export default function FeedbackInboxPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
+  const {
+    businesses,
+    businessId,
+    setBusinessId,
+    businessLoading,
+    businessError,
+  } = useBusinessContext(userEmail);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUserEmail(data.session?.user?.email ?? null);
@@ -44,12 +51,12 @@ export default function FeedbackInboxPage() {
   }, []);
 
   useEffect(() => {
-    if (userEmail) {
+    if (businessId) {
       loadFeedback();
     } else {
       setFeedback([]);
     }
-  }, [userEmail]);
+  }, [businessId]);
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
@@ -83,7 +90,7 @@ export default function FeedbackInboxPage() {
     setLoadingFeedback(true);
 
     const { data, error } = await supabase.rpc("v3_get_feedback_inbox", {
-      p_business_id: DEMO_BUSINESS_ID,
+      p_business_id: businessId,
       p_limit: 100,
     });
 
