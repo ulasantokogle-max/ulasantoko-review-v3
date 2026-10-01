@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import DashboardNav from "../DashboardNav";
 
 const DEMO_BUSINESS_ID = "99438efc-aeb4-436a-b0c6-90b0a1832674";
 
@@ -204,6 +205,8 @@ export default function FeedbackInboxPage() {
           >
             UlasanToko Review V3
           </div>
+
+          <DashboardNav />
 
           <h1 style={{ margin: 0, fontSize: 30 }}>Feedback Inbox</h1>
 
