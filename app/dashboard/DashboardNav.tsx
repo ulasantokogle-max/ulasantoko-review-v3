@@ -21,6 +21,11 @@ const items = [
     label: "Feedback Inbox",
     description: "Kelola feedback 1–3 bintang",
   },
+  {
+    href: "/dashboard/contact",
+    label: "Contact & WhatsApp",
+    description: "Nomor WhatsApp bisnis",
+  },
 ];
 
 export default function DashboardNav() {
