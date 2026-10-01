@@ -37,6 +37,7 @@ export async function POST(request: Request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: authorization,
         },
         body: JSON.stringify({
           maps_url: mapsUrl,
