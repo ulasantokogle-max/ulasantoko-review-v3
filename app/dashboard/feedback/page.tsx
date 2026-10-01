@@ -26,6 +26,8 @@ export default function FeedbackInboxPage() {
   const [loadError, setLoadError] = useState("");
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -95,6 +97,39 @@ export default function FeedbackInboxPage() {
 
     setFeedback((data ?? []) as FeedbackRow[]);
   }
+
+  async function updateStatus(feedbackId: string, status: string) {
+    setUpdatingId(feedbackId);
+    setLoadError("");
+
+    const { data, error } = await supabase.rpc("v3_update_feedback_status", {
+      p_feedback_id: feedbackId,
+      p_status: status,
+    });
+
+    setUpdatingId(null);
+
+    if (error) {
+      setLoadError(error.message);
+      return;
+    }
+
+    if (data?.success === false) {
+      setLoadError(data?.message ?? "Gagal mengubah status feedback.");
+      return;
+    }
+
+    setFeedback((current) =>
+      current.map((item) =>
+        item.id === feedbackId ? { ...item, status } : item
+      )
+    );
+  }
+
+  const filteredFeedback = useMemo(() => {
+    if (statusFilter === "all") return feedback;
+    return feedback.filter((item) => item.status === statusFilter);
+  }, [feedback, statusFilter]);
 
   const stats = useMemo(() => {
     const total = feedback.length;
@@ -297,6 +332,37 @@ export default function FeedbackInboxPage() {
                 ))}
               </div>
 
+              <div
+                style={{
+                  display: "flex",
+                  gap: 8,
+                  flexWrap: "wrap",
+                  marginBottom: 16,
+                }}
+              >
+                {["all", "new", "viewed", "contacted", "resolved", "closed"].map(
+                  (status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setStatusFilter(status)}
+                      style={{
+                        ...buttonStyle,
+                        padding: "8px 11px",
+                        background:
+                          statusFilter === status ? "#111827" : "#ffffff",
+                        color:
+                          statusFilter === status ? "#ffffff" : "#111827",
+                        border: "1px solid #d1d5db",
+                        textTransform: "capitalize",
+                      }}
+                    >
+                      {status === "all" ? "Semua" : status}
+                    </button>
+                  )
+                )}
+              </div>
+
               {loadError && (
                 <div
                   style={{
@@ -313,7 +379,7 @@ export default function FeedbackInboxPage() {
 
               {loadingFeedback ? (
                 <p>Memuat feedback...</p>
-              ) : feedback.length === 0 ? (
+              ) : filteredFeedback.length === 0 ? (
                 <div
                   style={{
                     padding: 24,
@@ -327,7 +393,7 @@ export default function FeedbackInboxPage() {
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 14 }}>
-                  {feedback.map((item) => (
+                  {filteredFeedback.map((item) => (
                     <article
                       key={item.id}
                       style={{
@@ -416,7 +482,16 @@ export default function FeedbackInboxPage() {
                         </div>
                       </div>
 
-                      {item.customer_phone && item.contact_consent && (
+                      <div
+                        style={{
+                          marginTop: 14,
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          alignItems: "center",
+                        }}
+                      >
+                        {item.customer_phone && item.contact_consent && (
                         <a
                           href={`https://wa.me/${item.customer_phone.replace(
                             /\D/g,
@@ -438,7 +513,62 @@ export default function FeedbackInboxPage() {
                         >
                           Hubungi via WhatsApp
                         </a>
-                      )}
+                        )}
+
+                        <select
+                          value={item.status}
+                          disabled={updatingId === item.id}
+                          onChange={(event) =>
+                            updateStatus(item.id, event.target.value)
+                          }
+                          style={{
+                            padding: "9px 10px",
+                            borderRadius: 10,
+                            border: "1px solid #d1d5db",
+                            background: "#ffffff",
+                            fontSize: 13,
+                            fontWeight: 700,
+                          }}
+                        >
+                          <option value="new">New</option>
+                          <option value="viewed">Viewed</option>
+                          <option value="contacted">Contacted</option>
+                          <option value="resolved">Resolved</option>
+                          <option value="closed">Closed</option>
+                        </select>
+
+                        {item.status === "new" && (
+                          <button
+                            type="button"
+                            onClick={() => updateStatus(item.id, "viewed")}
+                            disabled={updatingId === item.id}
+                            style={{
+                              ...buttonStyle,
+                              padding: "9px 11px",
+                              background: "#ffffff",
+                              color: "#111827",
+                              border: "1px solid #d1d5db",
+                            }}
+                          >
+                            Tandai Dilihat
+                          </button>
+                        )}
+
+                        {item.status !== "resolved" &&
+                          item.status !== "closed" && (
+                            <button
+                              type="button"
+                              onClick={() => updateStatus(item.id, "resolved")}
+                              disabled={updatingId === item.id}
+                              style={{
+                                ...buttonStyle,
+                                padding: "9px 11px",
+                              }}
+                            >
+                              Selesai
+                            </button>
+                          )}
+                      </div>
                     </article>
                   ))}
                 </div>
