@@ -2,8 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-
-const DEMO_BUSINESS_ID = "99438efc-aeb4-436a-b0c6-90b0a1832674";
+import { useBusinessContext } from "../../../lib/useBusinessContext";
 
 type SetupResult = {
   success?: boolean;
@@ -42,6 +41,14 @@ export default function GoogleReviewDashboardPage() {
   const [nameMessage, setNameMessage] = useState("");
   const [loadingName, setLoadingName] = useState(false);
 
+  const {
+    businesses,
+    businessId,
+    setBusinessId,
+    businessLoading,
+    businessError,
+  } = useBusinessContext(userEmail);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUserEmail(data.session?.user?.email ?? null);
@@ -57,19 +64,19 @@ export default function GoogleReviewDashboardPage() {
   }, []);
 
   useEffect(() => {
-    if (userEmail) {
+    if (businessId) {
       loadBusinessProfile();
     } else {
       setDisplayName("");
       setInternalName("");
     }
-  }, [userEmail]);
+  }, [businessId]);
 
   async function loadBusinessProfile() {
     setNameError("");
 
     const { data, error } = await supabase.rpc("v3_get_business_profile", {
-      p_business_id: DEMO_BUSINESS_ID,
+      p_business_id: businessId,
     });
 
     if (error) {
@@ -95,7 +102,7 @@ export default function GoogleReviewDashboardPage() {
     const { data, error } = await supabase.rpc(
       "v3_update_business_display_name",
       {
-        p_business_id: DEMO_BUSINESS_ID,
+        p_business_id: businessId,
         p_display_name: displayName,
       }
     );
@@ -292,6 +299,41 @@ export default function GoogleReviewDashboardPage() {
           </form>
         ) : (
           <>
+            {businesses.length > 1 && (
+              <select
+                value={businessId ?? ""}
+                onChange={(event) => setBusinessId(event.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "11px 12px",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 10,
+                  marginBottom: 14,
+                  background: "#ffffff",
+                }}
+              >
+                {businesses.map((business) => (
+                  <option key={business.business_id} value={business.business_id}>
+                    {business.display_name || business.business_name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {(businessLoading || businessError) && (
+              <div
+                style={{
+                  padding: 12,
+                  borderRadius: 10,
+                  marginBottom: 14,
+                  background: businessError ? "#fef2f2" : "#f9fafb",
+                  color: businessError ? "#991b1b" : "#6b7280",
+                }}
+              >
+                {businessError || "Memuat bisnis..."}
+              </div>
+            )}
+
             <div
               style={{
                 display: "flex",
