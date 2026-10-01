@@ -52,9 +52,12 @@ export async function POST(request: Request) {
         {
           success: false,
           step: "resolve",
+          message:
+            resolveData?.message ??
+            "Gagal memproses Google Maps URL.",
           details: resolveData,
         },
-        { status: 400 }
+        { status: resolveResponse.status || 400 }
       );
     }
 
@@ -81,6 +84,9 @@ export async function POST(request: Request) {
         {
           success: false,
           step: "save",
+          message:
+            saveData?.message ??
+            "Gagal menyimpan profil Google Review.",
           details: saveData,
         },
         { status: saveResponse.status }
