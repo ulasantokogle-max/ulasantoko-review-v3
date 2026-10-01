@@ -20,7 +20,7 @@ export default function DashboardNav() {
   const pathname = usePathname();
 
   return (
-    <nav style={{ display: "grid", gap: 8 }}>
+    <nav className="dashboard-nav" style={{ display: "grid", gap: 8 }}>
       {items.map((item) => {
         const active = pathname === item.href;
 
