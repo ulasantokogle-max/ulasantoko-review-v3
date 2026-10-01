@@ -25,6 +25,7 @@ export default function ActivateCardPage() {
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [businessMode, setBusinessMode] = useState<"existing" | "new">("new");
   const [selectedBusinessId, setSelectedBusinessId] = useState("");
@@ -133,6 +134,38 @@ export default function ActivateCardPage() {
     }
 
     setAuthMessage("Akun berhasil dibuat dan Anda sudah login.");
+  }
+
+  async function resendConfirmation() {
+    if (!email || resendLoading) return;
+
+    setResendLoading(true);
+    setAuthError("");
+    setAuthMessage("");
+
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/activate/${cardCode}`
+        : undefined;
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo,
+      },
+    });
+
+    setResendLoading(false);
+
+    if (error) {
+      setAuthError(error.message);
+      return;
+    }
+
+    setAuthMessage(
+      "Email konfirmasi baru sudah dikirim. Gunakan email terbaru karena link lama bisa kedaluwarsa."
+    );
   }
 
   async function activateCard(event: FormEvent) {
@@ -315,7 +348,28 @@ export default function ActivateCardPage() {
             </form>
 
             {authError && <p style={{ color: "#b91c1c" }}>{authError}</p>}
-            {authMessage && <p style={{ color: "#166534" }}>{authMessage}</p>}
+            {authMessage && (
+              <div style={{ display: "grid", gap: 8 }}>
+                <p style={{ color: "#166534", marginBottom: 0 }}>{authMessage}</p>
+                {mode === "signup" && email && (
+                  <button
+                    type="button"
+                    onClick={resendConfirmation}
+                    disabled={resendLoading}
+                    style={{
+                      ...buttonStyle,
+                      background: "#ffffff",
+                      color: "#111827",
+                      border: "1px solid #d1d5db",
+                    }}
+                  >
+                    {resendLoading
+                      ? "Mengirim ulang..."
+                      : "Kirim Ulang Email Konfirmasi"}
+                  </button>
+                )}
+              </div>
+            )}
           </>
         ) : (
           <form onSubmit={activateCard} style={{ display: "grid", gap: 12, marginTop: 20 }}>
