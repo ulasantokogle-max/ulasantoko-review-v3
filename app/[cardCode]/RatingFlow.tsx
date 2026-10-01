@@ -33,6 +33,23 @@ export default function RatingFlow({
     }
   }
 
+  function getFeedbackSessionId() {
+    if (typeof window === "undefined") return null;
+
+    const key = "ulasantoko_feedback_session";
+    let value = window.sessionStorage.getItem(key);
+
+    if (!value) {
+      value =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      window.sessionStorage.setItem(key, value);
+    }
+
+    return value;
+  }
+
   async function submitFeedback(event: FormEvent) {
     event.preventDefault();
 
@@ -55,6 +72,7 @@ export default function RatingFlow({
           message,
           category: "service",
           contact_consent: consent,
+          session_id: getFeedbackSessionId(),
         }),
       });
 
@@ -221,6 +239,7 @@ export default function RatingFlow({
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Nama (opsional)"
+              maxLength={120}
               style={{
                 width: "100%",
                 boxSizing: "border-box",
@@ -235,6 +254,7 @@ export default function RatingFlow({
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               placeholder="No. WhatsApp (opsional)"
+              maxLength={32}
               inputMode="tel"
               style={{
                 width: "100%",
@@ -251,6 +271,7 @@ export default function RatingFlow({
               onChange={(event) => setMessage(event.target.value)}
               placeholder="Ceritakan apa yang bisa kami perbaiki..."
               required
+              maxLength={2000}
               rows={4}
               style={{
                 width: "100%",
