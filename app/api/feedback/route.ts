@@ -46,6 +46,7 @@ export async function POST(request: Request) {
       p_message: message,
       p_category: category,
       p_contact_consent: contactConsent,
+      p_session_id: body?.session_id ?? null,
     });
 
     if (error) {
