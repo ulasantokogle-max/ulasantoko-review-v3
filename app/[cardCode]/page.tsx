@@ -74,9 +74,14 @@ export default async function PublicCardPage({
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  const { data, error } = await supabase.rpc("v3_get_public_card", {
-    p_card_code: cardCode,
-  });
+  const [{ data, error }, { data: publicNameData }] = await Promise.all([
+    supabase.rpc("v3_get_public_card", {
+      p_card_code: cardCode,
+    }),
+    supabase.rpc("v3_get_public_business_name", {
+      p_card_code: cardCode,
+    }),
+  ]);
 
   if (error || !data) {
     notFound();
@@ -105,6 +110,8 @@ export default async function PublicCardPage({
 
   const businessName =
     firstString(
+      publicNameData?.display_name,
+      business.display_name,
       googleReview.business_name,
       business.name,
       business.business_name,
@@ -131,6 +138,8 @@ export default async function PublicCardPage({
 
   const pageTitle =
     firstString(
+      business.display_name,
+      publicNameData?.display_name,
       landingPage.title,
       landingPage.name,
       payload.landing_title
