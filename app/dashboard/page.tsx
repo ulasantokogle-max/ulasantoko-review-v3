@@ -106,31 +106,18 @@ export default function DashboardHomePage() {
     setLoading(true);
     setLoadError("");
 
-    const [analyticsResult, profileResult, contactResult, reviewResult] =
-      await Promise.all([
-        supabase.rpc("v3_get_business_analytics", {
-          p_business_id: businessId,
-        }),
-        supabase.rpc("v3_get_business_profile", {
-          p_business_id: businessId,
-        }),
-        supabase.rpc("v3_get_business_contact_settings", {
-          p_business_id: businessId,
-        }),
-        supabase
-          .from("google_review_profiles")
-          .select("review_url")
-          .eq("business_id", businessId)
-          .maybeSingle(),
-      ]);
+    const [analyticsResult, setupResult] = await Promise.all([
+      supabase.rpc("v3_get_business_analytics", {
+        p_business_id: businessId,
+      }),
+      supabase.rpc("v3_get_business_setup_status", {
+        p_business_id: businessId,
+      }),
+    ]);
 
     setLoading(false);
 
-    const firstError =
-      analyticsResult.error ||
-      profileResult.error ||
-      contactResult.error ||
-      reviewResult.error;
+    const firstError = analyticsResult.error || setupResult.error;
 
     if (firstError) {
       setLoadError(firstError.message);
@@ -139,12 +126,9 @@ export default function DashboardHomePage() {
 
     setAnalytics((analyticsResult.data ?? null) as AnalyticsData | null);
     setSetup({
-      displayName:
-        profileResult.data?.display_name ??
-        profileResult.data?.internal_name ??
-        "",
-      whatsapp: contactResult.data?.whatsapp_number ?? "",
-      reviewUrl: reviewResult.data?.review_url ?? "",
+      displayName: setupResult.data?.display_name ?? "",
+      whatsapp: setupResult.data?.whatsapp_number ?? "",
+      reviewUrl: setupResult.data?.google_review_configured ? "configured" : "",
     });
   }
 
