@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import RatingFlow from "./RatingFlow";
 
 type AnyObject = Record<string, any>;
@@ -73,6 +73,19 @@ export default async function PublicCardPage({
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+
+  const { data: activationState } = await supabase.rpc(
+    "v3_get_card_activation_state",
+    { p_card_code: cardCode }
+  );
+
+  if (activationState?.success && activationState?.needs_activation) {
+    redirect(`/activate/${cardCode}`);
+  }
+
+  if (activationState?.success === false) {
+    notFound();
+  }
 
   const [{ data, error }, { data: publicNameData }] = await Promise.all([
     supabase.rpc("v3_get_public_card", {
