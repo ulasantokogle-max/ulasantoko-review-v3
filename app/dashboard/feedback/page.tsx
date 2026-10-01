@@ -80,13 +80,10 @@ export default function FeedbackInboxPage() {
     setLoadError("");
     setLoadingFeedback(true);
 
-    const { data, error } = await supabase
-      .from("feedback_submissions")
-      .select(
-        "id,rating,customer_name,customer_phone,message,category,contact_consent,status,created_at"
-      )
-      .eq("business_id", DEMO_BUSINESS_ID)
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.rpc("v3_get_feedback_inbox", {
+      p_business_id: DEMO_BUSINESS_ID,
+      p_limit: 100,
+    });
 
     setLoadingFeedback(false);
 
