@@ -5,6 +5,11 @@ import { usePathname } from "next/navigation";
 
 const items = [
   {
+    href: "/dashboard/cards",
+    label: "Card Management",
+    description: "QR/NFC, status & area kartu",
+  },
+  {
     href: "/dashboard/google-review",
     label: "Google Review Setup",
     description: "Nama bisnis & Google Maps",
