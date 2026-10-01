@@ -103,7 +103,18 @@ export default function ActivateCardPage() {
       return;
     }
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const emailRedirectTo =
+      typeof window !== "undefined"
+        ? `${window.location.origin}/activate/${cardCode}`
+        : undefined;
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo,
+      },
+    });
     setAuthLoading(false);
 
     if (error) {
@@ -116,7 +127,7 @@ export default function ActivateCardPage() {
 
     if (!data.session) {
       setAuthMessage(
-        "Akun berhasil dibuat. Cek email untuk konfirmasi, lalu kembali dan login."
+        "Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini."
       );
       return;
     }
