@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import DashboardNav from "../DashboardNav";
 
 const DEMO_BUSINESS_ID = "99438efc-aeb4-436a-b0c6-90b0a1832674";
 
@@ -36,6 +37,11 @@ export default function GoogleReviewDashboardPage() {
   const [result, setResult] = useState<SetupResult | null>(null);
   const [loadingLogin, setLoadingLogin] = useState(false);
   const [loadingSetup, setLoadingSetup] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [internalName, setInternalName] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [nameMessage, setNameMessage] = useState("");
+  const [loadingName, setLoadingName] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -50,6 +56,66 @@ export default function GoogleReviewDashboardPage() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (userEmail) {
+      loadBusinessProfile();
+    } else {
+      setDisplayName("");
+      setInternalName("");
+    }
+  }, [userEmail]);
+
+  async function loadBusinessProfile() {
+    setNameError("");
+
+    const { data, error } = await supabase.rpc("v3_get_business_profile", {
+      p_business_id: DEMO_BUSINESS_ID,
+    });
+
+    if (error) {
+      setNameError(error.message);
+      return;
+    }
+
+    if (data?.success === false) {
+      setNameError(data?.message ?? "Gagal memuat profil bisnis.");
+      return;
+    }
+
+    setInternalName(data?.internal_name ?? "");
+    setDisplayName(data?.display_name ?? data?.internal_name ?? "");
+  }
+
+  async function saveDisplayName(event: FormEvent) {
+    event.preventDefault();
+    setNameError("");
+    setNameMessage("");
+    setLoadingName(true);
+
+    const { data, error } = await supabase.rpc(
+      "v3_update_business_display_name",
+      {
+        p_business_id: DEMO_BUSINESS_ID,
+        p_display_name: displayName,
+      }
+    );
+
+    setLoadingName(false);
+
+    if (error) {
+      setNameError(error.message);
+      return;
+    }
+
+    if (data?.success === false) {
+      setNameError(data?.message ?? "Gagal menyimpan nama publik.");
+      return;
+    }
+
+    setDisplayName(data?.display_name ?? displayName);
+    setNameMessage("Nama bisnis publik berhasil disimpan.");
+  }
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
@@ -171,6 +237,8 @@ export default function GoogleReviewDashboardPage() {
   return (
     <main style={pageStyle}>
       <section style={cardStyle}>
+        <DashboardNav />
+
         <div style={{ marginBottom: 24 }}>
           <div
             style={{
@@ -257,6 +325,76 @@ export default function GoogleReviewDashboardPage() {
                 Logout
               </button>
             </div>
+
+            <form
+              onSubmit={saveDisplayName}
+              style={{
+                marginBottom: 24,
+                padding: 18,
+                borderRadius: 14,
+                background: "#f9fafb",
+                border: "1px solid #e5e7eb",
+              }}
+            >
+              <h2 style={{ margin: "0 0 6px", fontSize: 18 }}>
+                Nama Bisnis Publik
+              </h2>
+
+              <p
+                style={{
+                  margin: "0 0 14px",
+                  color: "#6b7280",
+                  fontSize: 14,
+                  lineHeight: 1.55,
+                }}
+              >
+                Nama internal: <strong>{internalName || "-"}</strong>. Nama di
+                bawah ini dipakai di landing page customer dan bisa diubah
+                kapan saja tanpa mengubah Business ID, kartu, atau Review URL.
+              </p>
+
+              <input
+                style={inputStyle}
+                type="text"
+                placeholder="Nama bisnis publik"
+                value={displayName}
+                onChange={(event) => setDisplayName(event.target.value)}
+                required
+              />
+
+              <button
+                style={{ ...buttonStyle, marginTop: 12 }}
+                type="submit"
+                disabled={loadingName}
+              >
+                {loadingName ? "Menyimpan..." : "Simpan Nama Publik"}
+              </button>
+
+              {nameError && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    color: "#991b1b",
+                    fontSize: 14,
+                  }}
+                >
+                  {nameError}
+                </div>
+              )}
+
+              {nameMessage && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    color: "#166534",
+                    fontSize: 14,
+                    fontWeight: 700,
+                  }}
+                >
+                  {nameMessage}
+                </div>
+              )}
+            </form>
 
             <form onSubmit={handleSetup}>
               <label
