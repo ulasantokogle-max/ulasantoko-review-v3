@@ -2,7 +2,6 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
-import DashboardNav from "../DashboardNav";
 
 const DEMO_BUSINESS_ID = "99438efc-aeb4-436a-b0c6-90b0a1832674";
 
@@ -237,8 +236,6 @@ export default function GoogleReviewDashboardPage() {
   return (
     <main style={pageStyle}>
       <section style={cardStyle}>
-        <DashboardNav />
-
         <div style={{ marginBottom: 24 }}>
           <div
             style={{
