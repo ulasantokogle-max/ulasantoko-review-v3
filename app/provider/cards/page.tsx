@@ -1,0 +1,625 @@
+"use client";
+
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import { supabase } from "../../../lib/supabase";
+
+type ProviderCard = {
+  id: string;
+  card_code: string;
+  label: string | null;
+  area: string | null;
+  internal_code: string | null;
+  operational_status: string;
+  activation_status: string;
+  business_id: string | null;
+  business_name: string | null;
+  qr_url: string | null;
+  qr_enabled: boolean;
+  nfc_enabled: boolean;
+  nfc_identifier: string | null;
+  inventory_status: string;
+  created_at: string;
+  activated_at: string | null;
+};
+
+type CreateResult = {
+  success?: boolean;
+  card_id?: string;
+  card_code?: string;
+  activation_pin?: string;
+  qr_url?: string;
+  nfc_url?: string;
+  inventory_status?: string;
+  message?: string;
+};
+
+export default function ProviderCardsPage() {
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [providerAllowed, setProviderAllowed] = useState<boolean | null>(null);
+
+  const [cards, setCards] = useState<ProviderCard[]>([]);
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [loadError, setLoadError] = useState("");
+
+  const [label, setLabel] = useState("");
+  const [area, setArea] = useState("");
+  const [internalCode, setInternalCode] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
+  const [created, setCreated] = useState<CreateResult | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserEmail(session?.user?.email ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (userEmail) {
+      checkProvider();
+    } else {
+      setProviderAllowed(null);
+      setCards([]);
+    }
+  }, [userEmail]);
+
+  async function checkProvider() {
+    setLoadError("");
+
+    const { data, error } = await supabase.rpc("v3_is_provider_admin");
+
+    if (error) {
+      setLoadError(error.message);
+      setProviderAllowed(false);
+      return;
+    }
+
+    const allowed = Boolean(data);
+    setProviderAllowed(allowed);
+
+    if (allowed) {
+      loadCards();
+    }
+  }
+
+  async function handleLogin(event: FormEvent) {
+    event.preventDefault();
+    setLoginError("");
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      setLoginError(error.message);
+      return;
+    }
+
+    setUserEmail(data.user?.email ?? null);
+    setPassword("");
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setUserEmail(null);
+    setProviderAllowed(null);
+    setCards([]);
+    setCreated(null);
+  }
+
+  async function loadCards() {
+    setLoadingCards(true);
+    setLoadError("");
+
+    const { data, error } = await supabase.rpc("v3_provider_list_cards", {
+      p_limit: 200,
+    });
+
+    setLoadingCards(false);
+
+    if (error) {
+      setLoadError(error.message);
+      setCards([]);
+      return;
+    }
+
+    setCards((data ?? []) as ProviderCard[]);
+  }
+
+  async function createCard(event: FormEvent) {
+    event.preventDefault();
+    setCreating(true);
+    setCreateError("");
+    setCreated(null);
+
+    const { data, error } = await supabase.rpc("v3_provider_create_card", {
+      p_label: label || null,
+      p_area: area || null,
+      p_internal_code: internalCode || null,
+    });
+
+    setCreating(false);
+
+    if (error) {
+      setCreateError(error.message);
+      return;
+    }
+
+    if (!data?.success) {
+      setCreateError(data?.message ?? "Gagal membuat kartu.");
+      return;
+    }
+
+    setCreated(data as CreateResult);
+    setLabel("");
+    setArea("");
+    setInternalCode("");
+    await loadCards();
+  }
+
+  async function copyText(value?: string) {
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+  }
+
+  const stats = useMemo(() => {
+    return {
+      total: cards.length,
+      ready: cards.filter((card) => card.inventory_status === "ready_to_sell").length,
+      activated: cards.filter((card) => card.inventory_status === "activated").length,
+    };
+  }, [cards]);
+
+  const inputStyle = {
+    width: "100%",
+    boxSizing: "border-box" as const,
+    padding: "11px 12px",
+    border: "1px solid #d1d5db",
+    borderRadius: 10,
+    fontSize: 14,
+    background: "#ffffff",
+  };
+
+  const buttonStyle = {
+    border: 0,
+    borderRadius: 10,
+    padding: "10px 12px",
+    fontSize: 13,
+    fontWeight: 800,
+    cursor: "pointer",
+    background: "#111827",
+    color: "#ffffff",
+  } as const;
+
+  return (
+    <main
+      style={{
+        minHeight: "100vh",
+        background: "#f5f7fb",
+        padding: "28px 16px",
+        fontFamily:
+          "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+        color: "#111827",
+      }}
+    >
+      <div style={{ maxWidth: 1120, margin: "0 auto" }}>
+        <header
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 16,
+            alignItems: "center",
+            marginBottom: 20,
+            flexWrap: "wrap",
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: .7,
+                color: "#6b7280",
+              }}
+            >
+              ULASANTOKO PROVIDER
+            </div>
+            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Card Factory</h1>
+            <p style={{ margin: "7px 0 0", color: "#6b7280" }}>
+              Produksi kartu QR + NFC siap jual sebelum diaktivasi customer.
+            </p>
+          </div>
+
+          {userEmail && (
+            <button
+              type="button"
+              onClick={handleLogout}
+              style={{
+                ...buttonStyle,
+                background: "#ffffff",
+                color: "#111827",
+                border: "1px solid #d1d5db",
+              }}
+            >
+              Logout
+            </button>
+          )}
+        </header>
+
+        {!userEmail ? (
+          <section
+            style={{
+              maxWidth: 460,
+              background: "#ffffff",
+              border: "1px solid #e5e7eb",
+              borderRadius: 18,
+              padding: 22,
+            }}
+          >
+            <h2 style={{ marginTop: 0 }}>Login Provider</h2>
+            <form onSubmit={handleLogin} style={{ display: "grid", gap: 10 }}>
+              <input
+                style={inputStyle}
+                type="email"
+                placeholder="Email provider"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <input
+                style={inputStyle}
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button style={buttonStyle} type="submit">
+                Login Provider
+              </button>
+            </form>
+            {loginError && <p style={{ color: "#b91c1c" }}>{loginError}</p>}
+          </section>
+        ) : providerAllowed === false ? (
+          <section
+            style={{
+              background: "#fff",
+              border: "1px solid #fecaca",
+              borderRadius: 18,
+              padding: 22,
+              color: "#991b1b",
+            }}
+          >
+            Akun <strong>{userEmail}</strong> tidak memiliki akses Provider.
+          </section>
+        ) : providerAllowed === null ? (
+          <p>Memeriksa akses provider...</p>
+        ) : (
+          <>
+            <section
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+                gap: 12,
+                marginBottom: 18,
+              }}
+            >
+              {[
+                ["Total Inventory", stats.total],
+                ["Ready to Sell", stats.ready],
+                ["Activated", stats.activated],
+              ].map(([name, value]) => (
+                <div
+                  key={String(name)}
+                  style={{
+                    background: "#ffffff",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 14,
+                    padding: 16,
+                  }}
+                >
+                  <div style={{ color: "#6b7280", fontSize: 13 }}>{name}</div>
+                  <div style={{ fontSize: 25, fontWeight: 900, marginTop: 4 }}>
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </section>
+
+            <section
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: 18,
+                padding: 20,
+                marginBottom: 18,
+              }}
+            >
+              <h2 style={{ marginTop: 0 }}>Buat Kartu Baru</h2>
+              <p style={{ color: "#6b7280", lineHeight: 1.5 }}>
+                Card Code dan PIN dibuat otomatis. PIN hanya ditampilkan setelah
+                kartu dibuat, jadi simpan/cetak bersama kartu fisik.
+              </p>
+
+              <form
+                onSubmit={createCard}
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                  gap: 10,
+                }}
+              >
+                <input
+                  style={inputStyle}
+                  value={label}
+                  onChange={(e) => setLabel(e.target.value)}
+                  placeholder="Label (opsional)"
+                />
+                <input
+                  style={inputStyle}
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  placeholder="Area / batch (opsional)"
+                />
+                <input
+                  style={inputStyle}
+                  value={internalCode}
+                  onChange={(e) => setInternalCode(e.target.value)}
+                  placeholder="Internal code / SKU (opsional)"
+                />
+                <button style={buttonStyle} type="submit" disabled={creating}>
+                  {creating ? "Membuat..." : "Generate Card"}
+                </button>
+              </form>
+
+              {createError && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    padding: 12,
+                    borderRadius: 10,
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                  }}
+                >
+                  {createError}
+                </div>
+              )}
+
+              {created?.success && (
+                <div
+                  style={{
+                    marginTop: 16,
+                    padding: 16,
+                    borderRadius: 14,
+                    background: "#f0fdf4",
+                    border: "1px solid #bbf7d0",
+                  }}
+                >
+                  <h3 style={{ marginTop: 0 }}>Kartu siap dijual ✅</h3>
+                  <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
+                    <div><strong>Card Code:</strong> {created.card_code}</div>
+                    <div><strong>PIN Aktivasi:</strong> {created.activation_pin}</div>
+                    <div style={{ overflowWrap: "anywhere" }}>
+                      <strong>QR / NFC URL:</strong> {created.qr_url}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 8,
+                      flexWrap: "wrap",
+                      marginTop: 14,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      style={buttonStyle}
+                      onClick={() => copyText(created.card_code)}
+                    >
+                      Copy Card Code
+                    </button>
+                    <button
+                      type="button"
+                      style={buttonStyle}
+                      onClick={() => copyText(created.activation_pin)}
+                    >
+                      Copy PIN
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        ...buttonStyle,
+                        background: "#ffffff",
+                        color: "#111827",
+                        border: "1px solid #d1d5db",
+                      }}
+                      onClick={() => copyText(created.qr_url)}
+                    >
+                      Copy URL
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <section
+              style={{
+                background: "#ffffff",
+                border: "1px solid #e5e7eb",
+                borderRadius: 18,
+                padding: 20,
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  gap: 10,
+                  flexWrap: "wrap",
+                  marginBottom: 14,
+                }}
+              >
+                <div>
+                  <h2 style={{ margin: 0 }}>Inventory</h2>
+                  <div style={{ color: "#6b7280", fontSize: 13, marginTop: 4 }}>
+                    Kartu provider, baik belum terjual maupun sudah aktif.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={loadCards}
+                  style={{
+                    ...buttonStyle,
+                    background: "#ffffff",
+                    color: "#111827",
+                    border: "1px solid #d1d5db",
+                  }}
+                >
+                  Refresh
+                </button>
+              </div>
+
+              {loadError && (
+                <div
+                  style={{
+                    padding: 12,
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                    borderRadius: 10,
+                    marginBottom: 12,
+                  }}
+                >
+                  {loadError}
+                </div>
+              )}
+
+              {loadingCards ? (
+                <p>Memuat inventory...</p>
+              ) : cards.length === 0 ? (
+                <div style={{ color: "#6b7280" }}>Belum ada inventory.</div>
+              ) : (
+                <div style={{ display: "grid", gap: 10 }}>
+                  {cards.map((card) => (
+                    <article
+                      key={card.id}
+                      style={{
+                        border: "1px solid #e5e7eb",
+                        borderRadius: 14,
+                        padding: 15,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          gap: 10,
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        <div>
+                          <div style={{ fontWeight: 900, fontSize: 17 }}>
+                            {card.card_code}
+                          </div>
+                          <div
+                            style={{
+                              color: "#6b7280",
+                              fontSize: 13,
+                              marginTop: 3,
+                            }}
+                          >
+                            {card.label || "Tanpa label"}
+                            {card.internal_code ? ` · ${card.internal_code}` : ""}
+                          </div>
+                        </div>
+
+                        <span
+                          style={{
+                            padding: "5px 9px",
+                            borderRadius: 999,
+                            fontSize: 11,
+                            fontWeight: 900,
+                            textTransform: "uppercase",
+                            background:
+                              card.inventory_status === "ready_to_sell"
+                                ? "#fef3c7"
+                                : card.inventory_status === "activated"
+                                  ? "#dcfce7"
+                                  : "#eff6ff",
+                            color:
+                              card.inventory_status === "ready_to_sell"
+                                ? "#92400e"
+                                : card.inventory_status === "activated"
+                                  ? "#166534"
+                                  : "#1d4ed8",
+                          }}
+                        >
+                          {card.inventory_status.replaceAll("_", " ")}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gap: 5,
+                          marginTop: 12,
+                          color: "#4b5563",
+                          fontSize: 13,
+                        }}
+                      >
+                        <div><strong>Area:</strong> {card.area || "-"}</div>
+                        <div>
+                          <strong>QR:</strong> {card.qr_enabled ? "Ready" : "Off"}
+                          {" · "}
+                          <strong>NFC:</strong> {card.nfc_enabled ? "Ready" : "Off"}
+                        </div>
+                        <div>
+                          <strong>Owner:</strong> {card.business_name || "Belum ada"}
+                        </div>
+                        <div style={{ overflowWrap: "anywhere" }}>
+                          <strong>URL:</strong> {card.qr_url || "-"}
+                        </div>
+                      </div>
+
+                      {card.qr_url && (
+                        <div style={{ marginTop: 12 }}>
+                          <a
+                            href={card.qr_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            style={{
+                              ...buttonStyle,
+                              display: "inline-block",
+                              textDecoration: "none",
+                            }}
+                          >
+                            Test Card
+                          </a>
+                        </div>
+                      )}
+                    </article>
+                  ))}
+                </div>
+              )}
+            </section>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
