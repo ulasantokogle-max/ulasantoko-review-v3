@@ -24,6 +24,7 @@ export default function ActivateCardPage() {
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
+  const [authLoading, setAuthLoading] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [businessMode, setBusinessMode] = useState<"existing" | "new">("new");
   const [selectedBusinessId, setSelectedBusinessId] = useState("");
@@ -85,26 +86,42 @@ export default function ActivateCardPage() {
 
   async function handleAuth(event: FormEvent) {
     event.preventDefault();
+    if (authLoading) return;
+
+    setAuthLoading(true);
     setAuthError("");
     setAuthMessage("");
 
     if (mode === "login") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) setAuthError(error.message);
+      setAuthLoading(false);
+
+      if (error) {
+        setAuthMessage("");
+        setAuthError(error.message);
+      }
       return;
     }
 
     const { data, error } = await supabase.auth.signUp({ email, password });
+    setAuthLoading(false);
+
     if (error) {
+      setAuthMessage("");
       setAuthError(error.message);
       return;
     }
+
+    setAuthError("");
 
     if (!data.session) {
       setAuthMessage(
         "Akun berhasil dibuat. Cek email untuk konfirmasi, lalu kembali dan login."
       );
+      return;
     }
+
+    setAuthMessage("Akun berhasil dibuat dan Anda sudah login.");
   }
 
   async function activateCard(event: FormEvent) {
@@ -277,8 +294,12 @@ export default function ActivateCardPage() {
                 minLength={6}
                 required
               />
-              <button style={buttonStyle} type="submit">
-                {mode === "login" ? "Login & Lanjut Aktivasi" : "Buat Akun"}
+              <button style={buttonStyle} type="submit" disabled={authLoading}>
+                {authLoading
+                  ? "Memproses..."
+                  : mode === "login"
+                    ? "Login & Lanjut Aktivasi"
+                    : "Buat Akun"}
               </button>
             </form>
 
