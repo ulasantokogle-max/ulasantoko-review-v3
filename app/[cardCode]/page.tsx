@@ -87,11 +87,18 @@ export default async function PublicCardPage({
     notFound();
   }
 
-  const [{ data, error }, { data: publicNameData }] = await Promise.all([
+  const [
+    { data, error },
+    { data: publicNameData },
+    { data: publicContactData },
+  ] = await Promise.all([
     supabase.rpc("v3_get_public_card", {
       p_card_code: cardCode,
     }),
     supabase.rpc("v3_get_public_business_name", {
+      p_card_code: cardCode,
+    }),
+    supabase.rpc("v3_get_public_business_contact", {
       p_card_code: cardCode,
     }),
   ]);
@@ -147,7 +154,9 @@ export default async function PublicCardPage({
     payload.maps_url
   );
 
-  const whatsappUrl = getWhatsAppUrl(blocks);
+  const whatsappUrl =
+    firstString(publicContactData?.whatsapp_url) ??
+    getWhatsAppUrl(blocks);
 
   const pageTitle =
     firstString(
