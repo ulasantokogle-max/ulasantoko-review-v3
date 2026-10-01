@@ -26,6 +26,11 @@ const items = [
     label: "Contact & WhatsApp",
     description: "Nomor WhatsApp bisnis",
   },
+  {
+    href: "/dashboard/analytics",
+    label: "Analytics & Insight",
+    description: "Ringkasan feedback & kartu",
+  },
 ];
 
 export default function DashboardNav() {
