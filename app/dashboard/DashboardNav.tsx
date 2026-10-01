@@ -7,6 +7,11 @@ import { supabase } from "../../lib/supabase";
 
 const items = [
   {
+    href: "/dashboard",
+    label: "Overview",
+    description: "Ringkasan bisnis & setup",
+  },
+  {
     href: "/dashboard/cards",
     label: "Card Management",
     description: "QR/NFC, status & area kartu",
