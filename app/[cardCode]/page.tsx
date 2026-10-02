@@ -350,7 +350,7 @@ export default async function PublicCardPage({
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
   const instagramUrl = firstString(landingSettingsData?.instagram_url);
-  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? "Menu & Daftar Harga";
+  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? "Informasi";
   const pdfUrl = firstString(landingSettingsData?.pdf_url);
   const showGoogleReview = landingSettingsData?.show_google_review !== false;
   const showWhatsapp = landingSettingsData?.show_whatsapp !== false;
