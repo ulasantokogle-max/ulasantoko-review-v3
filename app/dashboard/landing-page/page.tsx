@@ -133,22 +133,26 @@ export default function LandingPageBuilderPage() {
     setLoadingWhatsapp(false);
 
     if (error) {
-      setError(error.message);
+      console.error("Landing settings load failed", error);
+      setError("Pengaturan landing page belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (contactError) {
-      setError(contactError.message);
+      console.error("Business contact load failed", contactError);
+      setError("Kontak bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (profileError) {
-      setError(profileError.message);
+      console.error("Business profile load failed", profileError);
+      setError("Profil bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (profileData?.success === false) {
-      setError(profileData?.message ?? "Gagal memuat profil bisnis.");
+      console.error("Business profile returned unsuccessful result", profileData);
+      setError("Profil bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
@@ -216,8 +220,9 @@ export default function LandingPageBuilderPage() {
       });
 
     if (uploadError) {
+      console.error("Landing image upload failed", uploadError);
       setUploading(false);
-      setError(uploadError.message);
+      setError("Upload gambar belum berhasil. Silakan coba lagi.");
       return;
     }
 
@@ -272,8 +277,9 @@ export default function LandingPageBuilderPage() {
       });
 
     if (uploadError) {
+      console.error("Landing PDF upload failed", uploadError);
       setUploadingPdf(false);
-      setError(uploadError.message);
+      setError("Upload PDF belum berhasil. Silakan coba lagi.");
       return;
     }
 
@@ -312,14 +318,16 @@ export default function LandingPageBuilderPage() {
     );
 
     if (nameError) {
+      console.error("Public business name update failed", nameError);
       setSaving(false);
-      setError(nameError.message);
+      setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
     if (nameData?.success === false) {
+      console.error("Public business name update returned unsuccessful result", nameData);
       setSaving(false);
-      setError(nameData?.message ?? "Gagal menyimpan Nama Bisnis Publik.");
+      setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
@@ -356,26 +364,31 @@ export default function LandingPageBuilderPage() {
         const googleData = await response.json();
 
         if (!response.ok || !googleData?.success) {
+          console.error("Google Review setup failed", {
+            status: response.status,
+            data: googleData
+          });
           setLoadingGoogleReview(false);
           setSaving(false);
-          setError(
-            googleData?.message ??
-              (googleData?.step
-                ? `Google Review gagal di tahap: ${googleData.step}`
-                : "Gagal menyimpan Google Maps URL.")
-          );
+
+          if (response.status === 401) {
+            setError("Sesi login sudah berakhir. Silakan login kembali.");
+          } else if (response.status === 429) {
+            setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
+          } else if (googleData?.step === "resolve") {
+            setError("Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.");
+          } else {
+            setError("Google Review belum dapat disimpan. Silakan coba lagi.");
+          }
           return;
         }
 
         setMapsUrl(googleData?.maps_url ?? mapsUrl.trim());
       } catch (googleError) {
+        console.error("Google Review request failed", googleError);
         setLoadingGoogleReview(false);
         setSaving(false);
-        setError(
-          googleError instanceof Error
-            ? googleError.message
-            : "Gagal memproses Google Maps URL."
-        );
+        setError("Google Review belum dapat diproses. Periksa koneksi lalu coba lagi.");
         return;
       }
 
@@ -391,14 +404,16 @@ export default function LandingPageBuilderPage() {
     );
 
     if (contactError) {
+      console.error("Business contact update failed", contactError);
       setSaving(false);
-      setError(contactError.message);
+      setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
     if (contactData?.success === false) {
+      console.error("Business contact update returned unsuccessful result", contactData);
       setSaving(false);
-      setError(contactData?.message ?? "Gagal menyimpan nomor WhatsApp.");
+      setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
@@ -427,11 +442,13 @@ export default function LandingPageBuilderPage() {
 
     setSaving(false);
     if (error) {
-      setError(error.message);
+      console.error("Landing page update failed", error);
+      setError("Landing page belum dapat disimpan. Silakan coba lagi.");
       return;
     }
     if (data?.success === false) {
-      setError(data?.message ?? "Gagal menyimpan landing page.");
+      console.error("Landing page update returned unsuccessful result", data);
+      setError("Landing page belum dapat disimpan. Silakan coba lagi.");
       return;
     }
     setMessage("Landing page berhasil disimpan.");
