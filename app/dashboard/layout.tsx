@@ -21,7 +21,7 @@ export default function DashboardLayout({
               marginBottom: 6,
             }}
           >
-            UlasanToko Review V3
+            UlasanToko Review
           </div>
 
           <div
