@@ -216,9 +216,9 @@ export default function DashboardHomePage() {
         }}
       >
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          ULASANTOKO REVIEW V3
+          ULASANTOKO REVIEW
         </div>
-        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Dashboard Overview</h1>
+        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Ringkasan Dashboard</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
           Ringkasan bisnis, status setup, feedback, dan kartu dalam satu halaman.
         </p>
@@ -266,7 +266,7 @@ export default function DashboardHomePage() {
             >
               <div>
                 <div style={{ fontSize: 13, color: "#6b7280" }}>
-                  Login sebagai <strong>{userEmail}</strong>
+                  Akun: <strong>{userEmail}</strong>
                 </div>
                 <div style={{ marginTop: 3, fontWeight: 900 }}>
                   {selectedBusiness?.display_name ||
@@ -285,7 +285,7 @@ export default function DashboardHomePage() {
                   }}
                   onClick={loadSummary}
                 >
-                  Refresh
+                  Muat Ulang
                 </button>
               </div>
             </div>
@@ -454,8 +454,8 @@ export default function DashboardHomePage() {
                     </h2>
                     <div style={{ display: "grid", gap: 10 }}>
                       {[
-                        ["/dashboard/feedback", "Buka Feedback Inbox"],
-                        ["/dashboard/analytics", "Lihat Analytics Lengkap"],
+                        ["/dashboard/feedback", "Buka Feedback"],
+                        ["/dashboard/analytics", "Lihat Analitik"],
                         ["/dashboard/cards", "Kelola Kartu"],
                         ["/dashboard/landing-page", "Atur Landing Page"],
                       ].map(([href, label]) => (
