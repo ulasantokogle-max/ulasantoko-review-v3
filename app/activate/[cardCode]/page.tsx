@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
+import { useLanguage } from "../../../lib/i18n";
 
 type Business = {
   business_id: string;
@@ -12,6 +13,7 @@ type Business = {
 };
 
 export default function ActivateCardPage() {
+  const { tr } = useLanguage();
   const params = useParams<{ cardCode: string }>();
   const router = useRouter();
   const cardCode = params.cardCode;
@@ -348,7 +350,7 @@ export default function ActivateCardPage() {
                 {authLoading
                   ? "Memproses..."
                   : mode === "login"
-                    ? "Masuk & Lanjut Aktivasi"
+                    ? tr("Masuk & Lanjut Aktivasi", "Sign In & Continue Activation")
                     : "Buat Akun"}
               </button>
             </form>
