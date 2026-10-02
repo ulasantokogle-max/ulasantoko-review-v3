@@ -543,17 +543,17 @@ export default async function PublicCardPage({
                 color: theme.text,
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
-                minHeight: isSmoothie ? 92 : "auto",
+                minHeight: isSmoothie ? 116 : "auto",
                 display: isSmoothie ? "grid" : "block",
                 placeItems: isSmoothie ? "center" : "initial",
-                fontSize: isSmoothie ? 16 : 14,
+                fontSize: isSmoothie ? 17 : 14,
                 boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
                 order: isSmoothie ? 2 : "initial",
               }}
             >
               {isSmoothie ? (
                 <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                  <IconBubble bg="#E6F4E8"><WhatsAppIcon /></IconBubble>
+                  <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
                   <span>WhatsApp</span>
                 </span>
               ) : (
@@ -570,23 +570,25 @@ export default async function PublicCardPage({
               style={{
                 textDecoration: "none",
                 textAlign: "center",
-                padding: "13px 14px",
-                borderRadius: 14,
-                background: theme.soft,
+                padding: isSmoothie ? "18px 14px" : "13px 14px",
+                borderRadius: isSmoothie ? 24 : 14,
+                background: isSmoothie
+                  ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
+                  : theme.soft,
                 color: theme.text,
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
-                minHeight: isSmoothie ? 92 : "auto",
+                minHeight: isSmoothie ? 116 : "auto",
                 display: isSmoothie ? "grid" : "block",
                 placeItems: isSmoothie ? "center" : "initial",
-                fontSize: isSmoothie ? 16 : 14,
+                fontSize: isSmoothie ? 17 : 14,
                 boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
                 order: isSmoothie ? 3 : "initial",
               }}
             >
               {isSmoothie ? (
                 <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                  <IconBubble bg="#F7E7E4"><InstagramIcon /></IconBubble>
+                  <IconBubble bg="#F7E7E4"><span style={{ transform: "scale(1.4)", display: "grid" }}><InstagramIcon /></span></IconBubble>
                   <span>Instagram</span>
                 </span>
               ) : (
@@ -609,25 +611,27 @@ export default async function PublicCardPage({
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
                 gridColumn: isSmoothie ? "1 / -1" : "auto",
-                minHeight: isSmoothie ? 68 : "auto",
+                position: isSmoothie ? "relative" : "static",
+                minHeight: isSmoothie ? 86 : "auto",
                 display: isSmoothie ? "flex" : "block",
                 alignItems: isSmoothie ? "center" : "initial",
-                justifyContent: isSmoothie ? "space-between" : "initial",
-                padding: isSmoothie ? "18px 20px" : "13px 14px",
-                fontSize: isSmoothie ? 17 : 14,
+                justifyContent: isSmoothie ? "center" : "initial",
+                gap: isSmoothie ? 16 : 0,
+                padding: isSmoothie ? "18px 22px" : "13px 14px",
+                fontSize: isSmoothie ? 18 : 14,
                 boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
                 order: isSmoothie ? 1 : "initial",
               }}
             >
               {isSmoothie ? (
-                <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <IconBubble><PdfIcon /></IconBubble>
+                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, width: "100%" }}>
+                  <IconBubble><span style={{ transform: "scale(1.45)", display: "grid" }}><PdfIcon /></span></IconBubble>
                   <span>{pdfTitle}</span>
                 </span>
               ) : (
                 <span>▤&nbsp; {pdfTitle}</span>
               )}
-              {isSmoothie && <span style={{ fontSize: 28, lineHeight: 1 }}>›</span>}
+              {isSmoothie && <span style={{ fontSize: 30, lineHeight: 1, position: "absolute", right: 22 }}>›</span>}
             </a>
           )}
         </div>
