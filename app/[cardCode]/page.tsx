@@ -338,13 +338,18 @@ export default async function PublicCardPage({
     >
       <style>{`
         @media (max-width: 520px) {
-          .smoothie-page { padding: 0 !important; }
+          .smoothie-page {
+            padding: 0 !important;
+            overflow-x: hidden !important;
+          }
           .smoothie-shell {
             width: 100% !important;
             max-width: none !important;
+            box-sizing: border-box !important;
             border-radius: 0 !important;
             padding: 10px !important;
             box-shadow: none !important;
+            overflow-x: clip !important;
           }
           .smoothie-hero {
             min-height: 0 !important;
@@ -353,6 +358,8 @@ export default async function PublicCardPage({
             border-radius: 22px !important;
           }
           .smoothie-content {
+            width: 100% !important;
+            box-sizing: border-box !important;
             padding-left: 10px !important;
             padding-right: 10px !important;
           }
@@ -365,12 +372,17 @@ export default async function PublicCardPage({
             padding: 12px 14px !important;
           }
           .smoothie-links {
-            grid-template-columns: 1fr !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            grid-template-columns: minmax(0, 1fr) !important;
             gap: 10px !important;
+            overflow: hidden !important;
           }
           .smoothie-link-card {
             min-height: 78px !important;
             width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
             grid-column: 1 / -1 !important;
           }
           .smoothie-social-card {
