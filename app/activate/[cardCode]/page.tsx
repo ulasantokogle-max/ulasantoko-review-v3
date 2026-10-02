@@ -194,7 +194,7 @@ export default function ActivateCardPage() {
       return;
     }
 
-    router.push("/dashboard/google-review?onboarding=1");
+    router.push("/dashboard/onboarding");
   }
 
   const inputStyle = {
