@@ -40,8 +40,7 @@ export default async function PublicPdfMenuPage({
   const businessName = firstString(data?.business_name) ?? "UlasanToko";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
-  const mobileViewerUrl =
-    "https://docs.google.com/gview?embedded=1&url=" + encodeURIComponent(pdfUrl);
+  const mobileViewerUrl = pdfUrl + "#view=FitH&zoom=page-width";
 
   return (
     <main
@@ -165,9 +164,11 @@ export default async function PublicPdfMenuPage({
           .pdf-viewer-mobile {
             display: block !important;
             width: 100% !important;
+            max-width: 100% !important;
             min-height: calc(100vh - 112px) !important;
             height: calc(100vh - 112px) !important;
             border: 0 !important;
+            background: #fff !important;
           }
         }
       `}</style>
