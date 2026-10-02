@@ -321,7 +321,7 @@ export default function ProviderCardsPage() {
             </div>
             <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Pusat Kartu</h1>
             <p style={{ margin: "7px 0 0", color: "#6b7280" }}>
-              Produksi kartu QR + NFC siap jual sebelum diaktivasi customer.
+              Produksi kartu QR + NFC siap jual sebelum diaktifkan pemilik bisnis.
             </p>
           </div>
 
@@ -605,7 +605,7 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari card code, label, area, SKU, owner..."
+                  placeholder="Cari card code, label, area, SKU, pemilik bisnis..."
                 />
                 <select
                   style={inputStyle}
