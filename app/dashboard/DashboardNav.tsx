@@ -19,7 +19,7 @@ const items = [
   {
     href: "/dashboard/landing-page",
     label: "Landing Page",
-    description: "Tema, konten & preview publik",
+    description: "Tema, Google Review, kontak & konten",
   },
   {
     href: "/dashboard/feedback",
