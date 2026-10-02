@@ -31,7 +31,7 @@ export async function generateMetadata({
     });
 
     const businessName = firstString(data?.business_name) ?? "ReputasiPro";
-    const title = firstString(data?.pdf_title) ?? "Dokumen";
+    const title = firstString(data?.pdf_title) ?? "Informasi";
 
     return {
       title: title + " | " + businessName,
@@ -73,7 +73,7 @@ export default async function PublicPdfMenuPage({
     notFound();
   }
 
-  const title = firstString(data?.pdf_title) ?? "Dokumen & Informasi";
+  const title = firstString(data?.pdf_title) ?? "Informasi";
   const businessName = firstString(data?.business_name) ?? "UlasanToko";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
