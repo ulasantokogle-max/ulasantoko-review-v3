@@ -656,18 +656,6 @@ export default function CardsDashboardPage() {
                               flexWrap: "wrap",
                             }}
                           >
-                            <a
-                              href={`/${card.card_code}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                ...buttonStyle,
-                                textDecoration: "none",
-                              }}
-                            >
-                              Lihat Public Page
-                            </a>
-
                             {card.qr_url && (
                               <a
                                 href={card.qr_url}
@@ -676,12 +664,9 @@ export default function CardsDashboardPage() {
                                 style={{
                                   ...buttonStyle,
                                   textDecoration: "none",
-                                  background: "#ffffff",
-                                  color: "#111827",
-                                  border: "1px solid #d1d5db",
                                 }}
                               >
-                                Buka QR URL
+                                Preview Halaman Publik
                               </a>
                             )}
 
