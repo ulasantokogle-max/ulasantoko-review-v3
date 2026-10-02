@@ -17,7 +17,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "card_code and rating 1-3 are required",
+          message: "Data feedback belum lengkap.",
         },
         { status: 400 }
       );
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Supabase environment variables are missing",
+          message: "Layanan sedang mengalami kendala.",
         },
         { status: 500 }
       );
@@ -50,17 +50,25 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      console.error("Feedback RPC failed", error);
       return NextResponse.json(
         {
           success: false,
-          message: error.message,
+          message: "Feedback belum dapat dikirim. Silakan coba lagi.",
         },
         { status: 400 }
       );
     }
 
     if (data?.success === false) {
-      return NextResponse.json(data, { status: 400 });
+      console.error("Feedback RPC returned unsuccessful result", data);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Feedback belum dapat dikirim. Silakan coba lagi.",
+        },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(data);
@@ -68,8 +76,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to submit feedback",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Feedback belum dapat dikirim. Silakan coba lagi.",
       },
       { status: 500 }
     );
