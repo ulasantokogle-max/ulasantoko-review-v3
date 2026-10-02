@@ -94,7 +94,8 @@ export default function ProviderCardsPage() {
     const { data, error } = await supabase.rpc("v3_is_provider_admin");
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Provider access check failed", error);
+      setLoadError("Akses provider belum dapat diverifikasi. Silakan coba lagi.");
       setProviderAllowed(false);
       return;
     }
@@ -117,7 +118,8 @@ export default function ProviderCardsPage() {
     });
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Provider login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -144,7 +146,8 @@ export default function ProviderCardsPage() {
     setLoadingCards(false);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Provider card list load failed", error);
+      setLoadError("Daftar kartu belum dapat dimuat. Silakan coba lagi.");
       setCards([]);
       return;
     }
@@ -167,12 +170,14 @@ export default function ProviderCardsPage() {
     setCreating(false);
 
     if (error) {
-      setCreateError(error.message);
+      console.error("Provider card creation failed", error);
+      setCreateError("Kartu belum dapat dibuat. Silakan coba lagi.");
       return;
     }
 
     if (!data?.success) {
-      setCreateError(data?.message ?? "Gagal membuat kartu.");
+      console.error("Provider card creation returned unsuccessful result", data);
+      setCreateError("Kartu belum dapat dibuat. Periksa data lalu coba lagi.");
       return;
     }
 
@@ -211,12 +216,14 @@ export default function ProviderCardsPage() {
     setResettingCardId(null);
 
     if (error) {
-      setResetPinError(error.message);
+      console.error("Provider PIN reset failed", error);
+      setResetPinError("PIN belum dapat direset. Silakan coba lagi.");
       return;
     }
 
     if (!data?.success) {
-      setResetPinError(data?.message ?? "Gagal mereset PIN.");
+      console.error("Provider PIN reset returned unsuccessful result", data);
+      setResetPinError("PIN belum dapat direset untuk kartu ini.");
       return;
     }
 
