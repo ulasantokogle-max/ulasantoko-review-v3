@@ -208,10 +208,10 @@ export default function FeedbackInboxPage() {
               marginBottom: 8,
             }}
           >
-            UlasanToko Review V3
+            UlasanToko Review
           </div>
 
-            <h1 style={{ margin: 0, fontSize: 30 }}>Feedback Inbox</h1>
+            <h1 style={{ margin: 0, fontSize: 30 }}>Feedback Pelanggan</h1>
 
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Feedback privat dari pelanggan yang memberikan rating 1–3 bintang.
@@ -266,7 +266,7 @@ export default function FeedbackInboxPage() {
                 }}
               >
                 <span style={{ fontSize: 14 }}>
-                  Login sebagai <strong>{userEmail}</strong>
+                  Akun: <strong>{userEmail}</strong>
                 </span>
 
                 <div style={{ display: "flex", gap: 8 }}>
@@ -281,7 +281,7 @@ export default function FeedbackInboxPage() {
                       padding: "9px 12px",
                     }}
                   >
-                    Refresh
+                    Muat Ulang
                   </button>
                 </div>
               </div>
