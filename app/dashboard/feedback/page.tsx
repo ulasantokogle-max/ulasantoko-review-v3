@@ -115,13 +115,13 @@ export default function FeedbackInboxPage() {
 
     if (error) {
       console.error("Feedback status update failed", error);
-      setLoadError("Status feedback belum dapat diperbarui. Silakan coba lagi.");
+      setLoadError("Status masukan belum dapat diperbarui. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
       console.error("Feedback status update returned unsuccessful result", data);
-      setLoadError("Status feedback belum dapat diperbarui. Silakan coba lagi.");
+      setLoadError("Status masukan belum dapat diperbarui. Silakan coba lagi.");
       return;
     }
 
@@ -349,7 +349,17 @@ export default function FeedbackInboxPage() {
                         textTransform: "capitalize",
                       }}
                     >
-                      {status === "all" ? "Semua" : status}
+                      {status === "all"
+                        ? "Semua"
+                        : status === "new"
+                          ? "Baru"
+                          : status === "viewed"
+                            ? "Dilihat"
+                            : status === "contacted"
+                              ? "Dihubungi"
+                              : status === "resolved"
+                                ? "Selesai"
+                                : "Ditutup"}
                     </button>
                   )
                 )}
@@ -370,7 +380,7 @@ export default function FeedbackInboxPage() {
               )}
 
               {loadingFeedback ? (
-                <p>Memuat feedback...</p>
+                <p>Memuat masukan...</p>
               ) : filteredFeedback.length === 0 ? (
                 <div
                   style={{
@@ -381,7 +391,7 @@ export default function FeedbackInboxPage() {
                     textAlign: "center",
                   }}
                 >
-                  Belum ada feedback.
+                  Belum ada masukan.
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 14 }}>
