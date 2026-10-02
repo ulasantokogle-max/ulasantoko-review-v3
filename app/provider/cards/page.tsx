@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 
@@ -318,25 +319,41 @@ export default function ProviderCardsPage() {
             >
               ULASANTOKO PROVIDER
             </div>
-            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Card Factory</h1>
+            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Pusat Kartu</h1>
             <p style={{ margin: "7px 0 0", color: "#6b7280" }}>
               Produksi kartu QR + NFC siap jual sebelum diaktivasi customer.
             </p>
           </div>
 
           {userEmail && (
-            <button
-              type="button"
-              onClick={handleLogout}
-              style={{
-                ...buttonStyle,
-                background: "#ffffff",
-                color: "#111827",
-                border: "1px solid #d1d5db",
-              }}
-            >
-              Logout
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {providerAllowed && (
+                <Link
+                  href="/access"
+                  style={{
+                    ...buttonStyle,
+                    background: "#ffffff",
+                    color: "#111827",
+                    border: "1px solid #d1d5db",
+                    textDecoration: "none",
+                  }}
+                >
+                  Menu Akses
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  ...buttonStyle,
+                  background: "#ffffff",
+                  color: "#111827",
+                  border: "1px solid #d1d5db",
+                }}
+              >
+                Keluar
+              </button>
+            </div>
           )}
         </header>
 
@@ -557,7 +574,7 @@ export default function ProviderCardsPage() {
                 }}
               >
                 <div>
-                  <h2 style={{ margin: 0 }}>Inventory</h2>
+                  <h2 style={{ margin: 0 }}>Inventori Kartu</h2>
                   <div style={{ color: "#6b7280", fontSize: 13, marginTop: 4 }}>
                     Kartu provider, baik belum terjual maupun sudah aktif.
                   </div>
