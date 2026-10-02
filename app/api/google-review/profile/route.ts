@@ -9,7 +9,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Authentication required",
+          message: "Sesi login diperlukan.",
         },
         { status: 401 }
       );
@@ -25,7 +25,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "business_id, maps_url and place_id are required",
+          message: "Data Google Review belum lengkap.",
         },
         { status: 400 }
       );
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Supabase environment variables are missing",
+          message: "Layanan sedang mengalami kendala.",
         },
         { status: 500 }
       );
@@ -69,7 +69,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: error.message,
+          message: "Profil Google Review belum dapat disimpan. Silakan coba lagi.",
         },
         { status: 400 }
       );
@@ -83,11 +83,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to save Google Review profile",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        message: "Profil Google Review belum dapat disimpan. Silakan coba lagi.",
       },
       { status: 500 }
     );
