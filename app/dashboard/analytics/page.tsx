@@ -165,7 +165,7 @@ export default function AnalyticsDashboardPage() {
             REPUTASIPRO
           </div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>
-            Analitik & Insight
+            Analitik & Wawasan
           </h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Ringkasan feedback pelanggan dan performa kartu bisnis.
@@ -176,7 +176,7 @@ export default function AnalyticsDashboardPage() {
               <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               <button style={buttonStyle} type="submit" disabled={loadingLogin}>
-                {loadingLogin ? "Login..." : "Login"}
+                {loadingLogin ? "Masuk..." : "Masuk"}
               </button>
               {loginError && <div style={{ color: "#991b1b" }}>{loginError}</div>}
             </form>
