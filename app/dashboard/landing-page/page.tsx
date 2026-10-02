@@ -30,6 +30,11 @@ type Settings = {
 
 export default function LandingPageBuilderPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const [loadingLogin, setLoadingLogin] = useState(false);
   const [settings, setSettings] = useState<Settings>({
     theme_key: "warm_brown",
     hero_title: "",
@@ -52,9 +57,13 @@ export default function LandingPageBuilderPage() {
     useBusinessContext(userEmail);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUserEmail(data.session?.user?.email ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      setUserEmail(data.session?.user?.email ?? null);
+      setAuthChecked(true);
+    });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserEmail(session?.user?.email ?? null);
+      setAuthChecked(true);
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -62,6 +71,27 @@ export default function LandingPageBuilderPage() {
   useEffect(() => {
     if (businessId) loadSettings();
   }, [businessId]);
+
+  async function handleLogin(event: FormEvent) {
+    event.preventDefault();
+    setLoginError("");
+    setLoadingLogin(true);
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    setLoadingLogin(false);
+
+    if (error) {
+      setLoginError(error.message);
+      return;
+    }
+
+    setUserEmail(data.user?.email ?? null);
+    setPassword("");
+  }
 
   async function loadSettings() {
     setLoading(true);
@@ -141,8 +171,56 @@ export default function LandingPageBuilderPage() {
     background: "#fff"
   };
 
+  if (!authChecked) {
+    return (
+      <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
+          <h1 style={{ marginBottom: 8 }}>Landing Page Builder</h1>
+          <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
+        </div>
+      </main>
+    );
+  }
+
   if (!userEmail) {
-    return <main style={{ padding: 32 }}><h1>Landing Page Builder</h1><p>Silakan login dari dashboard terlebih dahulu.</p></main>;
+    return (
+      <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
+        <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
+          <h1 style={{ margin: "6px 0 8px" }}>Landing Page Builder</h1>
+          <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
+            Login customer untuk mengatur landing page bisnis.
+          </p>
+          <form onSubmit={handleLogin} style={{ display: "grid", gap: 10, marginTop: 16 }}>
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", border: "1px solid #d1d5db", borderRadius: 10, fontSize: 14 }}
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              style={{ width: "100%", boxSizing: "border-box", padding: "11px 12px", border: "1px solid #d1d5db", borderRadius: 10, fontSize: 14 }}
+            />
+            <button
+              type="submit"
+              disabled={loadingLogin}
+              style={{ border: 0, borderRadius: 10, padding: "11px 12px", background: "#8B5E3C", color: "#fff", fontWeight: 900, cursor: "pointer" }}
+            >
+              {loadingLogin ? "Login..." : "Login"}
+            </button>
+          </form>
+          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{loginError}</div>}
+        </div>
+      </main>
+    );
   }
 
   return (
