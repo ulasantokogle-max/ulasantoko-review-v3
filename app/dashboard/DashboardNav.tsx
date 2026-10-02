@@ -8,12 +8,12 @@ import { supabase } from "../../lib/supabase";
 const items = [
   {
     href: "/dashboard",
-    label: "Overview",
+    label: "Ringkasan",
     description: "Ringkasan bisnis & setup",
   },
   {
     href: "/dashboard/cards",
-    label: "Card Management",
+    label: "Kartu",
     description: "QR/NFC, status & area kartu",
   },
   {
@@ -23,12 +23,12 @@ const items = [
   },
   {
     href: "/dashboard/feedback",
-    label: "Feedback Inbox",
+    label: "Feedback",
     description: "Kelola feedback 1–3 bintang",
   },
   {
     href: "/dashboard/analytics",
-    label: "Analytics & Insight",
+    label: "Analitik",
     description: "Ringkasan feedback & kartu",
   },
 ];
@@ -127,7 +127,7 @@ export default function DashboardNav() {
           fontWeight: 900,
         }}
       >
-        {loggingOut ? "Logout..." : "Logout"}
+        {loggingOut ? "Keluar..." : "Keluar"}
         <div
           style={{
             marginTop: 3,
@@ -137,7 +137,7 @@ export default function DashboardNav() {
             fontWeight: 500,
           }}
         >
-          Keluar dari dashboard customer
+          Keluar dari akun
         </div>
       </button>
     </nav>
