@@ -7,6 +7,7 @@ export const metadata = {
 };
 
 import DashboardNav from "./DashboardNav";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import "./dashboard.css";
 
 export default function DashboardLayout({
@@ -43,6 +44,8 @@ export default function DashboardLayout({
           >
             Dashboard
           </div>
+
+          <div style={{ marginBottom: 14 }}><LanguageSwitcher /></div>
 
           <DashboardNav />
         </aside>
