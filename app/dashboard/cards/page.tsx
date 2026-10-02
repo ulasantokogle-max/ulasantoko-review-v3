@@ -263,7 +263,7 @@ export default function CardsDashboardPage() {
             marginBottom: 8,
           }}
         >
-          UlasanToko Review
+          ReputasiPro
         </div>
 
         <h1 style={{ margin: 0, fontSize: 30 }}>Manajemen Kartu</h1>
