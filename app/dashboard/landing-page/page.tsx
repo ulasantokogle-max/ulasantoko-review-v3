@@ -291,7 +291,7 @@ export default function LandingPageBuilderPage() {
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Landing Page Builder</h1>
-          <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel dan premium.</p>
+          <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
         </div>
 
         {businesses.length > 1 && (
