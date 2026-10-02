@@ -175,6 +175,43 @@ function getWhatsAppUrl(blocks: AnyObject[]) {
   return null;
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ cardCode: string }>;
+}) {
+  const { cardCode } = await params;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return {
+      title: "ReputasiPro",
+      description: "Bagikan pengalaman dan feedback Anda.",
+    };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data } = await supabase.rpc("v3_get_public_business_name", {
+      p_card_code: cardCode,
+    });
+
+    const name =
+      firstString(data?.display_name, data?.business_name) ?? "ReputasiPro";
+
+    return {
+      title: name + " | ReputasiPro",
+      description: "Bagikan pengalaman dan feedback Anda untuk " + name + ".",
+    };
+  } catch {
+    return {
+      title: "ReputasiPro",
+      description: "Bagikan pengalaman dan feedback Anda.",
+    };
+  }
+}
+
 export default async function PublicCardPage({
   params,
 }: {
@@ -861,7 +898,7 @@ export default async function PublicCardPage({
             fontSize: 12,
           }}
         >
-          <span>Card: {card.card_code ?? cardCode}</span>
+          <span>Kartu: {card.card_code ?? cardCode}</span>
           <span>Powered by ReputasiPro</span>
         </div>
       </section>
