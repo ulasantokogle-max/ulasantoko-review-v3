@@ -14,6 +14,30 @@ type Props = {
   smoothMode?: boolean;
 };
 
+function GoogleMark() {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 46,
+        height: 46,
+        borderRadius: 999,
+        display: "grid",
+        placeItems: "center",
+        background: "rgba(255,255,255,.82)",
+        boxShadow: "0 8px 20px rgba(103,73,48,.08)",
+      }}
+    >
+      <svg width="26" height="26" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.2-.2-1.8H12v3.4h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.8 3-4.3 3-7.1Z"/>
+        <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1a5.8 5.8 0 0 1-5.4-4H3.3v2.6A10 10 0 0 0 12 22Z"/>
+        <path fill="#FBBC05" d="M6.6 14.1A6 6 0 0 1 6.3 12c0-.7.1-1.4.3-2.1V7.3H3.3A10 10 0 0 0 2 12c0 1.7.4 3.3 1.3 4.7l3.3-2.6Z"/>
+        <path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.9 1.5l2.9-2.9A9.8 9.8 0 0 0 12 2 10 10 0 0 0 3.3 7.3l3.3 2.6a5.8 5.8 0 0 1 5.4-4Z"/>
+      </svg>
+    </span>
+  );
+}
+
 export default function RatingFlow({
   cardCode,
   businessName,
@@ -159,6 +183,11 @@ export default function RatingFlow({
           : "none",
       }}
     >
+      {smoothMode && (
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+          <GoogleMark />
+        </div>
+      )}
       <div style={{ fontWeight: 900, fontSize: smoothMode ? 21 : 19, textAlign: "center", color: textColor }}>
         {smoothMode ? "Beri kami ulasan Google" : "Bagaimana pengalaman Anda?"}
       </div>
