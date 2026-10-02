@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 function firstString(...values: unknown[]) {
   for (const value of values) {
@@ -14,13 +16,16 @@ export async function generateMetadata({
   params: Promise<{ cardCode: string }>;
 }) {
   const { cardCode } = await params;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return {
-      title: "Dokumen | ReputasiPro",
-      description: "Dokumen publik bisnis.",
+      title: tr("Dokumen | ReputasiPro", "Document | ReputasiPro"),
+      description: tr("Dokumen publik bisnis.", "Public business document."),
     };
   }
 
@@ -31,16 +36,16 @@ export async function generateMetadata({
     });
 
     const businessName = firstString(data?.business_name) ?? "ReputasiPro";
-    const title = firstString(data?.pdf_title) ?? "Informasi";
+    const title = firstString(data?.pdf_title) ?? tr("Informasi", "Information");
 
     return {
       title: title + " | " + businessName,
-      description: "Dokumen publik " + businessName + " melalui ReputasiPro.",
+      description: tr("Dokumen publik ", "Public document for ") + businessName + tr(" melalui ReputasiPro.", " via ReputasiPro."),
     };
   } catch {
     return {
-      title: "Dokumen | ReputasiPro",
-      description: "Dokumen publik bisnis.",
+      title: tr("Dokumen | ReputasiPro", "Document | ReputasiPro"),
+      description: tr("Dokumen publik bisnis.", "Public business document."),
     };
   }
 }
@@ -51,6 +56,9 @@ export default async function PublicPdfMenuPage({
   params: Promise<{ cardCode: string }>;
 }) {
   const { cardCode } = await params;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -73,8 +81,8 @@ export default async function PublicPdfMenuPage({
     notFound();
   }
 
-  const title = firstString(data?.pdf_title) ?? "Informasi";
-  const businessName = firstString(data?.business_name) ?? "UlasanToko";
+  const title = firstString(data?.pdf_title) ?? tr("Informasi", "Information");
+  const businessName = firstString(data?.business_name) ?? "ReputasiPro";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
   const mobileViewerUrl = pdfUrl + "#view=FitH&zoom=page-width";
@@ -117,7 +125,8 @@ export default async function PublicPdfMenuPage({
           }}
         >
           <div>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "#8B5E3C" }}>
+            <LanguageSwitcher />
+            <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#8B5E3C" }}>
               {businessName}
             </div>
             <h1 style={{ margin: "4px 0 0", fontSize: isSmoothie ? 24 : 22, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{title}</h1>
@@ -135,7 +144,7 @@ export default async function PublicPdfMenuPage({
                 fontWeight: 800,
               }}
             >
-              Kembali
+              {tr("Kembali", "Back")}
             </a>
             <a
               href={pdfUrl}
@@ -150,7 +159,7 @@ export default async function PublicPdfMenuPage({
                 fontWeight: 800,
               }}
             >
-              Buka PDF
+              {tr("Buka PDF", "Open PDF")}
             </a>
           </div>
         </div>
