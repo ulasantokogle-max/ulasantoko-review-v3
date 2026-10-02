@@ -34,6 +34,9 @@ export default function CardsDashboardPage() {
   const [draftLabel, setDraftLabel] = useState("");
   const [draftArea, setDraftArea] = useState("");
   const [draftStatus, setDraftStatus] = useState<CardRow["status"]>("active");
+  const [resettingId, setResettingId] = useState<string | null>(null);
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetError, setResetError] = useState("");
 
   const {
     businesses,
@@ -116,6 +119,47 @@ export default function CardsDashboardPage() {
     setDraftLabel(card.label ?? "");
     setDraftArea(card.area ?? "");
     setDraftStatus(card.status);
+  }
+
+  async function resetCardSetup(card: CardRow) {
+    const typed = window.prompt(
+      `Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, feedback, analytics, QR/NFC, dan status aktivasi tetap aman.\n\nKetik ${card.card_code} untuk konfirmasi.`
+    );
+
+    if (typed !== card.card_code) {
+      if (typed !== null) {
+        setResetError("Reset dibatalkan karena Card Code tidak sesuai.");
+      }
+      return;
+    }
+
+    setResetError("");
+    setResetMessage("");
+    setResettingId(card.id);
+
+    const { data, error } = await supabase.rpc(
+      "v3_customer_reset_card_setup",
+      {
+        p_card_id: card.id,
+      }
+    );
+
+    setResettingId(null);
+
+    if (error) {
+      setResetError(error.message);
+      return;
+    }
+
+    if (data?.success === false) {
+      setResetError(data?.message ?? "Gagal mereset setup kartu.");
+      return;
+    }
+
+    setResetMessage(
+      `Setup ${card.card_code} berhasil direset. Kartu tetap menjadi milik bisnis Anda.`
+    );
+    await loadCards();
   }
 
   async function saveCard(card: CardRow) {
@@ -375,6 +419,45 @@ export default function CardsDashboardPage() {
               ))}
             </div>
 
+            {resetMessage && (
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 10,
+                  background: "#f0fdf4",
+                  color: "#166534",
+                  marginBottom: 16,
+                }}
+              >
+                <div style={{ fontWeight: 800 }}>{resetMessage}</div>
+                <a
+                  href="/dashboard/onboarding"
+                  style={{
+                    display: "inline-block",
+                    marginTop: 8,
+                    color: "#166534",
+                    fontWeight: 800,
+                  }}
+                >
+                  Setup ulang bisnis
+                </a>
+              </div>
+            )}
+
+            {resetError && (
+              <div
+                style={{
+                  padding: 14,
+                  borderRadius: 10,
+                  background: "#fef2f2",
+                  color: "#991b1b",
+                  marginBottom: 16,
+                }}
+              >
+                {resetError}
+              </div>
+            )}
+
             {loadError && (
               <div
                 style={{
@@ -631,6 +714,24 @@ export default function CardsDashboardPage() {
                             >
                               Edit Card
                             </button>
+
+                            {card.activation_status === "activated" && (
+                              <button
+                                type="button"
+                                disabled={resettingId === card.id}
+                                onClick={() => resetCardSetup(card)}
+                                style={{
+                                  ...buttonStyle,
+                                  background: "#fff7ed",
+                                  color: "#9a3412",
+                                  border: "1px solid #fed7aa",
+                                }}
+                              >
+                                {resettingId === card.id
+                                  ? "Mereset..."
+                                  : "Reset Setup"}
+                              </button>
+                            )}
                           </div>
                         </>
                       )}
