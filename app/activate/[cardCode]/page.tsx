@@ -63,7 +63,8 @@ export default function ActivateCardPage() {
     setStateLoading(false);
 
     if (!data?.success) {
-      setActivationError(data?.message ?? "Kartu tidak ditemukan.");
+      console.error("Card activation state unavailable", data);
+      setActivationError("Kartu tidak ditemukan atau belum tersedia.");
       return;
     }
 
@@ -98,8 +99,9 @@ export default function ActivateCardPage() {
       setAuthLoading(false);
 
       if (error) {
+        console.error("Activation login failed", error);
         setAuthMessage("");
-        setAuthError(error.message);
+        setAuthError("Email atau password tidak sesuai.");
       }
       return;
     }
@@ -119,8 +121,9 @@ export default function ActivateCardPage() {
     setAuthLoading(false);
 
     if (error) {
+      console.error("Activation signup failed", error);
       setAuthMessage("");
-      setAuthError(error.message);
+      setAuthError("Akun belum dapat dibuat. Periksa data lalu coba lagi.");
       return;
     }
 
@@ -159,7 +162,8 @@ export default function ActivateCardPage() {
     setResendLoading(false);
 
     if (error) {
-      setAuthError(error.message);
+      console.error("Activation confirmation resend failed", error);
+      setAuthError("Email konfirmasi belum dapat dikirim. Silakan coba lagi.");
       return;
     }
 
@@ -185,12 +189,14 @@ export default function ActivateCardPage() {
     setActivating(false);
 
     if (error) {
-      setActivationError(error.message);
+      console.error("Card activation failed", error);
+      setActivationError("Aktivasi belum berhasil. Periksa PIN dan coba lagi.");
       return;
     }
 
     if (!data?.success) {
-      setActivationError(data?.message ?? "Aktivasi gagal.");
+      console.error("Card activation returned unsuccessful result", data);
+      setActivationError("Aktivasi belum berhasil. Periksa PIN dan status kartu lalu coba lagi.");
       return;
     }
 
