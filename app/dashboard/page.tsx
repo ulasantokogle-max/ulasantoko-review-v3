@@ -220,7 +220,7 @@ export default function DashboardHomePage() {
         </div>
         <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Ringkasan Dashboard</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-          Ringkasan bisnis, status setup, feedback, dan kartu dalam satu halaman.
+          Ringkasan bisnis, status pengaturan, masukan, dan kartu dalam satu halaman.
         </p>
 
         {!userEmail ? (
