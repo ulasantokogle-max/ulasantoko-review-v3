@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 type ProviderCard = {
   id: string;
@@ -311,6 +312,7 @@ export default function ProviderCardsPage() {
           }}
         >
           <div>
+            <div style={{ marginBottom: 10 }}><LanguageSwitcher /></div>
             <div
               style={{
                 fontSize: 12,
@@ -607,7 +609,7 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari kode kartu, label, area, SKU, pemilik bisnis..."
+                  placeholder=tr("Cari kode kartu, label, area, SKU, pemilik bisnis...", "Search card code, label, area, SKU, owner...")
                 />
                 <select
                   style={inputStyle}
