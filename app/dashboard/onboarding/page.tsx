@@ -92,7 +92,7 @@ export default function CustomerOnboardingPage() {
         description: "Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review.",
         done: Boolean(setup.google_review_configured),
         href: "/dashboard/landing-page",
-        action: setup.google_review_configured ? "Sudah terhubung" : "Atur di Landing Page",
+        action: setup.google_review_configured ? "Sudah terhubung" : "Atur di Pengeditan Halaman",
       },
       {
         number: 2,
@@ -100,7 +100,7 @@ export default function CustomerOnboardingPage() {
         description: "Tambahkan nomor WhatsApp agar customer bisa menghubungi bisnis setelah memberi feedback privat.",
         done: Boolean(setup.whatsapp_number),
         href: "/dashboard/landing-page",
-        action: setup.whatsapp_number ? "Sudah tersimpan" : "Atur di Landing Page",
+        action: setup.whatsapp_number ? "Sudah tersimpan" : "Atur di Pengeditan Halaman",
       },
       {
         number: 3,
