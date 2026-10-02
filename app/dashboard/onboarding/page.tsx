@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type SetupStatus = {
   display_name?: string;
@@ -18,6 +19,7 @@ type AnalyticsData = {
 };
 
 export default function CustomerOnboardingPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [setup, setSetup] = useState<SetupStatus>({});
@@ -92,7 +94,7 @@ export default function CustomerOnboardingPage() {
         description: "Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review.",
         done: Boolean(setup.google_review_configured),
         href: "/dashboard/landing-page",
-        action: setup.google_review_configured ? "Sudah terhubung" : "Atur di Pengeditan Halaman",
+        action: setup.google_review_configured ? tr("Sudah terhubung", "Connected") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),
       },
       {
         number: 2,
@@ -100,7 +102,7 @@ export default function CustomerOnboardingPage() {
         description: "Tambahkan nomor WhatsApp agar customer bisa menghubungi bisnis setelah memberi feedback privat.",
         done: Boolean(setup.whatsapp_number),
         href: "/dashboard/landing-page",
-        action: setup.whatsapp_number ? "Sudah tersimpan" : "Atur di Pengeditan Halaman",
+        action: setup.whatsapp_number ? tr("Sudah tersimpan", "Saved") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),
       },
       {
         number: 3,
