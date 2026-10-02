@@ -6,13 +6,14 @@ import { useBusinessContext } from "../../../lib/useBusinessContext";
 
 const themes = {
   warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
+  soft_smoothie: { label: "Soft Smoothie", bg: "#FBF5EC", card: "#FFFDFC", primary: "#9B6A43", secondary: "#D7B08A", soft: "#F4E7D7", text: "#4A3023", muted: "#8A7567" },
   soft_tosca: { label: "Soft Tosca", bg: "#F0FBF9", card: "#FFFFFF", primary: "#2A9D8F", secondary: "#67C9BD", soft: "#DDF4F0", text: "#173E39", muted: "#5F7C78" },
   elegant_cream: { label: "Elegant Cream", bg: "#FBF7EF", card: "#FFFDF8", primary: "#9A7B4F", secondary: "#C9B184", soft: "#EFE5D2", text: "#4D4337", muted: "#7D7366" },
   minimal_dark: { label: "Minimal Dark", bg: "#161616", card: "#202020", primary: "#E6C59A", secondary: "#BFA17B", soft: "#2B2B2B", text: "#FAF7F2", muted: "#C9C1B8" }
 } as const;
 
 type ThemeKey = keyof typeof themes;
-type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo";
+type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_pdf";
 
 type Settings = {
   theme_key: ThemeKey;
@@ -23,10 +24,15 @@ type Settings = {
   logo_url: string;
   cover_url: string;
   cover_position: "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  instagram_url: string;
+  pdf_title: string;
+  pdf_url: string;
   show_google_review: boolean;
   show_whatsapp: boolean;
   show_about: boolean;
   show_promo: boolean;
+  show_instagram: boolean;
+  show_pdf: boolean;
 };
 
 export default function LandingPageBuilderPage() {
@@ -45,10 +51,15 @@ export default function LandingPageBuilderPage() {
     logo_url: "",
     cover_url: "",
     cover_position: "center",
+    instagram_url: "",
+    pdf_title: "Menu & Daftar Harga",
+    pdf_url: "",
     show_google_review: true,
     show_whatsapp: true,
     show_about: true,
-    show_promo: true
+    show_promo: true,
+    show_instagram: true,
+    show_pdf: true
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,6 +67,7 @@ export default function LandingPageBuilderPage() {
   const [message, setMessage] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail);
@@ -115,10 +127,15 @@ export default function LandingPageBuilderPage() {
       logo_url: data?.logo_url ?? "",
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
+      instagram_url: data?.instagram_url ?? "",
+      pdf_title: data?.pdf_title ?? "Menu & Daftar Harga",
+      pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
       show_about: data?.show_about ?? true,
-      show_promo: data?.show_promo ?? true
+      show_promo: data?.show_promo ?? true,
+      show_instagram: data?.show_instagram ?? true,
+      show_pdf: data?.show_pdf ?? true
     });
   }
 
@@ -182,6 +199,62 @@ export default function LandingPageBuilderPage() {
     setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
   }
 
+  async function uploadPdf(file: File) {
+    if (!userEmail) return;
+
+    if (file.type !== "application/pdf") {
+      setError("File harus berupa PDF.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Ukuran PDF maksimal 10 MB.");
+      return;
+    }
+
+    setUploadingPdf(true);
+    setError("");
+    setMessage("");
+
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+
+    if (!uid) {
+      setUploadingPdf(false);
+      setError("Sesi login tidak ditemukan.");
+      return;
+    }
+
+    const path = uid + "/pdf/menu-" + Date.now() + ".pdf";
+
+    const { error: uploadError } = await supabase.storage
+      .from("landing-media")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: "application/pdf"
+      });
+
+    if (uploadError) {
+      setUploadingPdf(false);
+      setError(uploadError.message);
+      return;
+    }
+
+    const { data: publicData } = supabase.storage
+      .from("landing-media")
+      .getPublicUrl(path);
+
+    setSettings((s) => ({
+      ...s,
+      pdf_url: publicData.publicUrl,
+      pdf_title: s.pdf_title || file.name.replace(/\.pdf$/i, "")
+    }));
+
+    setUploadingPdf(false);
+    setMessage("PDF berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+  }
+
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
@@ -198,10 +271,15 @@ export default function LandingPageBuilderPage() {
       p_logo_url: settings.logo_url,
       p_cover_url: settings.cover_url,
       p_cover_position: settings.cover_position,
+      p_instagram_url: settings.instagram_url,
+      p_pdf_title: settings.pdf_title,
+      p_pdf_url: settings.pdf_url,
       p_show_google_review: settings.show_google_review,
       p_show_whatsapp: settings.show_whatsapp,
       p_show_about: settings.show_about,
-      p_show_promo: settings.show_promo
+      p_show_promo: settings.show_promo,
+      p_show_instagram: settings.show_instagram,
+      p_show_pdf: settings.show_pdf
     });
 
     setSaving(false);
@@ -217,6 +295,7 @@ export default function LandingPageBuilderPage() {
   }
 
   const theme = themes[settings.theme_key] ?? themes.warm_brown;
+  const isSmoothie = settings.theme_key === "soft_smoothie";
   const selectedBusiness = businesses.find((b) => b.business_id === businessId);
   const businessName = selectedBusiness?.display_name || selectedBusiness?.business_name || "Nama Bisnis";
 
@@ -224,7 +303,9 @@ export default function LandingPageBuilderPage() {
     ["show_google_review", "Tampilkan Google Review"],
     ["show_whatsapp", "Tampilkan WhatsApp"],
     ["show_about", "Tampilkan Tentang Bisnis"],
-    ["show_promo", "Tampilkan Promo"]
+    ["show_promo", "Tampilkan Promo"],
+    ["show_instagram", "Tampilkan Instagram"],
+    ["show_pdf", "Tampilkan Menu PDF"]
   ];
 
   const inputStyle = {
@@ -325,8 +406,20 @@ export default function LandingPageBuilderPage() {
                   return (
                     <button key={key} type="button" onClick={() => setSettings((s) => ({ ...s, theme_key: key }))}
                       style={{ textAlign: "left", padding: 12, borderRadius: 12, border: active ? "2px solid " + item.primary : "1px solid #e5e7eb", background: item.bg, color: item.text, cursor: "pointer" }}>
-                      <div style={{ height: 34, borderRadius: 8, background: "linear-gradient(135deg, " + item.primary + ", " + item.secondary + ")", marginBottom: 9 }} />
+                      <div style={{
+                        height: 38,
+                        borderRadius: 10,
+                        background:
+                          key === "soft_smoothie"
+                            ? "radial-gradient(circle at 30% 20%, #fffaf4 0%, #f4e7d7 34%, #d7b08a 100%)"
+                            : "linear-gradient(135deg, " + item.primary + ", " + item.secondary + ")",
+                        marginBottom: 9,
+                        boxShadow: key === "soft_smoothie" ? "inset 0 1px 0 rgba(255,255,255,.8), 0 6px 14px rgba(155,106,67,.10)" : "none"
+                      }} />
                       <strong>{item.label}</strong>
+                      {key === "soft_smoothie" && (
+                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>Creamy · rounded · premium</div>
+                      )}
                     </button>
                   );
                 })}
@@ -440,6 +533,56 @@ export default function LandingPageBuilderPage() {
               </div>
             </section>
 
+            <section style={{ display: "grid", gap: 12 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
+                <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
+                  Tambahkan Instagram dan PDF menu/katalog langsung di landing page.
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Instagram</label>
+                <input
+                  style={inputStyle}
+                  placeholder="https://instagram.com/username"
+                  value={settings.instagram_url}
+                  onChange={(e) => setSettings((s) => ({ ...s, instagram_url: e.target.value }))}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Menu / Katalog PDF</label>
+                <input
+                  style={inputStyle}
+                  placeholder="Judul PDF, contoh: Menu & Daftar Harga"
+                  value={settings.pdf_title}
+                  onChange={(e) => setSettings((s) => ({ ...s, pdf_title: e.target.value }))}
+                  maxLength={80}
+                />
+                <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
+                  {uploadingPdf ? "Mengupload PDF..." : settings.pdf_url ? "Ganti PDF" : "Upload PDF"}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadPdf(file);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+                <input
+                  style={inputStyle}
+                  placeholder="Atau paste PDF URL (HTTPS)"
+                  value={settings.pdf_url}
+                  onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
+                />
+              </div>
+            </section>
+
             <section style={{ display: "grid", gap: 8 }}>
               <h2 style={{ margin: 0, fontSize: 18 }}>Tampilkan Section</h2>
               {toggles.map(([key, label]) => (
@@ -463,12 +606,12 @@ export default function LandingPageBuilderPage() {
             </button>
           </form>
 
-          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
+          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
             <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>LIVE PREVIEW</div>
-            <div style={{ borderRadius: 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: "0 20px 52px rgba(0,0,0,.09)" }}>
+            <div style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
               <div
                 style={{
-                  aspectRatio: "16 / 7",
+                  aspectRatio: isSmoothie ? "16 / 9" : "16 / 7",
                   minHeight: 120,
                   backgroundImage: settings.cover_url
                     ? "url(" + settings.cover_url + ")"
@@ -483,25 +626,37 @@ export default function LandingPageBuilderPage() {
                     settings.cover_position
                 }}
               />
-              <div style={{ padding: 20 }}>
+              <div style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
                 {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="" style={{ width: 76, height: 76, objectFit: "cover", borderRadius: 20, marginTop: -54, border: "4px solid " + theme.card, background: theme.card, boxShadow: "0 10px 26px rgba(0,0,0,.12)" }} />
+                  <img src={settings.logo_url} alt="" style={{ width: isSmoothie ? 98 : 76, height: isSmoothie ? 98 : 76, objectFit: "cover", borderRadius: isSmoothie ? 999 : 20, marginTop: isSmoothie ? -50 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
                 ) : (
-                  <div style={{ width: 76, height: 76, borderRadius: 20, marginTop: -54, border: "4px solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
+                  <div style={{ width: isSmoothie ? 98 : 76, height: isSmoothie ? 98 : 76, borderRadius: isSmoothie ? 999 : 20, margin: isSmoothie ? "-50px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
                     {businessName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
 
-                <h2 style={{ margin: "12px 0 6px", fontSize: 26 }}>{settings.hero_title || businessName}</h2>
+                <h2 style={{ margin: "14px 0 6px", fontSize: isSmoothie ? 29 : 26, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{settings.hero_title || businessName}</h2>
                 <p style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || "Bagikan pengalaman Anda dan bantu bisnis ini berkembang."}</p>
 
                 {settings.show_promo && settings.promo_text && (
                   <div style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 16 }}>
-                  {settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
-                  {settings.show_whatsapp && <div style={{ padding: "12px 10px", borderRadius: 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)" }}>◉ WhatsApp</div>}
+                {isSmoothie && settings.show_google_review && (
+                  <div style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
+                    <div style={{ fontWeight: 900, marginBottom: 4 }}>Beri kami ulasan Google</div>
+                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>Hanya 10 detik, sangat berarti bagi kami</div>
+                    <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
+                      {[1,2,3,4,5].map((n) => <span key={n} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,.78)", display: "grid", placeItems: "center", color: "#e5a323" }}>☆</span>)}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
+                  {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
+                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Menu PDF"} {isSmoothie ? "›" : ""}</div>}
+                  {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◉ WhatsApp</div>}
+                  {settings.show_instagram && settings.instagram_url && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
                 </div>
 
                 {settings.show_about && settings.about_text && (
