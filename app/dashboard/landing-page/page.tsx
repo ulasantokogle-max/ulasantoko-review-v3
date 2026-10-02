@@ -337,22 +337,29 @@ export default function LandingPageBuilderPage() {
               <input style={inputStyle} placeholder="Promo singkat" value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
             </section>
 
-            <section style={{ display: "grid", gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Logo & Cover</h2>
-              <div style={{ display: "grid", gap: 8 }}>
-                <label style={{ fontSize: 13, fontWeight: 800 }}>Logo Bisnis</label>
-                <input
+            <section style={{ display: "grid", gap: 12 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18 }}>Logo & Cover</h2>
+                <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12, lineHeight: 1.5 }}>
+                  Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.
+                </div>
+              </div>
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Logo Bisnis</label>
+                <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
+                  {uploadingLogo ? "Mengupload logo..." : settings.logo_url ? "Ganti Logo" : "Upload Logo"}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PNG / JPG / WebP · maks. 5 MB</span>
+                  <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
+                  style={{ display: "none" }}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) uploadMedia(file, "logo");
                     e.currentTarget.value = "";
                   }}
                 />
-                <div style={{ fontSize: 12, color: "#6b7280" }}>
-                  PNG/JPG/WebP · maksimal 5 MB {uploadingLogo ? "· Uploading..." : ""}
-                </div>
+                </label>
                 <input
                   style={inputStyle}
                   placeholder="Atau paste Logo URL (HTTPS)"
@@ -361,20 +368,22 @@ export default function LandingPageBuilderPage() {
                 />
               </div>
 
-              <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
-                <label style={{ fontSize: 13, fontWeight: 800 }}>Cover Landing Page</label>
-                <input
+              <div style={{ display: "grid", gap: 8, marginTop: 2, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Landing Page</label>
+                <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
+                  {uploadingCover ? "Mengupload cover..." : settings.cover_url ? "Ganti Cover" : "Upload Cover"}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>Rekomendasi rasio 16:7 · maks. 5 MB</span>
+                  <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
+                  style={{ display: "none" }}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (file) uploadMedia(file, "cover");
                     e.currentTarget.value = "";
                   }}
                 />
-                <div style={{ fontSize: 12, color: "#6b7280" }}>
-                  PNG/JPG/WebP · maksimal 5 MB {uploadingCover ? "· Uploading..." : ""}
-                </div>
+                </label>
                 <input
                   style={inputStyle}
                   placeholder="Atau paste Cover URL (HTTPS)"
@@ -407,15 +416,15 @@ export default function LandingPageBuilderPage() {
             </button>
           </form>
 
-          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: 24, padding: 16, border: "1px solid #e5e7eb" }}>
+          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
             <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>LIVE PREVIEW</div>
-            <div style={{ borderRadius: 22, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: "0 18px 50px rgba(0,0,0,.08)" }}>
-              <div style={{ height: 120, background: settings.cover_url ? "url(" + settings.cover_url + ") center/cover" : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")" }} />
+            <div style={{ borderRadius: 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: "0 20px 52px rgba(0,0,0,.09)" }}>
+              <div style={{ aspectRatio: "16 / 7", minHeight: 120, background: settings.cover_url ? "url(" + settings.cover_url + ") center/cover" : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")" }} />
               <div style={{ padding: 20 }}>
                 {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="" style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 18, marginTop: -52, border: "4px solid " + theme.card, background: theme.card }} />
+                  <img src={settings.logo_url} alt="" style={{ width: 76, height: 76, objectFit: "cover", borderRadius: 20, marginTop: -54, border: "4px solid " + theme.card, background: theme.card, boxShadow: "0 10px 26px rgba(0,0,0,.12)" }} />
                 ) : (
-                  <div style={{ width: 72, height: 72, borderRadius: 18, marginTop: -52, border: "4px solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary }}>
+                  <div style={{ width: 76, height: 76, borderRadius: 20, marginTop: -54, border: "4px solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
                     {businessName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
@@ -428,8 +437,8 @@ export default function LandingPageBuilderPage() {
                 )}
 
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 16 }}>
-                  {settings.show_google_review && <div style={{ padding: "11px 10px", borderRadius: 12, background: theme.primary, color: "#fff", textAlign: "center", fontWeight: 900 }}>Beri Ulasan</div>}
-                  {settings.show_whatsapp && <div style={{ padding: "11px 10px", borderRadius: 12, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900 }}>WhatsApp</div>}
+                  {settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
+                  {settings.show_whatsapp && <div style={{ padding: "12px 10px", borderRadius: 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)" }}>◉ WhatsApp</div>}
                 </div>
 
                 {settings.show_about && settings.about_text && (
