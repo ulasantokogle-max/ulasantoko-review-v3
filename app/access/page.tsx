@@ -160,7 +160,7 @@ export default function AccessHubPage() {
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 2</div>
             <h2 style={{ margin: "6px 0 8px" }}>Pemilik Bisnis</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Dashboard bisnis untuk kartu, landing page, Google Review, masukan, dan analitik.
+              Dashboard bisnis untuk kartu, halaman publik, Google Review, masukan, dan analitik.
             </p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Link href="/dashboard" style={buttonStyle}>Dashboard</Link>
@@ -199,7 +199,7 @@ export default function AccessHubPage() {
         </div>
 
         <section style={{ ...cardStyle, marginTop: 14 }}>
-          <h2 style={{ marginTop: 0 }}>Urutan Test End-to-End</h2>
+          <h2 style={{ marginTop: 0 }}>Urutan Uji End-to-End</h2>
           <div style={{ color: "#4b5563", lineHeight: 1.8, fontSize: 14 }}>
             <strong>1.</strong> Provider membuat kartu → <strong>2.</strong> pemilik bisnis membuka aktivasi dan memasukkan PIN → <strong>3.</strong> pemilik bisnis mengatur halaman → <strong>4.</strong> pengunjung scan QR/NFC → <strong>5.</strong> rating 4–5 ke Google Review, rating 1–3 masuk Masukan.
           </div>
