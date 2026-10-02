@@ -50,6 +50,9 @@ export default function ProviderCardsPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [created, setCreated] = useState<CreateResult | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [copied, setCopied] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -169,9 +172,11 @@ export default function ProviderCardsPage() {
     await loadCards();
   }
 
-  async function copyText(value?: string) {
+  async function copyText(value?: string, label?: string) {
     if (!value) return;
     await navigator.clipboard.writeText(value);
+    setCopied(label || "Tersalin");
+    window.setTimeout(() => setCopied(""), 1800);
   }
 
   const stats = useMemo(() => {
@@ -181,6 +186,31 @@ export default function ProviderCardsPage() {
       activated: cards.filter((card) => card.inventory_status === "activated").length,
     };
   }, [cards]);
+
+  const filteredCards = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return cards.filter((card) => {
+      const matchesStatus =
+        statusFilter === "all" || card.inventory_status === statusFilter;
+
+      const haystack = [
+        card.card_code,
+        card.label,
+        card.area,
+        card.internal_code,
+        card.business_name,
+        card.qr_url,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = !q || haystack.includes(q);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [cards, search, statusFilter]);
 
   const inputStyle = {
     width: "100%",
@@ -428,14 +458,14 @@ export default function ProviderCardsPage() {
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.card_code)}
+                      onClick={() => copyText(created.card_code, "Card Code")}
                     >
                       Copy Card Code
                     </button>
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.activation_pin)}
+                      onClick={() => copyText(created.activation_pin, "PIN")}
                     >
                       Copy PIN
                     </button>
@@ -447,7 +477,7 @@ export default function ProviderCardsPage() {
                         color: "#111827",
                         border: "1px solid #d1d5db",
                       }}
-                      onClick={() => copyText(created.qr_url)}
+                      onClick={() => copyText(created.qr_url, "URL")}
                     >
                       Copy URL
                     </button>
@@ -494,6 +524,47 @@ export default function ProviderCardsPage() {
                 </button>
               </div>
 
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) 180px",
+                  gap: 10,
+                  marginBottom: 14,
+                }}
+              >
+                <input
+                  style={inputStyle}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cari card code, label, area, SKU, owner..."
+                />
+                <select
+                  style={inputStyle}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">Semua status</option>
+                  <option value="ready_to_sell">Ready to Sell</option>
+                  <option value="activated">Activated</option>
+                </select>
+              </div>
+
+              {copied && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: "9px 11px",
+                    borderRadius: 10,
+                    background: "#f0fdf4",
+                    color: "#166534",
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  {copied} berhasil disalin.
+                </div>
+              )}
+
               {loadError && (
                 <div
                   style={{
@@ -512,15 +583,23 @@ export default function ProviderCardsPage() {
                 <p>Memuat inventory...</p>
               ) : cards.length === 0 ? (
                 <div style={{ color: "#6b7280" }}>Belum ada inventory.</div>
+              ) : filteredCards.length === 0 ? (
+                <div style={{ color: "#6b7280" }}>
+                  Tidak ada kartu yang cocok dengan filter.
+                </div>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {cards.map((card) => (
+                  {filteredCards.map((card) => (
                     <article
                       key={card.id}
                       style={{
                         border: "1px solid #e5e7eb",
                         borderRadius: 14,
                         padding: 15,
+                        background:
+                          card.inventory_status === "ready_to_sell"
+                            ? "#fffdf5"
+                            : "#ffffff",
                       }}
                     >
                       <div
@@ -596,22 +675,56 @@ export default function ProviderCardsPage() {
                         </div>
                       </div>
 
-                      {card.qr_url && (
-                        <div style={{ marginTop: 12 }}>
-                          <a
-                            href={card.qr_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            style={{
-                              ...buttonStyle,
-                              display: "inline-block",
-                              textDecoration: "none",
-                            }}
-                          >
-                            Test Card
-                          </a>
-                        </div>
-                      )}
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          marginTop: 12,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          style={{
+                            ...buttonStyle,
+                            background: "#ffffff",
+                            color: "#111827",
+                            border: "1px solid #d1d5db",
+                          }}
+                          onClick={() => copyText(card.card_code, "Card Code")}
+                        >
+                          Copy Card Code
+                        </button>
+
+                        {card.qr_url && (
+                          <>
+                            <button
+                              type="button"
+                              style={{
+                                ...buttonStyle,
+                                background: "#ffffff",
+                                color: "#111827",
+                                border: "1px solid #d1d5db",
+                              }}
+                              onClick={() => copyText(card.qr_url, "QR/NFC URL")}
+                            >
+                              Copy URL
+                            </button>
+                            <a
+                              href={card.qr_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                ...buttonStyle,
+                                display: "inline-block",
+                                textDecoration: "none",
+                              }}
+                            >
+                              Test Card
+                            </a>
+                          </>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>
