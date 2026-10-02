@@ -243,7 +243,7 @@ export default function FeedbackInboxPage() {
                   style={buttonStyle}
                   disabled={loadingLogin}
                 >
-                  {loadingLogin ? "Login..." : "Login"}
+                  {loadingLogin ? "Masuk..." : "Masuk"}
                 </button>
               </div>
 
