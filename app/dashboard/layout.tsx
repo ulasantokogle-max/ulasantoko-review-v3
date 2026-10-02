@@ -1,3 +1,11 @@
+export const metadata = {
+  title: "Dashboard | UlasanToko Review",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 import DashboardNav from "./DashboardNav";
 import "./dashboard.css";
 
