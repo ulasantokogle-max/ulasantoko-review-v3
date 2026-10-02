@@ -257,7 +257,7 @@ export default async function PublicCardPage({
       business.name,
       business.business_name,
       payload.business_name
-    ) ?? "UlasanToko";
+    ) ?? "ReputasiPro";
 
   const category = firstString(
     business.category,
@@ -484,7 +484,7 @@ export default async function PublicCardPage({
             textAlign: isSmoothie ? "center" : "left",
           }}
         >
-          UlasanToko Review
+          ReputasiPro
         </div>
 
         <div className={isSmoothie ? "smoothie-content" : undefined} style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
@@ -862,7 +862,7 @@ export default async function PublicCardPage({
           }}
         >
           <span>Card: {card.card_code ?? cardCode}</span>
-          <span>Powered by UlasanToko</span>
+          <span>Powered by ReputasiPro</span>
         </div>
       </section>
     </main>
