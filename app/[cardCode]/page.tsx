@@ -245,7 +245,7 @@ export default async function PublicCardPage({
         minHeight: "100vh",
         background:
           "radial-gradient(circle at top, " + theme.soft + " 0%, " + theme.bg + " 42%, " + theme.bg + " 100%)",
-        padding: "28px 16px 48px",
+        padding: "18px 14px 40px",
         fontFamily:
           "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
         color: theme.text,
@@ -256,44 +256,47 @@ export default async function PublicCardPage({
           maxWidth: 560,
           margin: "0 auto",
           background: theme.card,
-          border: "1px solid rgba(0,0,0,.06)",
-          borderRadius: 24,
-          padding: 24,
-          boxShadow: "0 24px 70px rgba(75,52,40,.12)",
+          border: "1px solid rgba(0,0,0,.055)",
+          borderRadius: 28,
+          padding: 14,
+          boxShadow: "0 28px 80px rgba(75,52,40,.13)",
         }}
       >
         <div
           style={{
-            height: 150,
-            borderRadius: 18,
+            aspectRatio: "16 / 7",
+            minHeight: 150,
+            maxHeight: 230,
+            borderRadius: 24,
             marginBottom: 0,
+            overflow: "hidden",
             background: coverUrl
               ? "url(" + coverUrl + ") center/cover"
               : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
           }}
         />
 
-        <div style={{ marginTop: -42, position: "relative" }}>
+        <div style={{ marginTop: -48, position: "relative", paddingLeft: 14 }}>
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={businessName}
               style={{
-                width: 84,
-                height: 84,
+                width: 88,
+                height: 88,
                 objectFit: "cover",
-                borderRadius: 22,
+                borderRadius: 24,
                 border: "5px solid " + theme.card,
                 background: theme.card,
-                boxShadow: "0 12px 30px rgba(0,0,0,.12)",
+                boxShadow: "0 14px 34px rgba(0,0,0,.14)",
               }}
             />
           ) : (
             <div
               style={{
-                width: 84,
-                height: 84,
-                borderRadius: 22,
+                width: 88,
+                height: 88,
+                borderRadius: 24,
                 border: "5px solid " + theme.card,
                 background: theme.soft,
                 display: "grid",
@@ -323,10 +326,12 @@ export default async function PublicCardPage({
           UlasanToko Review
         </div>
 
+        <div style={{ padding: "0 10px 10px" }}>
         <h1
           style={{
-            fontSize: 30,
-            lineHeight: 1.15,
+            fontSize: 31,
+            lineHeight: 1.12,
+            letterSpacing: "-0.4px",
             margin: "0 0 8px",
           }}
         >
@@ -343,7 +348,7 @@ export default async function PublicCardPage({
               color: theme.text,
               fontSize: 12,
               fontWeight: 700,
-              marginBottom: 16,
+              marginBottom: 14,
             }}
           >
             {category}
@@ -354,7 +359,7 @@ export default async function PublicCardPage({
           style={{
             color: theme.muted,
             lineHeight: 1.65,
-            margin: "6px 0 22px",
+            margin: "4px 0 20px",
           }}
         >
           {pageDescription}
@@ -364,14 +369,15 @@ export default async function PublicCardPage({
           <div
             style={{
               margin: "4px 0 18px",
-              padding: "12px 14px",
-              borderRadius: 14,
+              padding: "14px 15px",
+              borderRadius: 16,
               background: theme.soft,
               color: theme.text,
               fontWeight: 800,
+              border: "1px solid rgba(0,0,0,.05)",
             }}
           >
-            ✦ {promoText}
+            <span style={{ opacity: .8 }}>✦</span> {promoText}
           </div>
         )}
 
@@ -392,14 +398,15 @@ export default async function PublicCardPage({
               style={{
                 textDecoration: "none",
                 textAlign: "center",
-                padding: "12px 14px",
-                borderRadius: 12,
-                background: theme.primary,
+                padding: "13px 14px",
+                borderRadius: 14,
+                background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
                 color: "#fff",
                 fontWeight: 900,
+                boxShadow: "0 8px 20px rgba(0,0,0,.09)",
               }}
             >
-              Beri Ulasan
+              ★&nbsp; Beri Ulasan
             </a>
           )}
 
@@ -411,14 +418,15 @@ export default async function PublicCardPage({
               style={{
                 textDecoration: "none",
                 textAlign: "center",
-                padding: "12px 14px",
-                borderRadius: 12,
+                padding: "13px 14px",
+                borderRadius: 14,
                 background: theme.soft,
                 color: theme.text,
                 fontWeight: 900,
+                border: "1px solid rgba(0,0,0,.06)",
               }}
             >
-              WhatsApp
+              ◉&nbsp; WhatsApp
             </a>
           )}
         </div>
@@ -426,10 +434,11 @@ export default async function PublicCardPage({
         {showAbout && aboutText && (
           <div
             style={{
-              marginTop: 18,
-              padding: 16,
-              borderRadius: 16,
+              marginTop: 20,
+              padding: 18,
+              borderRadius: 18,
               background: theme.soft,
+              border: "1px solid rgba(0,0,0,.05)",
             }}
           >
             <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
@@ -439,6 +448,9 @@ export default async function PublicCardPage({
           </div>
         )}
 
+        </div>
+
+        <div style={{ padding: "0 10px 10px" }}>
         <RatingFlow
           cardCode={cardCode}
           businessName={businessName}
@@ -541,9 +553,11 @@ export default async function PublicCardPage({
           </div>
         )}
 
+        </div>
+
         <div
           style={{
-            marginTop: 26,
+            marginTop: 18,
             paddingTop: 18,
             borderTop: "1px solid rgba(0,0,0,.08)",
             display: "flex",
