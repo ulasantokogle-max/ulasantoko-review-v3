@@ -475,9 +475,10 @@ export default async function PublicCardPage({
               style={{
                 textDecoration: "none",
                 textAlign: "center",
-                padding: "13px 14px",
-                borderRadius: 14,
-                background: theme.soft,
+                borderRadius: isSmoothie ? 24 : 14,
+                background: isSmoothie
+                  ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
+                  : theme.soft,
                 color: theme.text,
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
