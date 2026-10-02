@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 import RatingFlow from "./RatingFlow";
 
 type AnyObject = Record<string, any>;
@@ -181,13 +183,16 @@ export async function generateMetadata({
   params: Promise<{ cardCode: string }>;
 }) {
   const { cardCode } = await params;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return {
       title: "ReputasiPro",
-      description: "Bagikan pengalaman dan masukan Anda.",
+      description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
     };
   }
 
@@ -202,12 +207,12 @@ export async function generateMetadata({
 
     return {
       title: name + " | ReputasiPro",
-      description: "Bagikan pengalaman dan masukan Anda untuk " + name + ".",
+      description: tr("Bagikan pengalaman dan masukan Anda untuk ", "Share your experience and feedback for ") + name + ".",
     };
   } catch {
     return {
       title: "ReputasiPro",
-      description: "Bagikan pengalaman dan masukan Anda.",
+      description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
     };
   }
 }
@@ -218,6 +223,9 @@ export default async function PublicCardPage({
   params: Promise<{ cardCode: string }>;
 }) {
   const { cardCode } = await params;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -333,7 +341,7 @@ export default async function PublicCardPage({
       landingPage.subtitle,
       payload.landing_description
     ) ??
-    "Bagikan pengalaman Anda dan bantu bisnis ini berkembang.";
+    tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.", "Share your experience and help this business grow.");
 
   const themeKey = firstString(landingSettingsData?.theme_key) ?? "warm_brown";
   const theme = themeMap[themeKey] ?? themeMap.warm_brown;
@@ -350,7 +358,7 @@ export default async function PublicCardPage({
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
   const instagramUrl = firstString(landingSettingsData?.instagram_url);
-  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? "Informasi";
+  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? tr("Informasi", "Information");
   const pdfUrl = firstString(landingSettingsData?.pdf_url);
   const showGoogleReview = landingSettingsData?.show_google_review !== false;
   const showWhatsapp = landingSettingsData?.show_whatsapp !== false;
@@ -433,6 +441,10 @@ export default async function PublicCardPage({
           }
         }
       `}</style>
+
+      <div style={{ maxWidth: 760, margin: "0 auto 10px", display: "flex", justifyContent: "flex-end" }}>
+        <LanguageSwitcher />
+      </div>
 
       <section
         className={isSmoothie ? "smoothie-shell" : undefined}
@@ -628,7 +640,7 @@ export default async function PublicCardPage({
                 boxShadow: "0 8px 20px rgba(0,0,0,.09)",
               }}
             >
-              ★&nbsp; Beri Ulasan
+              ★&nbsp; {tr("Beri Ulasan", "Leave a Review")}
             </a>
           )}
 
@@ -757,7 +769,7 @@ export default async function PublicCardPage({
               boxShadow: isSmoothie ? "0 12px 30px rgba(103,73,48,.07), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
             }}
           >
-            <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
+            <div style={{ fontWeight: 900, marginBottom: 6 }}>{tr("Tentang Kami", "About Us")}</div>
             <div style={{ color: theme.muted, lineHeight: 1.6, fontSize: 14 }}>
               {aboutText}
             </div>
@@ -796,7 +808,7 @@ export default async function PublicCardPage({
               border: "1px solid rgba(0,0,0,.12)",
             }}
           >
-            Lihat di Google Maps
+            {tr("Lihat di Google Maps", "View on Google Maps")}
           </a>
         )}
 
@@ -898,7 +910,7 @@ export default async function PublicCardPage({
             fontSize: 12,
           }}
         >
-          <span>Kartu: {card.card_code ?? cardCode}</span>
+          <span>{tr("Kartu", "Card")}: {card.card_code ?? cardCode}</span>
           <span>Powered by ReputasiPro</span>
         </div>
       </section>
