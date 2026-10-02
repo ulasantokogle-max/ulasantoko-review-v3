@@ -27,7 +27,7 @@ export default function NotFound() {
         }}
       >
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          ULASANTOKO REVIEW
+          REPUTASIPRO
         </div>
         <h1 style={{ margin: "8px 0 10px", fontSize: 26 }}>
           Halaman tidak ditemukan
