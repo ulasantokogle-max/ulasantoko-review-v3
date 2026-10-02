@@ -18,6 +18,7 @@ type FeedbackRow = {
 };
 
 export default function FeedbackInboxPage() {
+  const { tr } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
