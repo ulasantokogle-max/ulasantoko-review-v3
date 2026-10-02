@@ -98,6 +98,67 @@ function getBlockUrl(block: AnyObject) {
   );
 }
 
+function IconBubble({ children, bg = "#F6E9D8" }: { children: React.ReactNode; bg?: string }) {
+  return (
+    <span
+      aria-hidden="true"
+      style={{
+        width: 42,
+        height: 42,
+        borderRadius: 999,
+        display: "inline-grid",
+        placeItems: "center",
+        background: bg,
+        flex: "0 0 auto",
+      }}
+    >
+      {children}
+    </span>
+  );
+}
+
+function InstagramIcon() {
+  return (
+    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="5" />
+      <circle cx="12" cy="12" r="4" />
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+function WhatsAppIcon() {
+  return (
+    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M20.5 11.6a8.5 8.5 0 0 1-12.6 7.5L3.5 20.5l1.4-4.2A8.5 8.5 0 1 1 20.5 11.6Z" />
+      <path d="M8.5 8.2c.3 2.9 2.4 5.1 5.3 5.6" />
+      <path d="M8.4 8.1 10 7.4l1 2-1.1.8" />
+      <path d="m13.8 13.8.8-1.1 2 1-.7 1.6" />
+    </svg>
+  );
+}
+
+function PdfIcon() {
+  return (
+    <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M6 2.8h8l4 4V21H6z" />
+      <path d="M14 2.8V7h4" />
+      <path d="M8.7 15.8c2.3-4.5 3.3-5.8 4.1-4.8.6.7-.5 2.7-1.6 3.8 1.5-.3 3.1-.4 4.2.2" />
+    </svg>
+  );
+}
+
+function GoogleIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">
+      <path fill="#4285F4" d="M21.6 12.2c0-.7-.1-1.2-.2-1.8H12v3.4h5.4a4.6 4.6 0 0 1-2 3v2.5h3.2c1.9-1.8 3-4.3 3-7.1Z"/>
+      <path fill="#34A853" d="M12 22c2.7 0 5-.9 6.6-2.4l-3.2-2.5c-.9.6-2 1-3.4 1a5.8 5.8 0 0 1-5.4-4H3.3v2.6A10 10 0 0 0 12 22Z"/>
+      <path fill="#FBBC05" d="M6.6 14.1A6 6 0 0 1 6.3 12c0-.7.1-1.4.3-2.1V7.3H3.3A10 10 0 0 0 2 12c0 1.7.4 3.3 1.3 4.7l3.3-2.6Z"/>
+      <path fill="#EA4335" d="M12 5.9c1.5 0 2.8.5 3.9 1.5l2.9-2.9A9.8 9.8 0 0 0 12 2 10 10 0 0 0 3.3 7.3l3.3 2.6a5.8 5.8 0 0 1 5.4-4Z"/>
+    </svg>
+  );
+}
+
 function getWhatsAppUrl(blocks: AnyObject[]) {
   for (const block of blocks) {
     const url = getBlockUrl(block);
@@ -490,7 +551,14 @@ export default async function PublicCardPage({
                 order: isSmoothie ? 2 : "initial",
               }}
             >
-              ◉&nbsp; WhatsApp
+              {isSmoothie ? (
+                <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
+                  <IconBubble bg="#E6F4E8"><WhatsAppIcon /></IconBubble>
+                  <span>WhatsApp</span>
+                </span>
+              ) : (
+                <>◉&nbsp; WhatsApp</>
+              )}
             </a>
           )}
 
@@ -516,7 +584,14 @@ export default async function PublicCardPage({
                 order: isSmoothie ? 3 : "initial",
               }}
             >
-              ◎&nbsp; Instagram
+              {isSmoothie ? (
+                <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
+                  <IconBubble bg="#F7E7E4"><InstagramIcon /></IconBubble>
+                  <span>Instagram</span>
+                </span>
+              ) : (
+                <>◎&nbsp; Instagram</>
+              )}
             </a>
           )}
 
@@ -544,7 +619,15 @@ export default async function PublicCardPage({
                 order: isSmoothie ? 1 : "initial",
               }}
             >
-              <span>▤&nbsp; {pdfTitle}</span>{isSmoothie && <span>›</span>}
+              {isSmoothie ? (
+                <span style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <IconBubble><PdfIcon /></IconBubble>
+                  <span>{pdfTitle}</span>
+                </span>
+              ) : (
+                <span>▤&nbsp; {pdfTitle}</span>
+              )}
+              {isSmoothie && <span style={{ fontSize: 28, lineHeight: 1 }}>›</span>}
             </a>
           )}
         </div>
