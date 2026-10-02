@@ -38,13 +38,17 @@ export default async function PublicPdfMenuPage({
 
   const title = firstString(data?.pdf_title) ?? "Menu & Daftar Harga";
   const businessName = firstString(data?.business_name) ?? "UlasanToko";
+  const themeKey = firstString(data?.theme_key) ?? "warm_brown";
+  const isSmoothie = themeKey === "soft_smoothie";
 
   return (
     <main
       style={{
         minHeight: "100vh",
-        background: "#FFF8F1",
-        padding: "18px 14px 28px",
+        background: isSmoothie
+          ? "radial-gradient(circle at 50% 0%, #fffaf4 0%, #fbf5ec 42%, #f5eadc 100%)"
+          : "#FFF8F1",
+        padding: isSmoothie ? "14px 12px 24px" : "18px 14px 28px",
         fontFamily:
           "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
         color: "#4B3428",
@@ -54,10 +58,12 @@ export default async function PublicPdfMenuPage({
         style={{
           maxWidth: 980,
           margin: "0 auto",
-          background: "#fff",
-          border: "1px solid rgba(0,0,0,.06)",
-          borderRadius: 24,
-          boxShadow: "0 24px 70px rgba(75,52,40,.12)",
+          background: isSmoothie ? "rgba(255,253,250,.94)" : "#fff",
+          border: isSmoothie ? "1px solid rgba(255,255,255,.78)" : "1px solid rgba(0,0,0,.06)",
+          borderRadius: isSmoothie ? 30 : 24,
+          boxShadow: isSmoothie
+            ? "0 28px 80px rgba(103,73,48,.14), inset 0 1px 0 rgba(255,255,255,.9)"
+            : "0 24px 70px rgba(75,52,40,.12)",
           overflow: "hidden",
         }}
       >
@@ -76,7 +82,7 @@ export default async function PublicPdfMenuPage({
             <div style={{ fontSize: 12, fontWeight: 900, color: "#8B5E3C" }}>
               {businessName}
             </div>
-            <h1 style={{ margin: "4px 0 0", fontSize: 22 }}>{title}</h1>
+            <h1 style={{ margin: "4px 0 0", fontSize: isSmoothie ? 24 : 22, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{title}</h1>
           </div>
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
@@ -85,8 +91,8 @@ export default async function PublicPdfMenuPage({
               style={{
                 textDecoration: "none",
                 padding: "10px 12px",
-                borderRadius: 10,
-                background: "#F2E5D8",
+                borderRadius: isSmoothie ? 14 : 10,
+                background: isSmoothie ? "#F4E7D7" : "#F2E5D8",
                 color: "#4B3428",
                 fontWeight: 800,
               }}
@@ -100,8 +106,8 @@ export default async function PublicPdfMenuPage({
               style={{
                 textDecoration: "none",
                 padding: "10px 12px",
-                borderRadius: 10,
-                background: "#8B5E3C",
+                borderRadius: isSmoothie ? 14 : 10,
+                background: isSmoothie ? "#9B6A43" : "#8B5E3C",
                 color: "#fff",
                 fontWeight: 800,
               }}
@@ -124,6 +130,24 @@ export default async function PublicPdfMenuPage({
           }}
         />
       </section>
+
+      <style>{`
+        @media (max-width: 640px) {
+          main {
+            padding: 0 !important;
+          }
+          section {
+            max-width: none !important;
+            min-height: 100vh !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+          }
+          iframe {
+            min-height: calc(100vh - 112px) !important;
+            height: calc(100vh - 112px) !important;
+          }
+        }
+      `}</style>
     </main>
   );
 }
