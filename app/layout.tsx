@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "UlasanToko Review",
+  title: "ReputasiPro",
   description: "Platform kartu QR & NFC untuk ulasan dan feedback pelanggan.",
 };
 
