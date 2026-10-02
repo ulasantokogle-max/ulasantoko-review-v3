@@ -232,6 +232,13 @@ export default async function PublicCardPage({
   const theme = themeMap[themeKey] ?? themeMap.warm_brown;
   const logoUrl = firstString(landingSettingsData?.logo_url);
   const coverUrl = firstString(landingSettingsData?.cover_url);
+  const coverPosition = firstString(landingSettingsData?.cover_position) ?? "center";
+  const coverBackgroundPosition =
+    coverPosition === "top-left" ? "left top" :
+    coverPosition === "top-right" ? "right top" :
+    coverPosition === "bottom-left" ? "left bottom" :
+    coverPosition === "bottom-right" ? "right bottom" :
+    coverPosition;
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
   const showGoogleReview = landingSettingsData?.show_google_review !== false;
@@ -270,9 +277,12 @@ export default async function PublicCardPage({
             borderRadius: 24,
             marginBottom: 0,
             overflow: "hidden",
-            background: coverUrl
-              ? "url(" + coverUrl + ") center/cover"
+            backgroundImage: coverUrl
+              ? "url(" + coverUrl + ")"
               : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
+            backgroundSize: "cover",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: coverBackgroundPosition,
           }}
         />
 
