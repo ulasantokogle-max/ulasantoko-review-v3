@@ -279,7 +279,7 @@ export default function LandingPageBuilderPage() {
     if (uploadError) {
       console.error("Landing PDF upload failed", uploadError);
       setUploadingPdf(false);
-      setError("Upload PDF belum berhasil. Silakan coba lagi.");
+      setError("Unggah PDF belum berhasil. Silakan coba lagi.");
       return;
     }
 
@@ -501,7 +501,7 @@ export default function LandingPageBuilderPage() {
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
           <h1 style={{ margin: "6px 0 8px" }}>Pengeditan Halaman</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Login customer untuk mengatur halaman publik bisnis.
+            Masuk untuk mengatur halaman bisnis Anda.
           </p>
           <form onSubmit={handleLogin} style={{ display: "grid", gap: 10, marginTop: 16 }}>
             <input
@@ -525,7 +525,7 @@ export default function LandingPageBuilderPage() {
               disabled={loadingLogin}
               style={{ border: 0, borderRadius: 10, padding: "11px 12px", background: "#8B5E3C", color: "#fff", fontWeight: 900, cursor: "pointer" }}
             >
-              {loadingLogin ? "Login..." : "Login"}
+              {loadingLogin ? "Masuk..." : "Masuk"}
             </button>
           </form>
           {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{loginError}</div>}
@@ -637,7 +637,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste Logo URL (HTTPS)"
+                  placeholder="Atau tempel URL logo (HTTPS)"
                   value={settings.logo_url}
                   onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))}
                 />
@@ -661,7 +661,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste Cover URL (HTTPS)"
+                  placeholder="Atau tempel URL cover (HTTPS)"
                   value={settings.cover_url}
                   onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
                 />
@@ -715,7 +715,7 @@ export default function LandingPageBuilderPage() {
               <div>
                 <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
-                  Atur Google Review, WhatsApp, Instagram, dan PDF menu/katalog langsung dari satu halaman.
+                  Atur Google Review, WhatsApp, Instagram, serta file PDF dari satu halaman.
                 </div>
               </div>
 
@@ -760,7 +760,7 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Menu / Katalog PDF</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>File PDF</label>
                 <input
                   style={inputStyle}
                   placeholder="Judul PDF, contoh: Menu, Daftar Layanan, Paket Travel, Brosur"
@@ -769,7 +769,7 @@ export default function LandingPageBuilderPage() {
                   maxLength={80}
                 />
                 <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingPdf ? "Mengupload PDF..." : settings.pdf_url ? "Ganti PDF" : "Upload PDF"}
+                  {uploadingPdf ? "Mengunggah PDF..." : settings.pdf_url ? "Ganti PDF" : "Unggah PDF"}
                   <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
                   <input
                     type="file"
@@ -784,7 +784,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste PDF URL (HTTPS)"
+                  placeholder="Atau tempel URL PDF (HTTPS)"
                   value={settings.pdf_url}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
                 />
