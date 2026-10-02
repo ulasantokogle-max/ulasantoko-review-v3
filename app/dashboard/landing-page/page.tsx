@@ -106,7 +106,8 @@ export default function LandingPageBuilderPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Page editor login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -237,7 +238,7 @@ export default function LandingPageBuilderPage() {
     }
 
     setUploading(false);
-    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Halaman Publik untuk menyimpan perubahan.");
+    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan.");
   }
 
   async function uploadPdf(file: File) {
@@ -294,7 +295,7 @@ export default function LandingPageBuilderPage() {
     }));
 
     setUploadingPdf(false);
-    setMessage("PDF berhasil diupload. Klik Simpan Halaman Publik untuk menyimpan perubahan.");
+    setMessage("PDF berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {
@@ -469,7 +470,7 @@ export default function LandingPageBuilderPage() {
     ["show_about", "Tampilkan Tentang Bisnis"],
     ["show_promo", "Tampilkan Promo"],
     ["show_instagram", "Tampilkan Instagram"],
-    ["show_pdf", "Tampilkan Menu PDF"]
+    ["show_pdf", "Tampilkan File PDF"]
   ];
 
   const inputStyle = {
@@ -644,7 +645,7 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, marginTop: 2, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Halaman Publik</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Halaman</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
                   {uploadingCover ? "Mengupload cover..." : settings.cover_url ? "Ganti Cover" : "Upload Cover"}
                   <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>Rekomendasi rasio 16:7 · maks. 5 MB</span>
@@ -814,7 +815,7 @@ export default function LandingPageBuilderPage() {
                 ? loadingGoogleReview
                   ? "Memproses Google Review..."
                   : "Menyimpan..."
-                : "Simpan Halaman Publik"}
+                : "Simpan Perubahan"}
             </button>
           </form>
 
