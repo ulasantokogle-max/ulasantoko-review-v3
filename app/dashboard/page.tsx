@@ -85,7 +85,8 @@ export default function DashboardHomePage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -114,7 +115,8 @@ export default function DashboardHomePage() {
     const firstError = analyticsResult.error || setupResult.error;
 
     if (firstError) {
-      setLoadError(firstError.message);
+      console.error("Dashboard summary load failed", firstError);
+      setLoadError("Ringkasan dashboard belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
