@@ -11,6 +11,7 @@ type Props = {
   softColor?: string;
   textColor?: string;
   mutedColor?: string;
+  smoothMode?: boolean;
 };
 
 export default function RatingFlow({
@@ -22,6 +23,7 @@ export default function RatingFlow({
   softColor = "#F2E5D8",
   textColor = "#4B3428",
   mutedColor = "#7A6659",
+  smoothMode = false,
 }: Props) {
   const [rating, setRating] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -142,9 +144,23 @@ export default function RatingFlow({
   }
 
   return (
-    <section style={{ marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(0,0,0,.07)" }}>
-      <div style={{ fontWeight: 900, fontSize: 19, textAlign: "center", color: textColor }}>
-        Bagaimana pengalaman Anda?
+    <section
+      style={{
+        marginTop: smoothMode ? 18 : 24,
+        padding: smoothMode ? "22px 18px 20px" : 0,
+        paddingTop: smoothMode ? 22 : 22,
+        borderTop: smoothMode ? "1px solid rgba(255,255,255,.72)" : "1px solid rgba(0,0,0,.07)",
+        borderRadius: smoothMode ? 28 : 0,
+        background: smoothMode
+          ? "linear-gradient(145deg, rgba(255,255,255,.86), rgba(244,231,215,.86))"
+          : "transparent",
+        boxShadow: smoothMode
+          ? "0 18px 46px rgba(103,73,48,.11), inset 0 1px 0 rgba(255,255,255,.9)"
+          : "none",
+      }}
+    >
+      <div style={{ fontWeight: 900, fontSize: smoothMode ? 21 : 19, textAlign: "center", color: textColor }}>
+        {smoothMode ? "Beri kami ulasan Google" : "Bagaimana pengalaman Anda?"}
       </div>
       <div
         style={{
@@ -154,15 +170,15 @@ export default function RatingFlow({
           marginTop: 6,
         }}
       >
-        Pilih rating 1 sampai 5 bintang
+        {smoothMode ? "Hanya 10 detik, sangat berarti bagi kami" : "Pilih rating 1 sampai 5 bintang"}
       </div>
 
       <div
         style={{
           display: "flex",
           justifyContent: "center",
-          gap: 6,
-          marginTop: 16,
+          gap: smoothMode ? 10 : 6,
+          marginTop: smoothMode ? 18 : 16,
           flexWrap: "wrap",
         }}
       >
@@ -173,14 +189,16 @@ export default function RatingFlow({
             aria-label={`${value} bintang`}
             onClick={() => chooseRating(value)}
             style={{
-              border: 0,
-              background: "transparent",
-              fontSize: 40,
+              border: smoothMode ? "1px solid rgba(255,255,255,.8)" : 0,
+              background: smoothMode ? "rgba(255,255,255,.72)" : "transparent",
+              fontSize: smoothMode ? 34 : 40,
               lineHeight: 1,
               cursor: "pointer",
-              padding: 5,
+              padding: smoothMode ? 10 : 5,
+              borderRadius: smoothMode ? 16 : 0,
+              boxShadow: smoothMode ? "0 8px 18px rgba(103,73,48,.08)" : "none",
               color:
-                rating !== null && value <= rating ? "#f59e0b" : "#d1d5db",
+                rating !== null && value <= rating ? "#e5a323" : smoothMode ? "#cfc5bb" : "#d1d5db",
             }}
           >
             ★
