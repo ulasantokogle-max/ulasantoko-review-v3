@@ -22,6 +22,7 @@ type Settings = {
   promo_text: string;
   logo_url: string;
   cover_url: string;
+  cover_position: "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
   show_google_review: boolean;
   show_whatsapp: boolean;
   show_about: boolean;
@@ -43,6 +44,7 @@ export default function LandingPageBuilderPage() {
     promo_text: "",
     logo_url: "",
     cover_url: "",
+    cover_position: "center",
     show_google_review: true,
     show_whatsapp: true,
     show_about: true,
@@ -112,6 +114,7 @@ export default function LandingPageBuilderPage() {
       promo_text: data?.promo_text ?? "",
       logo_url: data?.logo_url ?? "",
       cover_url: data?.cover_url ?? "",
+      cover_position: data?.cover_position ?? "center",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
       show_about: data?.show_about ?? true,
@@ -194,6 +197,7 @@ export default function LandingPageBuilderPage() {
       p_promo_text: settings.promo_text,
       p_logo_url: settings.logo_url,
       p_cover_url: settings.cover_url,
+      p_cover_position: settings.cover_position,
       p_show_google_review: settings.show_google_review,
       p_show_whatsapp: settings.show_whatsapp,
       p_show_about: settings.show_about,
@@ -390,6 +394,49 @@ export default function LandingPageBuilderPage() {
                   value={settings.cover_url}
                   onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
                 />
+
+                <div style={{ marginTop: 4 }}>
+                  <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 8, color: "#6b5849" }}>
+                    Posisi Cover
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
+                    {[
+                      ["top-left", "↖"], ["top", "↑"], ["top-right", "↗"],
+                      ["left", "←"], ["center", "●"], ["right", "→"],
+                      ["bottom-left", "↙"], ["bottom", "↓"], ["bottom-right", "↘"]
+                    ].map(([value, icon]) => {
+                      const active = settings.cover_position === value;
+                      return (
+                        <button
+                          key={value}
+                          type="button"
+                          aria-label={"Posisi cover " + value}
+                          title={value}
+                          onClick={() =>
+                            setSettings((s) => ({
+                              ...s,
+                              cover_position: value as Settings["cover_position"]
+                            }))
+                          }
+                          style={{
+                            borderRadius: 10,
+                            padding: "9px 6px",
+                            border: active ? "2px solid #8B5E3C" : "1px solid #d8c9bb",
+                            background: active ? "#F2E5D8" : "#fff",
+                            color: active ? "#4B3428" : "#7A6659",
+                            fontWeight: 900,
+                            cursor: "pointer"
+                          }}
+                        >
+                          {icon}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div style={{ marginTop: 7, fontSize: 11, color: "#8b7a6d" }}>
+                    Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.
+                  </div>
+                </div>
               </div>
             </section>
 
@@ -419,7 +466,23 @@ export default function LandingPageBuilderPage() {
           <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
             <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>LIVE PREVIEW</div>
             <div style={{ borderRadius: 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: "0 20px 52px rgba(0,0,0,.09)" }}>
-              <div style={{ aspectRatio: "16 / 7", minHeight: 120, background: settings.cover_url ? "url(" + settings.cover_url + ") center/cover" : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")" }} />
+              <div
+                style={{
+                  aspectRatio: "16 / 7",
+                  minHeight: 120,
+                  backgroundImage: settings.cover_url
+                    ? "url(" + settings.cover_url + ")"
+                    : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
+                  backgroundSize: "cover",
+                  backgroundRepeat: "no-repeat",
+                  backgroundPosition:
+                    settings.cover_position === "top-left" ? "left top" :
+                    settings.cover_position === "top-right" ? "right top" :
+                    settings.cover_position === "bottom-left" ? "left bottom" :
+                    settings.cover_position === "bottom-right" ? "right bottom" :
+                    settings.cover_position
+                }}
+              />
               <div style={{ padding: 20 }}>
                 {settings.logo_url ? (
                   <img src={settings.logo_url} alt="" style={{ width: 76, height: 76, objectFit: "cover", borderRadius: 20, marginTop: -54, border: "4px solid " + theme.card, background: theme.card, boxShadow: "0 10px 26px rgba(0,0,0,.12)" }} />
