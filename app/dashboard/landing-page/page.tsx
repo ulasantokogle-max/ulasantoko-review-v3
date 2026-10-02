@@ -12,7 +12,7 @@ const themes = {
 } as const;
 
 type ThemeKey = keyof typeof themes;
-type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo";
+type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_pdf";
 
 type Settings = {
   theme_key: ThemeKey;
@@ -23,10 +23,15 @@ type Settings = {
   logo_url: string;
   cover_url: string;
   cover_position: "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
+  instagram_url: string;
+  pdf_title: string;
+  pdf_url: string;
   show_google_review: boolean;
   show_whatsapp: boolean;
   show_about: boolean;
   show_promo: boolean;
+  show_instagram: boolean;
+  show_pdf: boolean;
 };
 
 export default function LandingPageBuilderPage() {
@@ -45,10 +50,15 @@ export default function LandingPageBuilderPage() {
     logo_url: "",
     cover_url: "",
     cover_position: "center",
+    instagram_url: "",
+    pdf_title: "Menu & Daftar Harga",
+    pdf_url: "",
     show_google_review: true,
     show_whatsapp: true,
     show_about: true,
-    show_promo: true
+    show_promo: true,
+    show_instagram: true,
+    show_pdf: true
   });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,6 +66,7 @@ export default function LandingPageBuilderPage() {
   const [message, setMessage] = useState("");
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail);
@@ -115,10 +126,15 @@ export default function LandingPageBuilderPage() {
       logo_url: data?.logo_url ?? "",
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
+      instagram_url: data?.instagram_url ?? "",
+      pdf_title: data?.pdf_title ?? "Menu & Daftar Harga",
+      pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
       show_about: data?.show_about ?? true,
-      show_promo: data?.show_promo ?? true
+      show_promo: data?.show_promo ?? true,
+      show_instagram: data?.show_instagram ?? true,
+      show_pdf: data?.show_pdf ?? true
     });
   }
 
@@ -182,6 +198,62 @@ export default function LandingPageBuilderPage() {
     setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
   }
 
+  async function uploadPdf(file: File) {
+    if (!userEmail) return;
+
+    if (file.type !== "application/pdf") {
+      setError("File harus berupa PDF.");
+      return;
+    }
+
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Ukuran PDF maksimal 10 MB.");
+      return;
+    }
+
+    setUploadingPdf(true);
+    setError("");
+    setMessage("");
+
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+
+    if (!uid) {
+      setUploadingPdf(false);
+      setError("Sesi login tidak ditemukan.");
+      return;
+    }
+
+    const path = uid + "/pdf/menu-" + Date.now() + ".pdf";
+
+    const { error: uploadError } = await supabase.storage
+      .from("landing-media")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: "application/pdf"
+      });
+
+    if (uploadError) {
+      setUploadingPdf(false);
+      setError(uploadError.message);
+      return;
+    }
+
+    const { data: publicData } = supabase.storage
+      .from("landing-media")
+      .getPublicUrl(path);
+
+    setSettings((s) => ({
+      ...s,
+      pdf_url: publicData.publicUrl,
+      pdf_title: s.pdf_title || file.name.replace(/\.pdf$/i, "")
+    }));
+
+    setUploadingPdf(false);
+    setMessage("PDF berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+  }
+
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
     setSaving(true);
@@ -198,10 +270,15 @@ export default function LandingPageBuilderPage() {
       p_logo_url: settings.logo_url,
       p_cover_url: settings.cover_url,
       p_cover_position: settings.cover_position,
+      p_instagram_url: settings.instagram_url,
+      p_pdf_title: settings.pdf_title,
+      p_pdf_url: settings.pdf_url,
       p_show_google_review: settings.show_google_review,
       p_show_whatsapp: settings.show_whatsapp,
       p_show_about: settings.show_about,
-      p_show_promo: settings.show_promo
+      p_show_promo: settings.show_promo,
+      p_show_instagram: settings.show_instagram,
+      p_show_pdf: settings.show_pdf
     });
 
     setSaving(false);
@@ -224,7 +301,9 @@ export default function LandingPageBuilderPage() {
     ["show_google_review", "Tampilkan Google Review"],
     ["show_whatsapp", "Tampilkan WhatsApp"],
     ["show_about", "Tampilkan Tentang Bisnis"],
-    ["show_promo", "Tampilkan Promo"]
+    ["show_promo", "Tampilkan Promo"],
+    ["show_instagram", "Tampilkan Instagram"],
+    ["show_pdf", "Tampilkan Menu PDF"]
   ];
 
   const inputStyle = {
@@ -440,6 +519,56 @@ export default function LandingPageBuilderPage() {
               </div>
             </section>
 
+            <section style={{ display: "grid", gap: 12 }}>
+              <div>
+                <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
+                <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
+                  Tambahkan Instagram dan PDF menu/katalog langsung di landing page.
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Instagram</label>
+                <input
+                  style={inputStyle}
+                  placeholder="https://instagram.com/username"
+                  value={settings.instagram_url}
+                  onChange={(e) => setSettings((s) => ({ ...s, instagram_url: e.target.value }))}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Menu / Katalog PDF</label>
+                <input
+                  style={inputStyle}
+                  placeholder="Judul PDF, contoh: Menu & Daftar Harga"
+                  value={settings.pdf_title}
+                  onChange={(e) => setSettings((s) => ({ ...s, pdf_title: e.target.value }))}
+                  maxLength={80}
+                />
+                <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
+                  {uploadingPdf ? "Mengupload PDF..." : settings.pdf_url ? "Ganti PDF" : "Upload PDF"}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
+                  <input
+                    type="file"
+                    accept="application/pdf"
+                    style={{ display: "none" }}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) uploadPdf(file);
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                </label>
+                <input
+                  style={inputStyle}
+                  placeholder="Atau paste PDF URL (HTTPS)"
+                  value={settings.pdf_url}
+                  onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
+                />
+              </div>
+            </section>
+
             <section style={{ display: "grid", gap: 8 }}>
               <h2 style={{ margin: 0, fontSize: 18 }}>Tampilkan Section</h2>
               {toggles.map(([key, label]) => (
@@ -499,9 +628,11 @@ export default function LandingPageBuilderPage() {
                   <div style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 9, marginTop: 16 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 9, marginTop: 16 }}>
                   {settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
                   {settings.show_whatsapp && <div style={{ padding: "12px 10px", borderRadius: 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)" }}>◉ WhatsApp</div>}
+                  {settings.show_instagram && settings.instagram_url && <div style={{ padding: "12px 10px", borderRadius: 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)" }}>◎ Instagram</div>}
+                  {settings.show_pdf && settings.pdf_url && <div style={{ padding: "12px 10px", borderRadius: 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)" }}>▤ {settings.pdf_title || "Menu PDF"}</div>}
                 </div>
 
                 {settings.show_about && settings.about_text && (
