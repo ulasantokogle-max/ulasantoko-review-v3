@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Provider | UlasanToko Review",
+  title: "Provider | ReputasiPro",
   robots: {
     index: false,
     follow: false,
