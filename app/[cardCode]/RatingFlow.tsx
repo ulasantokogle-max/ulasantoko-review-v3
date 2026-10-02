@@ -129,14 +129,25 @@ export default function RatingFlow({
     return (
       <div
         style={{
-          marginTop: 22,
-          padding: 18,
-          borderRadius: 16,
-          background: "#f0fdf4",
-          border: "1px solid #bbf7d0",
+          marginTop: smoothMode ? 18 : 22,
+          padding: smoothMode ? "22px 18px" : 18,
+          borderRadius: smoothMode ? 28 : 16,
+          background: smoothMode
+            ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))"
+            : "#f0fdf4",
+          border: smoothMode ? "1px solid rgba(255,255,255,.78)" : "1px solid #bbf7d0",
+          boxShadow: smoothMode
+            ? "0 18px 46px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.9)"
+            : "none",
+          textAlign: smoothMode ? "center" : "left",
         }}
       >
-        <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>
+        {smoothMode && (
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+            <GoogleMark />
+          </div>
+        )}
+        <div style={{ fontWeight: 900, fontSize: smoothMode ? 20 : 18, marginBottom: 8, color: textColor }}>
           Terima kasih atas masukannya
         </div>
         <div style={{ color: mutedColor, lineHeight: 1.6 }}>
