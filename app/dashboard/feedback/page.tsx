@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type FeedbackRow = {
   id: string;
@@ -295,8 +296,8 @@ export default function FeedbackInboxPage() {
                 }}
               >
                 {[
-                  ["Total Masukan", String(stats.total)],
-                  ["Status Baru", String(stats.newCount)],
+                  [tr("Total Masukan", "Total Feedback"), String(stats.total)],
+                  [tr("Status Baru", "New Status"), String(stats.newCount)],
                   ["Rata-rata Rating", stats.avg],
                 ].map(([label, value]) => (
                   <div
@@ -350,16 +351,16 @@ export default function FeedbackInboxPage() {
                       }}
                     >
                       {status === "all"
-                        ? "Semua"
+                        ? tr("Semua", "All")
                         : status === "new"
-                          ? "Baru"
+                          ? tr("Baru", "New")
                           : status === "viewed"
-                            ? "Dilihat"
+                            ? tr("Dilihat", "Viewed")
                             : status === "contacted"
-                              ? "Dihubungi"
+                              ? tr("Dihubungi", "Contacted")
                               : status === "resolved"
-                                ? "Selesai"
-                                : "Ditutup"}
+                                ? tr("Selesai", "Resolved")
+                                : tr("Ditutup", "Closed")}
                     </button>
                   )
                 )}
@@ -428,7 +429,7 @@ export default function FeedbackInboxPage() {
                           </div>
 
                           <div style={{ fontWeight: 700 }}>
-                            {item.customer_name || "Pelanggan anonim"}
+                            {item.customer_name || tr("Pelanggan anonim", "Anonymous customer")}
                           </div>
                         </div>
 
