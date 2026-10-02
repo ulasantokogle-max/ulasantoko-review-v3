@@ -134,7 +134,7 @@ export default function LandingPageBuilderPage() {
 
     if (error) {
       console.error("Landing settings load failed", error);
-      setError("Pengaturan landing page belum dapat dimuat. Silakan coba lagi.");
+      setError("Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
@@ -237,7 +237,7 @@ export default function LandingPageBuilderPage() {
     }
 
     setUploading(false);
-    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Halaman Publik untuk menyimpan perubahan.");
   }
 
   async function uploadPdf(file: File) {
@@ -294,7 +294,7 @@ export default function LandingPageBuilderPage() {
     }));
 
     setUploadingPdf(false);
-    setMessage("PDF berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+    setMessage("PDF berhasil diupload. Klik Simpan Halaman Publik untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {
@@ -487,7 +487,7 @@ export default function LandingPageBuilderPage() {
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ marginBottom: 8 }}>Pengaturan Landing Page</h1>
+          <h1 style={{ marginBottom: 8 }}>Pengaturan Halaman Publik</h1>
           <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
         </div>
       </main>
@@ -499,9 +499,9 @@ export default function LandingPageBuilderPage() {
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ margin: "6px 0 8px" }}>Pengaturan Landing Page</h1>
+          <h1 style={{ margin: "6px 0 8px" }}>Pengaturan Halaman Publik</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Login customer untuk mengatur landing page bisnis.
+            Login customer untuk mengatur halaman publik bisnis.
           </p>
           <form onSubmit={handleLogin} style={{ display: "grid", gap: 10, marginTop: 16 }}>
             <input
@@ -539,7 +539,7 @@ export default function LandingPageBuilderPage() {
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Pengaturan Landing Page</h1>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Pengaturan Halaman Publik</h1>
           <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
         </div>
 
@@ -644,7 +644,7 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, marginTop: 2, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Landing Page</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Halaman Publik</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
                   {uploadingCover ? "Mengupload cover..." : settings.cover_url ? "Ganti Cover" : "Upload Cover"}
                   <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>Rekomendasi rasio 16:7 · maks. 5 MB</span>
@@ -814,7 +814,7 @@ export default function LandingPageBuilderPage() {
                 ? loadingGoogleReview
                   ? "Memproses Google Review..."
                   : "Menyimpan..."
-                : "Simpan Landing Page"}
+                : "Simpan Halaman Publik"}
             </button>
           </form>
 
