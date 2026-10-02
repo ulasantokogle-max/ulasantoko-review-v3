@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type CardRow = {
   id: string;
@@ -21,6 +22,7 @@ type CardRow = {
 };
 
 export default function CardsDashboardPage() {
+  const { tr } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -381,9 +383,9 @@ export default function CardsDashboardPage() {
               }}
             >
               {[
-                ["Total Kartu", stats.total],
-                ["Kartu Aktif", stats.active],
-                ["Sudah Diaktifkan", stats.activated],
+                [tr("Total Kartu", "Total Cards"), stats.total],
+                [tr("Kartu Aktif", "Active Cards"), stats.active],
+                [tr("Sudah Diaktifkan", "Activated"), stats.activated],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -510,7 +512,7 @@ export default function CardsDashboardPage() {
                             {card.card_code}
                           </div>
                           <div style={{ color: "#6b7280", fontSize: 13 }}>
-                            {card.internal_code || "Tanpa kode internal"}
+                            {card.internal_code || tr("Tanpa kode internal", "No internal code")}
                           </div>
                         </div>
 
@@ -535,10 +537,10 @@ export default function CardsDashboardPage() {
                             }}
                           >
                             {card.status === "active"
-                              ? "Aktif"
+                              ? tr("Aktif", "Active")
                               : card.status === "suspended"
-                                ? "Ditangguhkan"
-                                : "Tidak Digunakan"}
+                                ? tr("Ditangguhkan", "Suspended")
+                                : tr("Tidak Digunakan", "Retired")}
                           </span>
 
                           <span
@@ -553,10 +555,10 @@ export default function CardsDashboardPage() {
                             }}
                           >
                             {card.activation_status === "activated"
-                              ? "Sudah Diaktifkan"
+                              ? tr("Sudah Diaktifkan", "Activated")
                               : card.activation_status === "assigned"
-                                ? "Sudah Ditugaskan"
-                                : "Belum Ditugaskan"}
+                                ? tr("Sudah Ditugaskan", "Assigned")
+                                : tr("Belum Ditugaskan", "Unassigned")}
                           </span>
                         </div>
                       </div>
@@ -651,11 +653,11 @@ export default function CardsDashboardPage() {
                             </div>
                             <div>
                               <strong>QR:</strong>{" "}
-                              {card.qr_enabled ? "Aktif" : "Nonaktif"}
+                              {card.qr_enabled ? tr("Aktif", "Active") : "Nonaktif"}
                             </div>
                             <div>
                               <strong>NFC:</strong>{" "}
-                              {card.nfc_enabled ? "Aktif" : "Nonaktif"}
+                              {card.nfc_enabled ? tr("Aktif", "Active") : "Nonaktif"}
                               {card.nfc_identifier
                                 ? ` · ${card.nfc_identifier}`
                                 : ""}
