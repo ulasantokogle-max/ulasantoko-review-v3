@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
 
 const items = [
@@ -45,7 +45,9 @@ const items = [
 
 export default function DashboardNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
@@ -69,6 +71,15 @@ export default function DashboardNav() {
       subscription.unsubscribe();
     };
   }, []);
+
+  async function handleLogout() {
+    setLoggingOut(true);
+    await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setLoggingOut(false);
+    router.replace("/dashboard");
+    router.refresh();
+  }
 
   if (!authChecked || !isAuthenticated) {
     return null;
@@ -107,6 +118,38 @@ export default function DashboardNav() {
           </Link>
         );
       })}
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        disabled={loggingOut}
+        style={{
+          marginTop: 10,
+          width: "100%",
+          textAlign: "left",
+          padding: "12px 13px",
+          borderRadius: 12,
+          border: "1px solid #e5e7eb",
+          background: "#ffffff",
+          color: "#991b1b",
+          cursor: loggingOut ? "wait" : "pointer",
+          fontSize: 14,
+          fontWeight: 900,
+        }}
+      >
+        {loggingOut ? "Logout..." : "Logout"}
+        <div
+          style={{
+            marginTop: 3,
+            fontSize: 12,
+            lineHeight: 1.4,
+            color: "#6b7280",
+            fontWeight: 500,
+          }}
+        >
+          Keluar dari dashboard customer
+        </div>
+      </button>
     </nav>
   );
 }
