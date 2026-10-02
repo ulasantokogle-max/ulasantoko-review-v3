@@ -162,10 +162,10 @@ export default function AnalyticsDashboardPage() {
       <div style={{ maxWidth: 1040, margin: "0 auto" }}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            ULASANTOKO REVIEW V3
+            ULASANTOKO REVIEW
           </div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>
-            Analytics & Insight
+            Analitik & Insight
           </h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Ringkasan feedback pelanggan dan performa kartu bisnis.
@@ -183,10 +183,10 @@ export default function AnalyticsDashboardPage() {
           ) : (
             <>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", padding: 12, background: "#f9fafb", borderRadius: 10, marginBottom: 18 }}>
-                <span style={{ fontSize: 14 }}>Login sebagai <strong>{userEmail}</strong></span>
+                <span style={{ fontSize: 14 }}>Akun: <strong>{userEmail}</strong></span>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button type="button" style={{ ...buttonStyle, background: "#fff", color: "#111827", border: "1px solid #d1d5db" }} onClick={loadAnalytics}>
-                    Refresh
+                    Muat Ulang
                   </button>
                 </div>
               </div>
