@@ -6,6 +6,7 @@ import { useBusinessContext } from "../../../lib/useBusinessContext";
 
 const themes = {
   warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
+  soft_smoothie: { label: "Soft Smoothie", bg: "#FBF5EC", card: "#FFFDFC", primary: "#9B6A43", secondary: "#D7B08A", soft: "#F4E7D7", text: "#4A3023", muted: "#8A7567" },
   soft_tosca: { label: "Soft Tosca", bg: "#F0FBF9", card: "#FFFFFF", primary: "#2A9D8F", secondary: "#67C9BD", soft: "#DDF4F0", text: "#173E39", muted: "#5F7C78" },
   elegant_cream: { label: "Elegant Cream", bg: "#FBF7EF", card: "#FFFDF8", primary: "#9A7B4F", secondary: "#C9B184", soft: "#EFE5D2", text: "#4D4337", muted: "#7D7366" },
   minimal_dark: { label: "Minimal Dark", bg: "#161616", card: "#202020", primary: "#E6C59A", secondary: "#BFA17B", soft: "#2B2B2B", text: "#FAF7F2", muted: "#C9C1B8" }
@@ -404,8 +405,20 @@ export default function LandingPageBuilderPage() {
                   return (
                     <button key={key} type="button" onClick={() => setSettings((s) => ({ ...s, theme_key: key }))}
                       style={{ textAlign: "left", padding: 12, borderRadius: 12, border: active ? "2px solid " + item.primary : "1px solid #e5e7eb", background: item.bg, color: item.text, cursor: "pointer" }}>
-                      <div style={{ height: 34, borderRadius: 8, background: "linear-gradient(135deg, " + item.primary + ", " + item.secondary + ")", marginBottom: 9 }} />
+                      <div style={{
+                        height: 38,
+                        borderRadius: 10,
+                        background:
+                          key === "soft_smoothie"
+                            ? "radial-gradient(circle at 30% 20%, #fffaf4 0%, #f4e7d7 34%, #d7b08a 100%)"
+                            : "linear-gradient(135deg, " + item.primary + ", " + item.secondary + ")",
+                        marginBottom: 9,
+                        boxShadow: key === "soft_smoothie" ? "inset 0 1px 0 rgba(255,255,255,.8), 0 6px 14px rgba(155,106,67,.10)" : "none"
+                      }} />
                       <strong>{item.label}</strong>
+                      {key === "soft_smoothie" && (
+                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>Creamy · rounded · premium</div>
+                      )}
                     </button>
                   );
                 })}
