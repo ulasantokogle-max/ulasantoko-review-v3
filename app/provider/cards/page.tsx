@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { useLanguage } from "../../../lib/i18n";
 
 type ProviderCard = {
   id: string;
@@ -43,6 +44,7 @@ type ResetPinResult = {
 };
 
 export default function ProviderCardsPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -416,9 +418,9 @@ export default function ProviderCardsPage() {
               }}
             >
               {[
-                ["Total Kartu", stats.total],
-                ["Siap Dijual", stats.ready],
-                ["Sudah Diaktifkan", stats.activated],
+                [tr("Total Kartu", "Total Cards"), stats.total],
+                [tr("Siap Dijual", "Ready to Sell"), stats.ready],
+                [tr("Sudah Diaktifkan", "Activated"), stats.activated],
               ].map(([name, value]) => (
                 <div
                   key={String(name)}
@@ -479,7 +481,7 @@ export default function ProviderCardsPage() {
                   placeholder="Kode internal / SKU (opsional)"
                 />
                 <button style={buttonStyle} type="submit" disabled={creating}>
-                  {creating ? "Membuat..." : "Buat Kartu"}
+                  {creating ? "Membuat..." : tr("Buat Kartu", "Create Card")}
                 </button>
               </form>
 
@@ -527,7 +529,7 @@ export default function ProviderCardsPage() {
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.card_code, "Kode Kartu")}
+                      onClick={() => copyText(created.card_code, tr("Kode Kartu", "Card Code"))}
                     >
                       Salin Kode Kartu
                     </button>
@@ -764,9 +766,9 @@ export default function ProviderCardsPage() {
                           }}
                         >
                           {card.inventory_status === "ready_to_sell"
-                            ? "Siap Dijual"
+                            ? tr("Siap Dijual", "Ready to Sell")
                             : card.inventory_status === "activated"
-                              ? "Sudah Diaktifkan"
+                              ? tr("Sudah Diaktifkan", "Activated")
                               : card.inventory_status}
                         </span>
                       </div>
@@ -782,12 +784,12 @@ export default function ProviderCardsPage() {
                       >
                         <div><strong>Area:</strong> {card.area || "-"}</div>
                         <div>
-                          <strong>QR:</strong> {card.qr_enabled ? "Aktif" : "Nonaktif"}
+                          <strong>QR:</strong> {card.qr_enabled ? tr("Aktif", "Active") : tr("Nonaktif", "Inactive")}
                           {" · "}
-                          <strong>NFC:</strong> {card.nfc_enabled ? "Aktif" : "Nonaktif"}
+                          <strong>NFC:</strong> {card.nfc_enabled ? tr("Aktif", "Active") : tr("Nonaktif", "Inactive")}
                         </div>
                         <div>
-                          <strong>Pemilik:</strong> {card.business_name || "Belum ada"}
+                          <strong>Pemilik:</strong> {card.business_name || tr("Belum ada", "None")}
                         </div>
                         <div style={{ overflowWrap: "anywhere" }}>
                           <strong>URL:</strong> {card.qr_url || "-"}
@@ -810,7 +812,7 @@ export default function ProviderCardsPage() {
                             color: "#111827",
                             border: "1px solid #d1d5db",
                           }}
-                          onClick={() => copyText(card.card_code, "Kode Kartu")}
+                          onClick={() => copyText(card.card_code, tr("Kode Kartu", "Card Code"))}
                         >
                           Salin Kode Kartu
                         </button>
