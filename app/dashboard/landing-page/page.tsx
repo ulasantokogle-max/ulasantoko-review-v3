@@ -72,6 +72,7 @@ export default function LandingPageBuilderPage() {
   const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
   const [mapsUrl, setMapsUrl] = useState("");
   const [loadingGoogleReview, setLoadingGoogleReview] = useState(false);
+  const [displayName, setDisplayName] = useState("");
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail);
@@ -118,9 +119,14 @@ export default function LandingPageBuilderPage() {
     setLoadingWhatsapp(true);
     setError("");
 
-    const [{ data, error }, { data: contactData, error: contactError }] = await Promise.all([
+    const [
+      { data, error },
+      { data: contactData, error: contactError },
+      { data: profileData, error: profileError }
+    ] = await Promise.all([
       supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId }),
-      supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId })
+      supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId }),
+      supabase.rpc("v3_get_business_profile", { p_business_id: businessId })
     ]);
 
     setLoading(false);
@@ -136,6 +142,17 @@ export default function LandingPageBuilderPage() {
       return;
     }
 
+    if (profileError) {
+      setError(profileError.message);
+      return;
+    }
+
+    if (profileData?.success === false) {
+      setError(profileData?.message ?? "Gagal memuat profil bisnis.");
+      return;
+    }
+
+    setDisplayName(profileData?.display_name ?? profileData?.internal_name ?? "");
     setWhatsapp(contactData?.whatsapp_number ?? "");
     setSettings({
       theme_key: (data?.theme_key ?? "warm_brown") as ThemeKey,
@@ -280,6 +297,34 @@ export default function LandingPageBuilderPage() {
     setError("");
     setMessage("");
 
+    if (!displayName.trim()) {
+      setSaving(false);
+      setError("Nama Bisnis Publik wajib diisi.");
+      return;
+    }
+
+    const { data: nameData, error: nameError } = await supabase.rpc(
+      "v3_update_business_display_name",
+      {
+        p_business_id: businessId,
+        p_display_name: displayName.trim()
+      }
+    );
+
+    if (nameError) {
+      setSaving(false);
+      setError(nameError.message);
+      return;
+    }
+
+    if (nameData?.success === false) {
+      setSaving(false);
+      setError(nameData?.message ?? "Gagal menyimpan Nama Bisnis Publik.");
+      return;
+    }
+
+    setDisplayName(nameData?.display_name ?? displayName.trim());
+
     if (mapsUrl.trim()) {
       setLoadingGoogleReview(true);
 
@@ -395,7 +440,11 @@ export default function LandingPageBuilderPage() {
   const theme = themes[settings.theme_key] ?? themes.warm_brown;
   const isSmoothie = settings.theme_key === "soft_smoothie";
   const selectedBusiness = businesses.find((b) => b.business_id === businessId);
-  const businessName = selectedBusiness?.display_name || selectedBusiness?.business_name || "Nama Bisnis";
+  const businessName =
+    displayName ||
+    selectedBusiness?.display_name ||
+    selectedBusiness?.business_name ||
+    "Nama Bisnis";
 
   const toggles: Array<[ToggleKey, string]> = [
     ["show_google_review", "Tampilkan Google Review"],
@@ -526,6 +575,20 @@ export default function LandingPageBuilderPage() {
 
             <section style={{ display: "grid", gap: 10 }}>
               <h2 style={{ margin: 0, fontSize: 18 }}>Konten Utama</h2>
+              <div style={{ display: "grid", gap: 6 }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Nama Bisnis Publik</label>
+                <input
+                  style={inputStyle}
+                  placeholder="Nama yang tampil ke customer"
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                  maxLength={160}
+                  required
+                />
+                <div style={{ color: "#6b7280", fontSize: 11, lineHeight: 1.5 }}>
+                  Nama ini dipakai di halaman publik customer. Mengubahnya tidak mengubah Business ID, kartu, atau link Google Review.
+                </div>
+              </div>
               <input style={inputStyle} placeholder="Judul utama" value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
               <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder="Deskripsi singkat" value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
               <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder="Tentang bisnis" value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
