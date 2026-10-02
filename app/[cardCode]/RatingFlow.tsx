@@ -7,6 +7,10 @@ type Props = {
   businessName: string;
   reviewUrl: string | null;
   whatsappUrl?: string | null;
+  primaryColor?: string;
+  softColor?: string;
+  textColor?: string;
+  mutedColor?: string;
 };
 
 export default function RatingFlow({
@@ -14,6 +18,10 @@ export default function RatingFlow({
   businessName,
   reviewUrl,
   whatsappUrl,
+  primaryColor = "#8B5E3C",
+  softColor = "#F2E5D8",
+  textColor = "#4B3428",
+  mutedColor = "#7A6659",
 }: Props) {
   const [rating, setRating] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -105,7 +113,7 @@ export default function RatingFlow({
         <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>
           Terima kasih atas masukannya
         </div>
-        <div style={{ color: "#4b5563", lineHeight: 1.6 }}>
+        <div style={{ color: mutedColor, lineHeight: 1.6 }}>
           Feedback Anda sudah diterima oleh {businessName}.
         </div>
 
@@ -119,7 +127,7 @@ export default function RatingFlow({
               marginTop: 14,
               textAlign: "center",
               textDecoration: "none",
-              background: "#16a34a",
+              background: primaryColor,
               color: "#ffffff",
               padding: "12px 14px",
               borderRadius: 12,
@@ -134,13 +142,13 @@ export default function RatingFlow({
   }
 
   return (
-    <section style={{ marginTop: 22 }}>
-      <div style={{ fontWeight: 800, fontSize: 18, textAlign: "center" }}>
+    <section style={{ marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(0,0,0,.07)" }}>
+      <div style={{ fontWeight: 900, fontSize: 19, textAlign: "center", color: textColor }}>
         Bagaimana pengalaman Anda?
       </div>
       <div
         style={{
-          color: "#6b7280",
+          color: mutedColor,
           textAlign: "center",
           fontSize: 14,
           marginTop: 6,
@@ -153,7 +161,7 @@ export default function RatingFlow({
         style={{
           display: "flex",
           justifyContent: "center",
-          gap: 8,
+          gap: 6,
           marginTop: 16,
           flexWrap: "wrap",
         }}
@@ -167,10 +175,10 @@ export default function RatingFlow({
             style={{
               border: 0,
               background: "transparent",
-              fontSize: 38,
+              fontSize: 40,
               lineHeight: 1,
               cursor: "pointer",
-              padding: 4,
+              padding: 5,
               color:
                 rating !== null && value <= rating ? "#f59e0b" : "#d1d5db",
             }}
@@ -186,8 +194,8 @@ export default function RatingFlow({
             marginTop: 14,
             padding: 14,
             borderRadius: 12,
-            background: "#eff6ff",
-            color: "#1e3a8a",
+            background: softColor,
+            color: textColor,
             textAlign: "center",
             lineHeight: 1.55,
           }}
@@ -199,7 +207,7 @@ export default function RatingFlow({
                 href={reviewUrl}
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: "#1d4ed8", fontWeight: 800 }}
+                style={{ color: primaryColor, fontWeight: 800 }}
               >
                 Buka Google Review lagi
               </a>
@@ -212,11 +220,11 @@ export default function RatingFlow({
         <form
           onSubmit={submitFeedback}
           style={{
-            marginTop: 18,
+            marginTop: 20,
             padding: 18,
-            borderRadius: 16,
-            background: "#f9fafb",
-            border: "1px solid #e5e7eb",
+            borderRadius: 18,
+            background: softColor,
+            border: "1px solid rgba(0,0,0,.06)",
           }}
         >
           <div style={{ fontWeight: 800, marginBottom: 6 }}>
@@ -224,7 +232,7 @@ export default function RatingFlow({
           </div>
           <div
             style={{
-              color: "#6b7280",
+              color: mutedColor,
               fontSize: 14,
               lineHeight: 1.55,
               marginBottom: 14,
@@ -245,8 +253,10 @@ export default function RatingFlow({
                 boxSizing: "border-box",
                 padding: "12px 13px",
                 border: "1px solid #d1d5db",
-                borderRadius: 10,
+                borderRadius: 12,
                 fontSize: 14,
+                outline: "none",
+                background: "#fff",
               }}
             />
 
@@ -261,8 +271,10 @@ export default function RatingFlow({
                 boxSizing: "border-box",
                 padding: "12px 13px",
                 border: "1px solid #d1d5db",
-                borderRadius: 10,
+                borderRadius: 12,
                 fontSize: 14,
+                outline: "none",
+                background: "#fff",
               }}
             />
 
@@ -278,9 +290,11 @@ export default function RatingFlow({
                 boxSizing: "border-box",
                 padding: "12px 13px",
                 border: "1px solid #d1d5db",
-                borderRadius: 10,
+                borderRadius: 12,
                 fontSize: 14,
                 resize: "vertical",
+                outline: "none",
+                background: "#fff",
               }}
             />
 
@@ -290,7 +304,7 @@ export default function RatingFlow({
                 gap: 8,
                 alignItems: "flex-start",
                 fontSize: 13,
-                color: "#4b5563",
+                color: mutedColor,
               }}
             >
               <input
@@ -307,11 +321,11 @@ export default function RatingFlow({
               disabled={sending}
               style={{
                 border: 0,
-                borderRadius: 10,
-                padding: "12px 14px",
+                borderRadius: 13,
+                padding: "13px 14px",
                 fontWeight: 800,
                 cursor: "pointer",
-                background: "#111827",
+                background: primaryColor,
                 color: "#ffffff",
               }}
             >

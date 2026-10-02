@@ -22,6 +22,11 @@ const items = [
     description: "Nama bisnis & Google Maps",
   },
   {
+    href: "/dashboard/landing-page",
+    label: "Landing Page",
+    description: "Tema, konten & preview publik",
+  },
+  {
     href: "/dashboard/feedback",
     label: "Feedback Inbox",
     description: "Kelola feedback 1–3 bintang",
