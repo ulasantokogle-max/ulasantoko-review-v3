@@ -120,7 +120,7 @@ export default function CardsDashboardPage() {
 
   async function resetCardSetup(card: CardRow) {
     const typed = window.prompt(
-      `Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, feedback, analytics, QR/NFC, dan status aktivasi tetap aman.\n\nKetik ${card.card_code} untuk konfirmasi.`
+      `Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, masukan, analitik, QR/NFC, dan status aktivasi tetap dipertahankan.\n\nKetik ${card.card_code} untuk konfirmasi.`
     );
 
     if (typed !== card.card_code) {
@@ -534,7 +534,11 @@ export default function CardsDashboardPage() {
                               textTransform: "uppercase",
                             }}
                           >
-                            {card.status}
+                            {card.status === "active"
+                              ? "Aktif"
+                              : card.status === "suspended"
+                                ? "Ditangguhkan"
+                                : "Tidak Digunakan"}
                           </span>
 
                           <span
@@ -548,7 +552,11 @@ export default function CardsDashboardPage() {
                               textTransform: "uppercase",
                             }}
                           >
-                            {card.activation_status}
+                            {card.activation_status === "activated"
+                              ? "Sudah Diaktifkan"
+                              : card.activation_status === "assigned"
+                                ? "Sudah Ditugaskan"
+                                : "Belum Ditugaskan"}
                           </span>
                         </div>
                       </div>
@@ -587,7 +595,7 @@ export default function CardsDashboardPage() {
                               )
                             }
                           >
-                            <option value="active">Active</option>
+                            <option value="active">Aktif</option>
                             <option value="suspended">Ditangguhkan</option>
                             <option value="retired">Tidak Digunakan</option>
                           </select>
