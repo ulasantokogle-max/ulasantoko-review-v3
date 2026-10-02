@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 const themes = {
   warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
@@ -36,6 +37,7 @@ type Settings = {
 };
 
 export default function LandingPageBuilderPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [email, setEmail] = useState("");
@@ -52,7 +54,7 @@ export default function LandingPageBuilderPage() {
     cover_url: "",
     cover_position: "center",
     instagram_url: "",
-    pdf_title: "Informasi",
+    pdf_title: tr("Informasi", "Information"),
     pdf_url: "",
     show_google_review: true,
     show_whatsapp: true,
@@ -169,7 +171,7 @@ export default function LandingPageBuilderPage() {
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
       instagram_url: data?.instagram_url ?? "",
-      pdf_title: data?.pdf_title ?? "Informasi",
+      pdf_title: data?.pdf_title ?? tr("Informasi", "Information"),
       pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
@@ -465,12 +467,12 @@ export default function LandingPageBuilderPage() {
     "Nama Bisnis";
 
   const toggles: Array<[ToggleKey, string]> = [
-    ["show_google_review", "Tampilkan Google Review"],
+    ["show_google_review", tr("Tampilkan Google Review", "Show Google Review")],
     ["show_whatsapp", "Tampilkan WhatsApp"],
     ["show_about", "Tampilkan Tentang Bisnis"],
     ["show_promo", "Tampilkan Promo"],
     ["show_instagram", "Tampilkan Instagram"],
-    ["show_pdf", "Tampilkan File PDF"]
+    ["show_pdf", tr("Tampilkan File PDF", "Show PDF File")]
   ];
 
   const inputStyle = {
@@ -597,7 +599,7 @@ export default function LandingPageBuilderPage() {
                 <label style={{ fontSize: 13, fontWeight: 900 }}>Nama Bisnis Publik</label>
                 <input
                   style={inputStyle}
-                  placeholder="Nama yang tampil ke pelanggan"
+                  placeholder=tr("Nama yang tampil ke pelanggan", "Name shown to customers")
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={160}
@@ -638,7 +640,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau tempel URL logo (HTTPS)"
+                  placeholder=tr("Atau tempel URL logo (HTTPS)", "Or paste logo URL (HTTPS)")
                   value={settings.logo_url}
                   onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))}
                 />
@@ -662,7 +664,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau tempel URL cover (HTTPS)"
+                  placeholder=tr("Atau tempel URL cover (HTTPS)", "Or paste cover URL (HTTPS)")
                   value={settings.cover_url}
                   onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
                 />
@@ -770,7 +772,7 @@ export default function LandingPageBuilderPage() {
                   maxLength={80}
                 />
                 <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingPdf ? "Mengunggah PDF..." : settings.pdf_url ? "Ganti PDF" : "Unggah PDF"}
+                  {uploadingPdf ? tr("Mengunggah PDF...", "Uploading PDF...") : settings.pdf_url ? tr("Ganti PDF", "Replace PDF") : tr("Unggah PDF", "Upload PDF")}
                   <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
                   <input
                     type="file"
@@ -785,7 +787,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau tempel URL PDF (HTTPS)"
+                  placeholder=tr("Atau tempel URL PDF (HTTPS)", "Or paste PDF URL (HTTPS)")
                   value={settings.pdf_url}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
                 />
@@ -815,7 +817,7 @@ export default function LandingPageBuilderPage() {
                 ? loadingGoogleReview
                   ? "Memproses Google Review..."
                   : "Menyimpan..."
-                : "Simpan Perubahan"}
+                : tr("Simpan Perubahan", "Save Changes")}
             </button>
           </form>
 
@@ -869,7 +871,7 @@ export default function LandingPageBuilderPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
                   {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
-                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Informasi"} {isSmoothie ? "›" : ""}</div>}
+                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || tr("Informasi", "Information")} {isSmoothie ? "›" : ""}</div>}
                   {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
                     <div>◉ WhatsApp</div>
                     <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
