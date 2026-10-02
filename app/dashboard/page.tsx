@@ -135,12 +135,12 @@ export default function DashboardHomePage() {
       {
         label: "Nama bisnis publik",
         done: Boolean(setup.displayName),
-        href: "/dashboard/google-review",
+        href: "/dashboard/landing-page",
       },
       {
         label: "Google Review",
         done: Boolean(setup.reviewUrl),
-        href: "/dashboard/google-review",
+        href: "/dashboard/landing-page",
       },
       {
         label: "WhatsApp bisnis",
@@ -455,7 +455,6 @@ export default function DashboardHomePage() {
                         ["/dashboard/feedback", "Buka Feedback Inbox"],
                         ["/dashboard/analytics", "Lihat Analytics Lengkap"],
                         ["/dashboard/cards", "Kelola Kartu"],
-                        ["/dashboard/google-review", "Atur Google Review"],
                         ["/dashboard/contact", "Atur WhatsApp"],
                       ].map(([href, label]) => (
                         <Link
