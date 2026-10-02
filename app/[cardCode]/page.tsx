@@ -321,6 +321,9 @@ export default async function PublicCardPage({
   const showPromo = landingSettingsData?.show_promo !== false;
   const showInstagram = landingSettingsData?.show_instagram !== false;
   const showPdf = landingSettingsData?.show_pdf !== false;
+  const whatsappAvailable = Boolean(showWhatsapp && whatsappUrl);
+  const instagramAvailable = Boolean(showInstagram && instagramUrl);
+  const singleSocial = Number(whatsappAvailable) + Number(instagramAvailable) === 1;
 
   return (
     <main
@@ -592,7 +595,7 @@ export default async function PublicCardPage({
             </a>
           )}
 
-          {showWhatsapp && whatsappUrl && (
+          {whatsappAvailable && (
             <a
               className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
               href={whatsappUrl}
@@ -614,6 +617,7 @@ export default async function PublicCardPage({
                 fontSize: isSmoothie ? 17 : 14,
                 boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
                 order: isSmoothie ? 2 : "initial",
+                gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
               }}
             >
               {isSmoothie ? (
@@ -627,7 +631,7 @@ export default async function PublicCardPage({
             </a>
           )}
 
-          {showInstagram && instagramUrl && (
+          {instagramAvailable && (
             <a
               className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
               href={instagramUrl}
@@ -650,6 +654,7 @@ export default async function PublicCardPage({
                 fontSize: isSmoothie ? 17 : 14,
                 boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
                 order: isSmoothie ? 3 : "initial",
+                gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
               }}
             >
               {isSmoothie ? (
@@ -710,8 +715,9 @@ export default async function PublicCardPage({
               marginTop: isSmoothie ? 22 : 20,
               padding: isSmoothie ? 20 : 18,
               borderRadius: isSmoothie ? 24 : 18,
-              background: isSmoothie ? "rgba(244,231,215,.72)" : theme.soft,
+              background: isSmoothie ? "linear-gradient(145deg, rgba(255,255,255,.72), rgba(244,231,215,.78))" : theme.soft,
               border: "1px solid rgba(0,0,0,.05)",
+              boxShadow: isSmoothie ? "0 12px 30px rgba(103,73,48,.07), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
             }}
           >
             <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
@@ -828,9 +834,24 @@ export default async function PublicCardPage({
 
         </div>
 
+        {isSmoothie && (
+          <div
+            style={{
+              textAlign: "center",
+              color: theme.muted,
+              fontSize: 13,
+              lineHeight: 1.6,
+              padding: "18px 14px 4px",
+            }}
+          >
+            <div style={{ marginBottom: 6, color: theme.primary, fontSize: 18 }}>⌁</div>
+            Terima kasih sudah mendukung {businessName}.
+          </div>
+        )}
+
         <div
           style={{
-            marginTop: isSmoothie ? 22 : 18,
+            marginTop: isSmoothie ? 16 : 18,
             paddingTop: 18,
             borderTop: "1px solid rgba(0,0,0,.08)",
             display: "flex",
