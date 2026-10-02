@@ -19,6 +19,7 @@ type AnalyticsData = {
 
 export default function CustomerOnboardingPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [setup, setSetup] = useState<SetupStatus>({});
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [loading, setLoading] = useState(false);
@@ -35,6 +36,7 @@ export default function CustomerOnboardingPage() {
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUserEmail(data.session?.user?.email ?? null);
+      setAuthChecked(true);
     });
 
     const {
@@ -135,6 +137,22 @@ export default function CustomerOnboardingPage() {
     padding: 24,
     boxShadow: "0 18px 60px rgba(15,23,42,.06)",
   } as const;
+
+  if (!authChecked) {
+    return (
+      <main style={pageStyle}>
+        <section style={cardStyle}>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
+            ULASANTOKO REVIEW V3
+          </div>
+          <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
+          <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
+            Memeriksa sesi login...
+          </p>
+        </section>
+      </main>
+    );
+  }
 
   if (!userEmail) {
     return (
