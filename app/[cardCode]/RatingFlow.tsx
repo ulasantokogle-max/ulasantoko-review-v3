@@ -122,14 +122,14 @@ export default function RatingFlow({
           status: response.status,
           data
         });
-        setError("Feedback belum dapat dikirim. Silakan coba lagi.");
+        setError("Masukan belum dapat dikirim. Silakan coba lagi.");
         return;
       }
 
       setSent(true);
     } catch (err) {
       console.error("Private feedback request failed", err);
-      setError("Feedback belum dapat dikirim. Periksa koneksi lalu coba lagi.");
+      setError("Masukan belum dapat dikirim. Periksa koneksi lalu coba lagi.");
     } finally {
       setSending(false);
     }
@@ -161,7 +161,7 @@ export default function RatingFlow({
           Terima kasih atas masukannya
         </div>
         <div style={{ color: mutedColor, lineHeight: 1.6 }}>
-          Feedback Anda sudah diterima oleh {businessName}.
+          Masukan Anda sudah diterima oleh {businessName}.
         </div>
 
         {whatsappUrl && (
@@ -406,7 +406,7 @@ export default function RatingFlow({
                 color: "#ffffff",
               }}
             >
-              {sending ? "Mengirim..." : "Kirim Feedback Privat"}
+              {sending ? "Mengirim..." : "Kirim Masukan Privat"}
             </button>
           </div>
 
