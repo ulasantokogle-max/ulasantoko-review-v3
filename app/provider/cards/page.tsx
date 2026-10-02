@@ -367,7 +367,7 @@ export default function ProviderCardsPage() {
               padding: 22,
             }}
           >
-            <h2 style={{ marginTop: 0 }}>Login Provider</h2>
+            <h2 style={{ marginTop: 0 }}>Masuk Provider</h2>
             <form onSubmit={handleLogin} style={{ display: "grid", gap: 10 }}>
               <input
                 style={inputStyle}
@@ -386,7 +386,7 @@ export default function ProviderCardsPage() {
                 required
               />
               <button style={buttonStyle} type="submit">
-                Login Provider
+                Masuk Provider
               </button>
             </form>
             {loginError && <p style={{ color: "#b91c1c" }}>{loginError}</p>}
@@ -401,7 +401,7 @@ export default function ProviderCardsPage() {
               color: "#991b1b",
             }}
           >
-            Akun <strong>{userEmail}</strong> tidak memiliki akses Provider.
+            Akun <strong>{userEmail}</strong> tidak memiliki akses provider.
           </section>
         ) : providerAllowed === null ? (
           <p>Memeriksa akses provider...</p>
@@ -416,7 +416,7 @@ export default function ProviderCardsPage() {
               }}
             >
               {[
-                ["Total Inventory", stats.total],
+                ["Total Kartu", stats.total],
                 ["Siap Dijual", stats.ready],
                 ["Sudah Diaktifkan", stats.activated],
               ].map(([name, value]) => (
@@ -448,7 +448,7 @@ export default function ProviderCardsPage() {
             >
               <h2 style={{ marginTop: 0 }}>Buat Kartu Baru</h2>
               <p style={{ color: "#6b7280", lineHeight: 1.5 }}>
-                Card Code dan PIN dibuat otomatis. PIN hanya ditampilkan setelah
+                Kode Kartu dan PIN dibuat otomatis. PIN hanya ditampilkan setelah
                 kartu dibuat, jadi simpan/cetak bersama kartu fisik.
               </p>
 
@@ -479,7 +479,7 @@ export default function ProviderCardsPage() {
                   placeholder="Kode internal / SKU (opsional)"
                 />
                 <button style={buttonStyle} type="submit" disabled={creating}>
-                  {creating ? "Membuat..." : "Generate Card"}
+                  {creating ? "Membuat..." : "Buat Kartu"}
                 </button>
               </form>
 
@@ -509,7 +509,7 @@ export default function ProviderCardsPage() {
                 >
                   <h3 style={{ marginTop: 0 }}>Kartu siap dijual ✅</h3>
                   <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
-                    <div><strong>Card Code:</strong> {created.card_code}</div>
+                    <div><strong>Kode Kartu:</strong> {created.card_code}</div>
                     <div><strong>PIN Aktivasi:</strong> {created.activation_pin}</div>
                     <div style={{ overflowWrap: "anywhere" }}>
                       <strong>QR / NFC URL:</strong> {created.qr_url}
@@ -527,16 +527,16 @@ export default function ProviderCardsPage() {
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.card_code, "Card Code")}
+                      onClick={() => copyText(created.card_code, "Kode Kartu")}
                     >
-                      Copy Card Code
+                      Copy Kode Kartu
                     </button>
                     <button
                       type="button"
                       style={buttonStyle}
                       onClick={() => copyText(created.activation_pin, "PIN")}
                     >
-                      Copy PIN
+                      Salin PIN
                     </button>
                     <button
                       type="button"
@@ -548,7 +548,7 @@ export default function ProviderCardsPage() {
                       }}
                       onClick={() => copyText(created.qr_url, "URL")}
                     >
-                      Copy URL
+                      Salin URL
                     </button>
                   </div>
                 </div>
@@ -589,7 +589,7 @@ export default function ProviderCardsPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Refresh
+                  Muat Ulang
                 </button>
               </div>
 
@@ -645,7 +645,7 @@ export default function ProviderCardsPage() {
                       copyText(resetPinResult.activation_pin, "PIN baru")
                     }
                   >
-                    Copy PIN Baru
+                    Salin PIN Baru
                   </button>
                 </div>
               )}
@@ -783,7 +783,7 @@ export default function ProviderCardsPage() {
                           <strong>NFC:</strong> {card.nfc_enabled ? "Ready" : "Off"}
                         </div>
                         <div>
-                          <strong>Owner:</strong> {card.business_name || "Belum ada"}
+                          <strong>Pemilik:</strong> {card.business_name || "Belum ada"}
                         </div>
                         <div style={{ overflowWrap: "anywhere" }}>
                           <strong>URL:</strong> {card.qr_url || "-"}
@@ -806,9 +806,9 @@ export default function ProviderCardsPage() {
                             color: "#111827",
                             border: "1px solid #d1d5db",
                           }}
-                          onClick={() => copyText(card.card_code, "Card Code")}
+                          onClick={() => copyText(card.card_code, "Kode Kartu")}
                         >
-                          Copy Card Code
+                          Copy Kode Kartu
                         </button>
 
                         {card.inventory_status === "ready_to_sell" && (
@@ -841,7 +841,7 @@ export default function ProviderCardsPage() {
                               }}
                               onClick={() => copyText(card.qr_url ?? undefined, "QR/NFC URL")}
                             >
-                              Copy URL
+                              Salin URL
                             </button>
                             <a
                               href={card.qr_url}
@@ -853,7 +853,7 @@ export default function ProviderCardsPage() {
                                 textDecoration: "none",
                               }}
                             >
-                              Test Card
+                              Uji Kartu
                             </a>
                           </>
                         )}
