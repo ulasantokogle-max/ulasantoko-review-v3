@@ -162,7 +162,7 @@ export default function LandingPageBuilderPage() {
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(320px, 440px)", gap: 18, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18, alignItems: "start" }}>
           <form onSubmit={saveSettings} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 20, display: "grid", gap: 18 }}>
             <section>
               <h2 style={{ marginTop: 0, fontSize: 18 }}>Pilih Tema</h2>
