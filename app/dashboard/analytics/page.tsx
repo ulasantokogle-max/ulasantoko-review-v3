@@ -78,7 +78,8 @@ export default function AnalyticsDashboardPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Analytics dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -98,7 +99,8 @@ export default function AnalyticsDashboardPage() {
     setLoading(false);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Analytics load failed", error);
+      setLoadError("Data analytics belum dapat dimuat. Silakan coba lagi.");
       setAnalytics(null);
       return;
     }
