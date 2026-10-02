@@ -598,7 +598,7 @@ export default async function PublicCardPage({
           {whatsappAvailable && (
             <a
               className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-              href={whatsappUrl}
+              href={whatsappUrl ?? "#"}
               target="_blank"
               rel="noreferrer"
               style={{
@@ -634,7 +634,7 @@ export default async function PublicCardPage({
           {instagramAvailable && (
             <a
               className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-              href={instagramUrl}
+              href={instagramUrl ?? "#"}
               target="_blank"
               rel="noreferrer"
               style={{
