@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type PeriodKey = "hour" | "day" | "week" | "month" | "custom";
 
@@ -35,6 +36,7 @@ type AnalyticsData = {
 };
 
 export default function AnalyticsDashboardPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -186,22 +188,22 @@ export default function AnalyticsDashboardPage() {
 
   const periodLabel =
     period === "hour"
-      ? "Jam Ini"
+      ? tr("Jam Ini", "This Hour")
       : period === "day"
-        ? "Hari Ini"
+        ? tr("Hari Ini", "Today")
         : period === "week"
-          ? "Minggu Ini"
+          ? tr("Minggu Ini", "This Week")
           : period === "month"
-            ? "Bulan Ini"
-            : "Kustom";
+            ? tr("Bulan Ini", "This Month")
+            : tr("Kustom", "Custom");
 
   const metricCards = [
-    ["Total Masukan", feedback.total ?? 0],
-    ["Rata-rata Rating", Number(feedback.average_rating ?? 0).toFixed(1)],
-    ["Bisa Dihubungi", feedback.contactable ?? 0],
-    ["Periode", periodLabel],
-    ["Total Kartu", cards.total ?? 0],
-    ["Kartu Aktif", cards.activated ?? 0],
+    [tr("Total Masukan", "Total Feedback"), feedback.total ?? 0],
+    [tr("Rata-rata Rating", "Average Rating"), Number(feedback.average_rating ?? 0).toFixed(1)],
+    [tr("Bisa Dihubungi", "Contactable"), feedback.contactable ?? 0],
+    [tr("Periode", "Period"), periodLabel],
+    [tr("Total Kartu", "Total Cards"), cards.total ?? 0],
+    [tr("Kartu Aktif", "Active Cards"), cards.activated ?? 0],
   ];
 
   return (
@@ -252,11 +254,11 @@ export default function AnalyticsDashboardPage() {
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {([
-                    ["hour", "Jam Ini"],
-                    ["day", "Hari Ini"],
-                    ["week", "Minggu Ini"],
-                    ["month", "Bulan Ini"],
-                    ["custom", "Kustom"],
+                    ["hour", tr("Jam Ini", "This Hour")],
+                    ["day", tr("Hari Ini", "Today")],
+                    ["week", tr("Minggu Ini", "This Week")],
+                    ["month", tr("Bulan Ini", "This Month")],
+                    ["custom", tr("Kustom", "Custom")],
                   ] as [PeriodKey, string][]).map(([key, label]) => (
                     <button
                       key={key}
@@ -368,11 +370,11 @@ export default function AnalyticsDashboardPage() {
                     <section style={{ padding: 18, borderRadius: 14, border: "1px solid #e5e7eb" }}>
                       <h2 style={{ marginTop: 0, fontSize: 18 }}>Status Masukan</h2>
                       {[
-                        ["Baru", feedback.new ?? 0],
-                        ["Dilihat", feedback.viewed ?? 0],
-                        ["Dihubungi", feedback.contacted ?? 0],
-                        ["Selesai", feedback.resolved ?? 0],
-                        ["Ditutup", feedback.closed ?? 0],
+                        [tr("Baru", "New"), feedback.new ?? 0],
+                        [tr("Dilihat", "Viewed"), feedback.viewed ?? 0],
+                        [tr("Dihubungi", "Contacted"), feedback.contacted ?? 0],
+                        [tr("Selesai", "Resolved"), feedback.resolved ?? 0],
+                        [tr("Ditutup", "Closed"), feedback.closed ?? 0],
                       ].map(([label, value]) => (
                         <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
                           <span>{label}</span>
