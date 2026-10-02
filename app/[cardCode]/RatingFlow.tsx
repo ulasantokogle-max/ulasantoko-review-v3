@@ -142,8 +142,8 @@ export default function RatingFlow({
   }
 
   return (
-    <section style={{ marginTop: 22 }}>
-      <div style={{ fontWeight: 800, fontSize: 18, textAlign: "center" }}>
+    <section style={{ marginTop: 24, paddingTop: 22, borderTop: "1px solid rgba(0,0,0,.07)" }}>
+      <div style={{ fontWeight: 900, fontSize: 19, textAlign: "center", color: textColor }}>
         Bagaimana pengalaman Anda?
       </div>
       <div
@@ -161,7 +161,7 @@ export default function RatingFlow({
         style={{
           display: "flex",
           justifyContent: "center",
-          gap: 8,
+          gap: 6,
           marginTop: 16,
           flexWrap: "wrap",
         }}
@@ -175,10 +175,10 @@ export default function RatingFlow({
             style={{
               border: 0,
               background: "transparent",
-              fontSize: 38,
+              fontSize: 40,
               lineHeight: 1,
               cursor: "pointer",
-              padding: 4,
+              padding: 5,
               color:
                 rating !== null && value <= rating ? "#f59e0b" : "#d1d5db",
             }}
@@ -220,9 +220,9 @@ export default function RatingFlow({
         <form
           onSubmit={submitFeedback}
           style={{
-            marginTop: 18,
+            marginTop: 20,
             padding: 18,
-            borderRadius: 16,
+            borderRadius: 18,
             background: softColor,
             border: "1px solid rgba(0,0,0,.06)",
           }}
@@ -253,8 +253,10 @@ export default function RatingFlow({
                 boxSizing: "border-box",
                 padding: "12px 13px",
                 border: "1px solid #d1d5db",
-                borderRadius: 10,
+                borderRadius: 12,
                 fontSize: 14,
+                outline: "none",
+                background: "#fff",
               }}
             />
 
@@ -269,8 +271,10 @@ export default function RatingFlow({
                 boxSizing: "border-box",
                 padding: "12px 13px",
                 border: "1px solid #d1d5db",
-                borderRadius: 10,
+                borderRadius: 12,
                 fontSize: 14,
+                outline: "none",
+                background: "#fff",
               }}
             />
 
@@ -286,9 +290,11 @@ export default function RatingFlow({
                 boxSizing: "border-box",
                 padding: "12px 13px",
                 border: "1px solid #d1d5db",
-                borderRadius: 10,
+                borderRadius: 12,
                 fontSize: 14,
                 resize: "vertical",
+                outline: "none",
+                background: "#fff",
               }}
             />
 
@@ -315,8 +321,8 @@ export default function RatingFlow({
               disabled={sending}
               style={{
                 border: 0,
-                borderRadius: 10,
-                padding: "12px 14px",
+                borderRadius: 13,
+                padding: "13px 14px",
                 fontWeight: 800,
                 cursor: "pointer",
                 background: primaryColor,
