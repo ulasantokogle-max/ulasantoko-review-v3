@@ -28,6 +28,7 @@ type SetupState = {
 };
 
 export default function DashboardHomePage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
