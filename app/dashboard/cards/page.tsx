@@ -263,10 +263,10 @@ export default function CardsDashboardPage() {
             marginBottom: 8,
           }}
         >
-          UlasanToko Review V3
+          UlasanToko Review
         </div>
 
-        <h1 style={{ margin: 0, fontSize: 30 }}>Card Management</h1>
+        <h1 style={{ margin: 0, fontSize: 30 }}>Manajemen Kartu</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
           Kelola kartu QR/NFC, status operasional, label, dan area penggunaan.
         </p>
@@ -353,7 +353,7 @@ export default function CardsDashboardPage() {
               }}
             >
               <span style={{ fontSize: 14 }}>
-                Login sebagai <strong>{userEmail}</strong>
+                Akun: <strong>{userEmail}</strong>
               </span>
 
               <div style={{ display: "flex", gap: 8 }}>
@@ -367,7 +367,7 @@ export default function CardsDashboardPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Refresh
+                  Muat Ulang
                 </button>
               </div>
             </div>
@@ -383,7 +383,7 @@ export default function CardsDashboardPage() {
               {[
                 ["Total Card", stats.total],
                 ["Card Aktif", stats.active],
-                ["Sudah Aktivasi", stats.activated],
+                ["Sudah Diaktifkan", stats.activated],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -510,7 +510,7 @@ export default function CardsDashboardPage() {
                             {card.card_code}
                           </div>
                           <div style={{ color: "#6b7280", fontSize: 13 }}>
-                            {card.internal_code || "Tanpa internal code"}
+                            {card.internal_code || "Tanpa kode internal"}
                           </div>
                         </div>
 
@@ -588,8 +588,8 @@ export default function CardsDashboardPage() {
                             }
                           >
                             <option value="active">Active</option>
-                            <option value="suspended">Suspended</option>
-                            <option value="retired">Retired</option>
+                            <option value="suspended">Ditangguhkan</option>
+                            <option value="retired">Tidak Digunakan</option>
                           </select>
 
                           <div
