@@ -894,7 +894,7 @@ export default async function PublicCardPage({
             }}
           >
             <div style={{ marginBottom: 6, color: theme.primary, fontSize: 18 }}>⌁</div>
-            Terima kasih sudah mendukung {businessName}.
+            {tr("Terima kasih sudah mendukung", "Thank you for supporting")} {businessName}.
           </div>
         )}
 
