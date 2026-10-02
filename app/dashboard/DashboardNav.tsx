@@ -13,23 +13,23 @@ const items = [
   },
   {
     href: "/dashboard/cards",
-    label: "Kartu",
-    description: "QR/NFC, status & area kartu",
+    label: "Kartu & QR/NFC",
+    description: "Kelola kartu, status & area",
   },
   {
     href: "/dashboard/landing-page",
-    label: "Landing Page",
-    description: "Tema, Google Review, kontak & konten",
+    label: "Halaman Publik",
+    description: "Tampilan, ulasan, kontak & konten",
   },
   {
     href: "/dashboard/feedback",
-    label: "Feedback",
-    description: "Kelola feedback 1–3 bintang",
+    label: "Masukan",
+    description: "Kelola masukan pelanggan 1–3 bintang",
   },
   {
     href: "/dashboard/analytics",
     label: "Analitik",
-    description: "Ringkasan feedback & kartu",
+    description: "Insight masukan, ulasan & kartu",
   },
 ];
 
