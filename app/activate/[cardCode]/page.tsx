@@ -259,7 +259,7 @@ export default function ActivateCardPage() {
             Kartu {cardCode} sudah terhubung ke bisnis.
           </p>
           <a href={`/${cardCode}`} style={{ ...buttonStyle, display: "block", textDecoration: "none", boxSizing: "border-box" }}>
-            Buka Landing Page
+            Buka Halaman Publik
           </a>
         </section>
       </main>
