@@ -52,7 +52,7 @@ export default function LandingPageBuilderPage() {
     cover_url: "",
     cover_position: "center",
     instagram_url: "",
-    pdf_title: "Menu & Daftar Harga",
+    pdf_title: "Informasi",
     pdf_url: "",
     show_google_review: true,
     show_whatsapp: true,
@@ -168,7 +168,7 @@ export default function LandingPageBuilderPage() {
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
       instagram_url: data?.instagram_url ?? "",
-      pdf_title: data?.pdf_title ?? "Menu & Daftar Harga",
+      pdf_title: data?.pdf_title ?? "Informasi",
       pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
@@ -487,7 +487,7 @@ export default function LandingPageBuilderPage() {
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ marginBottom: 8 }}>Pengaturan Halaman Publik</h1>
+          <h1 style={{ marginBottom: 8 }}>Pengeditan Halaman</h1>
           <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
         </div>
       </main>
@@ -499,7 +499,7 @@ export default function LandingPageBuilderPage() {
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ margin: "6px 0 8px" }}>Pengaturan Halaman Publik</h1>
+          <h1 style={{ margin: "6px 0 8px" }}>Pengeditan Halaman</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Login customer untuk mengatur halaman publik bisnis.
           </p>
@@ -539,7 +539,7 @@ export default function LandingPageBuilderPage() {
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Pengaturan Halaman Publik</h1>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Pengeditan Halaman</h1>
           <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
         </div>
 
@@ -763,7 +763,7 @@ export default function LandingPageBuilderPage() {
                 <label style={{ fontSize: 13, fontWeight: 900 }}>Menu / Katalog PDF</label>
                 <input
                   style={inputStyle}
-                  placeholder="Judul PDF, contoh: Menu & Daftar Harga"
+                  placeholder="Judul PDF, contoh: Menu, Daftar Layanan, Paket Travel, Brosur"
                   value={settings.pdf_title}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_title: e.target.value }))}
                   maxLength={80}
@@ -868,7 +868,7 @@ export default function LandingPageBuilderPage() {
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
                   {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
-                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Menu PDF"} {isSmoothie ? "›" : ""}</div>}
+                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Informasi"} {isSmoothie ? "›" : ""}</div>}
                   {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
                     <div>◉ WhatsApp</div>
                     <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
