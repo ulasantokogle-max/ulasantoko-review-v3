@@ -33,6 +33,14 @@ type CreateResult = {
   message?: string;
 };
 
+type ResetPinResult = {
+  success?: boolean;
+  card_id?: string;
+  card_code?: string;
+  activation_pin?: string;
+  message?: string;
+};
+
 export default function ProviderCardsPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -50,6 +58,12 @@ export default function ProviderCardsPage() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [created, setCreated] = useState<CreateResult | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [copied, setCopied] = useState("");
+  const [resettingCardId, setResettingCardId] = useState<string | null>(null);
+  const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
+  const [resetPinError, setResetPinError] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -169,9 +183,45 @@ export default function ProviderCardsPage() {
     await loadCards();
   }
 
-  async function copyText(value?: string) {
+  async function copyText(value?: string, label?: string) {
     if (!value) return;
     await navigator.clipboard.writeText(value);
+    setCopied(label || "Tersalin");
+    window.setTimeout(() => setCopied(""), 1800);
+  }
+
+  async function resetActivationPin(card: ProviderCard) {
+    const confirmed = window.confirm(
+      `Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`
+    );
+
+    if (!confirmed) return;
+
+    setResetPinError("");
+    setResetPinResult(null);
+    setResettingCardId(card.id);
+
+    const { data, error } = await supabase.rpc(
+      "v3_provider_reset_activation_pin",
+      {
+        p_card_id: card.id,
+      }
+    );
+
+    setResettingCardId(null);
+
+    if (error) {
+      setResetPinError(error.message);
+      return;
+    }
+
+    if (!data?.success) {
+      setResetPinError(data?.message ?? "Gagal mereset PIN.");
+      return;
+    }
+
+    setResetPinResult(data as ResetPinResult);
+    await loadCards();
   }
 
   const stats = useMemo(() => {
@@ -181,6 +231,31 @@ export default function ProviderCardsPage() {
       activated: cards.filter((card) => card.inventory_status === "activated").length,
     };
   }, [cards]);
+
+  const filteredCards = useMemo(() => {
+    const q = search.trim().toLowerCase();
+
+    return cards.filter((card) => {
+      const matchesStatus =
+        statusFilter === "all" || card.inventory_status === statusFilter;
+
+      const haystack = [
+        card.card_code,
+        card.label,
+        card.area,
+        card.internal_code,
+        card.business_name,
+        card.qr_url,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const matchesSearch = !q || haystack.includes(q);
+
+      return matchesStatus && matchesSearch;
+    });
+  }, [cards, search, statusFilter]);
 
   const inputStyle = {
     width: "100%",
@@ -428,14 +503,14 @@ export default function ProviderCardsPage() {
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.card_code)}
+                      onClick={() => copyText(created.card_code, "Card Code")}
                     >
                       Copy Card Code
                     </button>
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.activation_pin)}
+                      onClick={() => copyText(created.activation_pin, "PIN")}
                     >
                       Copy PIN
                     </button>
@@ -447,7 +522,7 @@ export default function ProviderCardsPage() {
                         color: "#111827",
                         border: "1px solid #d1d5db",
                       }}
-                      onClick={() => copyText(created.qr_url)}
+                      onClick={() => copyText(created.qr_url, "URL")}
                     >
                       Copy URL
                     </button>
@@ -494,6 +569,93 @@ export default function ProviderCardsPage() {
                 </button>
               </div>
 
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "minmax(0, 1fr) 180px",
+                  gap: 10,
+                  marginBottom: 14,
+                }}
+              >
+                <input
+                  style={inputStyle}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Cari card code, label, area, SKU, owner..."
+                />
+                <select
+                  style={inputStyle}
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">Semua status</option>
+                  <option value="ready_to_sell">Ready to Sell</option>
+                  <option value="activated">Activated</option>
+                </select>
+              </div>
+
+              {resetPinResult?.success && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 14,
+                    borderRadius: 12,
+                    background: "#fff7ed",
+                    border: "1px solid #fed7aa",
+                    color: "#9a3412",
+                  }}
+                >
+                  <div style={{ fontWeight: 900, marginBottom: 6 }}>
+                    PIN baru untuk {resetPinResult.card_code}
+                  </div>
+                  <div style={{ fontSize: 14, marginBottom: 10 }}>
+                    PIN Aktivasi: <strong>{resetPinResult.activation_pin}</strong>
+                  </div>
+                  <div style={{ fontSize: 12, marginBottom: 10 }}>
+                    Simpan PIN ini sekarang. Setelah panel ini hilang, PIN tidak dapat dilihat kembali.
+                  </div>
+                  <button
+                    type="button"
+                    style={buttonStyle}
+                    onClick={() =>
+                      copyText(resetPinResult.activation_pin, "PIN baru")
+                    }
+                  >
+                    Copy PIN Baru
+                  </button>
+                </div>
+              )}
+
+              {resetPinError && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 12,
+                    borderRadius: 10,
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                  }}
+                >
+                  {resetPinError}
+                </div>
+              )}
+
+              {copied && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: "9px 11px",
+                    borderRadius: 10,
+                    background: "#f0fdf4",
+                    color: "#166534",
+                    fontSize: 13,
+                    fontWeight: 800,
+                  }}
+                >
+                  {copied} berhasil disalin.
+                </div>
+              )}
+
               {loadError && (
                 <div
                   style={{
@@ -512,15 +674,23 @@ export default function ProviderCardsPage() {
                 <p>Memuat inventory...</p>
               ) : cards.length === 0 ? (
                 <div style={{ color: "#6b7280" }}>Belum ada inventory.</div>
+              ) : filteredCards.length === 0 ? (
+                <div style={{ color: "#6b7280" }}>
+                  Tidak ada kartu yang cocok dengan filter.
+                </div>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>
-                  {cards.map((card) => (
+                  {filteredCards.map((card) => (
                     <article
                       key={card.id}
                       style={{
                         border: "1px solid #e5e7eb",
                         borderRadius: 14,
                         padding: 15,
+                        background:
+                          card.inventory_status === "ready_to_sell"
+                            ? "#fffdf5"
+                            : "#ffffff",
                       }}
                     >
                       <div
@@ -596,22 +766,74 @@ export default function ProviderCardsPage() {
                         </div>
                       </div>
 
-                      {card.qr_url && (
-                        <div style={{ marginTop: 12 }}>
-                          <a
-                            href={card.qr_url}
-                            target="_blank"
-                            rel="noreferrer"
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: 8,
+                          flexWrap: "wrap",
+                          marginTop: 12,
+                        }}
+                      >
+                        <button
+                          type="button"
+                          style={{
+                            ...buttonStyle,
+                            background: "#ffffff",
+                            color: "#111827",
+                            border: "1px solid #d1d5db",
+                          }}
+                          onClick={() => copyText(card.card_code, "Card Code")}
+                        >
+                          Copy Card Code
+                        </button>
+
+                        {card.inventory_status === "ready_to_sell" && (
+                          <button
+                            type="button"
                             style={{
                               ...buttonStyle,
-                              display: "inline-block",
-                              textDecoration: "none",
+                              background: "#fff7ed",
+                              color: "#9a3412",
+                              border: "1px solid #fed7aa",
                             }}
+                            disabled={resettingCardId === card.id}
+                            onClick={() => resetActivationPin(card)}
                           >
-                            Test Card
-                          </a>
-                        </div>
-                      )}
+                            {resettingCardId === card.id
+                              ? "Resetting..."
+                              : "Reset PIN"}
+                          </button>
+                        )}
+
+                        {card.qr_url && (
+                          <>
+                            <button
+                              type="button"
+                              style={{
+                                ...buttonStyle,
+                                background: "#ffffff",
+                                color: "#111827",
+                                border: "1px solid #d1d5db",
+                              }}
+                              onClick={() => copyText(card.qr_url ?? undefined, "QR/NFC URL")}
+                            >
+                              Copy URL
+                            </button>
+                            <a
+                              href={card.qr_url}
+                              target="_blank"
+                              rel="noreferrer"
+                              style={{
+                                ...buttonStyle,
+                                display: "inline-block",
+                                textDecoration: "none",
+                              }}
+                            >
+                              Test Card
+                            </a>
+                          </>
+                        )}
+                      </div>
                     </article>
                   ))}
                 </div>
