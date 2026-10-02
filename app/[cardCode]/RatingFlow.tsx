@@ -7,6 +7,10 @@ type Props = {
   businessName: string;
   reviewUrl: string | null;
   whatsappUrl?: string | null;
+  primaryColor?: string;
+  softColor?: string;
+  textColor?: string;
+  mutedColor?: string;
 };
 
 export default function RatingFlow({
@@ -14,6 +18,10 @@ export default function RatingFlow({
   businessName,
   reviewUrl,
   whatsappUrl,
+  primaryColor = "#8B5E3C",
+  softColor = "#F2E5D8",
+  textColor = "#4B3428",
+  mutedColor = "#7A6659",
 }: Props) {
   const [rating, setRating] = useState<number | null>(null);
   const [name, setName] = useState("");
@@ -105,7 +113,7 @@ export default function RatingFlow({
         <div style={{ fontWeight: 800, fontSize: 18, marginBottom: 8 }}>
           Terima kasih atas masukannya
         </div>
-        <div style={{ color: "#4b5563", lineHeight: 1.6 }}>
+        <div style={{ color: mutedColor, lineHeight: 1.6 }}>
           Feedback Anda sudah diterima oleh {businessName}.
         </div>
 
@@ -119,7 +127,7 @@ export default function RatingFlow({
               marginTop: 14,
               textAlign: "center",
               textDecoration: "none",
-              background: "#16a34a",
+              background: primaryColor,
               color: "#ffffff",
               padding: "12px 14px",
               borderRadius: 12,
@@ -140,7 +148,7 @@ export default function RatingFlow({
       </div>
       <div
         style={{
-          color: "#6b7280",
+          color: mutedColor,
           textAlign: "center",
           fontSize: 14,
           marginTop: 6,
@@ -186,8 +194,8 @@ export default function RatingFlow({
             marginTop: 14,
             padding: 14,
             borderRadius: 12,
-            background: "#eff6ff",
-            color: "#1e3a8a",
+            background: softColor,
+            color: textColor,
             textAlign: "center",
             lineHeight: 1.55,
           }}
@@ -199,7 +207,7 @@ export default function RatingFlow({
                 href={reviewUrl}
                 target="_blank"
                 rel="noreferrer"
-                style={{ color: "#1d4ed8", fontWeight: 800 }}
+                style={{ color: primaryColor, fontWeight: 800 }}
               >
                 Buka Google Review lagi
               </a>
@@ -215,8 +223,8 @@ export default function RatingFlow({
             marginTop: 18,
             padding: 18,
             borderRadius: 16,
-            background: "#f9fafb",
-            border: "1px solid #e5e7eb",
+            background: softColor,
+            border: "1px solid rgba(0,0,0,.06)",
           }}
         >
           <div style={{ fontWeight: 800, marginBottom: 6 }}>
@@ -224,7 +232,7 @@ export default function RatingFlow({
           </div>
           <div
             style={{
-              color: "#6b7280",
+              color: mutedColor,
               fontSize: 14,
               lineHeight: 1.55,
               marginBottom: 14,
@@ -290,7 +298,7 @@ export default function RatingFlow({
                 gap: 8,
                 alignItems: "flex-start",
                 fontSize: 13,
-                color: "#4b5563",
+                color: mutedColor,
               }}
             >
               <input
@@ -311,7 +319,7 @@ export default function RatingFlow({
                 padding: "12px 14px",
                 fontWeight: 800,
                 cursor: "pointer",
-                background: "#111827",
+                background: primaryColor,
                 color: "#ffffff",
               }}
             >
