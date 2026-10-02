@@ -160,11 +160,11 @@ export default function AccessHubPage() {
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 2</div>
             <h2 style={{ margin: "6px 0 8px" }}>Pemilik Bisnis</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Dashboard bisnis untuk kartu, landing page, Google Review, feedback, dan analitik.
+              Dashboard bisnis untuk kartu, landing page, Google Review, masukan, dan analitik.
             </p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Link href="/dashboard" style={buttonStyle}>Dashboard</Link>
-              <Link href="/dashboard/landing-page" style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Landing Page</Link>
+              <Link href="/dashboard/landing-page" style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Pengeditan Halaman</Link>
             </div>
           </section>
 
@@ -172,7 +172,7 @@ export default function AccessHubPage() {
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 3</div>
             <h2 style={{ margin: "6px 0 8px" }}>Aktivasi Pemilik</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Simulasi customer yang baru membeli kartu dan akan menghubungkannya ke bisnis.
+              Simulasi pemilik bisnis yang baru membeli kartu dan akan menghubungkannya ke bisnis.
             </p>
             {cardReady ? (
               <Link href={"/activate/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Buka Aktivasi</Link>
@@ -190,7 +190,7 @@ export default function AccessHubPage() {
             {cardReady ? (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <Link href={"/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Halaman Publik</Link>
-                <Link href={"/" + encodeURIComponent(normalizedCardCode) + "/menu"} style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Menu / PDF</Link>
+                <Link href={"/" + encodeURIComponent(normalizedCardCode) + "/menu"} style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Informasi / PDF</Link>
               </div>
             ) : (
               <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Kode Kartu terlebih dahulu.</div>
