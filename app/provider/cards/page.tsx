@@ -706,7 +706,7 @@ export default function ProviderCardsPage() {
                                 color: "#111827",
                                 border: "1px solid #d1d5db",
                               }}
-                              onClick={() => copyText(card.qr_url, "QR/NFC URL")}
+                              onClick={() => copyText(card.qr_url ?? undefined, "QR/NFC URL")}
                             >
                               Copy URL
                             </button>
