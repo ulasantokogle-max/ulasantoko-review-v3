@@ -148,7 +148,7 @@ export default function CustomerOnboardingPage() {
           </div>
           <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Memeriksa sesi login...
+            Memeriksa sesi...
           </p>
         </section>
       </main>
@@ -164,7 +164,7 @@ export default function CustomerOnboardingPage() {
           </div>
           <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Silakan login kembali dari dashboard untuk melanjutkan setup bisnis.
+            Silakan masuk kembali dari dashboard untuk melanjutkan pengaturan bisnis.
           </p>
           <Link
             href="/dashboard"
@@ -192,9 +192,9 @@ export default function CustomerOnboardingPage() {
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
           REPUTASIPRO
         </div>
-        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Setup Bisnis Anda</h1>
+        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Siapkan Bisnis Anda</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6, marginTop: 0 }}>
-          Kartu sudah aktif. Selesaikan beberapa langkah ini supaya ReputasiPro siap dipakai customer.
+          Kartu sudah aktif. Selesaikan beberapa langkah ini agar ReputasiPro siap digunakan pelanggan.
         </p>
 
         <div
