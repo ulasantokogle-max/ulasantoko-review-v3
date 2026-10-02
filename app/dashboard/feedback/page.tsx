@@ -208,7 +208,7 @@ export default function FeedbackInboxPage() {
               marginBottom: 8,
             }}
           >
-            UlasanToko Review
+            ReputasiPro
           </div>
 
             <h1 style={{ margin: 0, fontSize: 30 }}>Feedback Pelanggan</h1>
