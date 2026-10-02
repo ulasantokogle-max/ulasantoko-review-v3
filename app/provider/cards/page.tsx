@@ -317,7 +317,7 @@ export default function ProviderCardsPage() {
                 color: "#6b7280",
               }}
             >
-              ULASANTOKO PROVIDER
+              REPUTASIPRO PROVIDER
             </div>
             <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Pusat Kartu</h1>
             <p style={{ margin: "7px 0 0", color: "#6b7280" }}>
