@@ -204,7 +204,7 @@ export default function LandingPageBuilderPage() {
 
     if (!uid) {
       setUploading(false);
-      setError("Sesi login tidak ditemukan.");
+      setError("Sesi tidak ditemukan. Silakan masuk kembali.");
       return;
     }
 
@@ -263,7 +263,7 @@ export default function LandingPageBuilderPage() {
 
     if (!uid) {
       setUploadingPdf(false);
-      setError("Sesi login tidak ditemukan.");
+      setError("Sesi tidak ditemukan. Silakan masuk kembali.");
       return;
     }
 
@@ -295,7 +295,7 @@ export default function LandingPageBuilderPage() {
     }));
 
     setUploadingPdf(false);
-    setMessage("PDF berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan.");
+    setMessage("PDF berhasil diunggah. Klik Simpan Perubahan untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {
@@ -345,7 +345,7 @@ export default function LandingPageBuilderPage() {
       if (sessionError || !session?.access_token) {
         setLoadingGoogleReview(false);
         setSaving(false);
-        setError("Session login tidak ditemukan. Silakan login ulang.");
+        setError("Sesi tidak ditemukan. Silakan masuk kembali.");
         return;
       }
 
@@ -373,7 +373,7 @@ export default function LandingPageBuilderPage() {
           setSaving(false);
 
           if (response.status === 401) {
-            setError("Sesi login sudah berakhir. Silakan login kembali.");
+            setError("Sesi sudah berakhir. Silakan masuk kembali.");
           } else if (response.status === 429) {
             setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
           } else if (googleData?.step === "resolve") {
@@ -489,7 +489,7 @@ export default function LandingPageBuilderPage() {
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
           <h1 style={{ marginBottom: 8 }}>Pengeditan Halaman</h1>
-          <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
+          <p style={{ color: "#6b7280" }}>Memeriksa sesi...</p>
         </div>
       </main>
     );
@@ -597,14 +597,14 @@ export default function LandingPageBuilderPage() {
                 <label style={{ fontSize: 13, fontWeight: 900 }}>Nama Bisnis Publik</label>
                 <input
                   style={inputStyle}
-                  placeholder="Nama yang tampil ke customer"
+                  placeholder="Nama yang tampil ke pelanggan"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={160}
                   required
                 />
                 <div style={{ color: "#6b7280", fontSize: 11, lineHeight: 1.5 }}>
-                  Nama ini tampil di halaman publik customer. Perubahan nama tidak memengaruhi kartu atau link Google Review.
+                  Nama ini tampil di halaman publik pelanggan. Perubahan nama tidak memengaruhi kartu atau link Google Review.
                 </div>
               </div>
               <input style={inputStyle} placeholder="Judul utama" value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
@@ -731,7 +731,7 @@ export default function LandingPageBuilderPage() {
                   disabled={loadingGoogleReview}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Paste link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.
+                  Tempel link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.
                 </div>
               </div>
 
