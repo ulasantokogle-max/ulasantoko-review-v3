@@ -8,7 +8,7 @@ export async function POST(request: Request) {
 
     if (!authorization?.startsWith("Bearer ")) {
       return NextResponse.json(
-        { success: false, message: "Authentication required" },
+        { success: false, message: "Sesi login diperlukan." },
         { status: 401 }
       );
     }
@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "business_id and maps_url are required",
+          message: "Data Google Review belum lengkap.",
         },
         { status: 400 }
       );
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { success: false, message: "Supabase environment variables are missing" },
+        { success: false, message: "Layanan sedang mengalami kendala." },
         { status: 500 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     if (userError || !userData.user) {
       return NextResponse.json(
-        { success: false, message: "Invalid or expired session" },
+        { success: false, message: "Sesi login sudah berakhir." },
         { status: 401 }
       );
     }
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
 
     if (limitError) {
       return NextResponse.json(
-        { success: false, message: "Unable to verify request limit" },
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi." },
         { status: 400 }
       );
     }
@@ -77,8 +77,7 @@ export async function POST(request: Request) {
         {
           success: false,
           step: "resolve",
-          message: typed.message || "Gagal memproses Google Maps URL.",
-          details: typed.details,
+          message: "Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.",
         },
         { status: typed.status ?? 400 }
       );
@@ -98,7 +97,7 @@ export async function POST(request: Request) {
         {
           success: false,
           step: "save",
-          message: saveError.message,
+          message: "Google Review belum dapat disimpan. Silakan coba lagi.",
         },
         { status: 400 }
       );
@@ -118,8 +117,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Google Review setup failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Google Review belum dapat diproses. Silakan coba lagi.",
       },
       { status: 500 }
     );
