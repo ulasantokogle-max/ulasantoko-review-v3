@@ -93,12 +93,6 @@ export default function DashboardHomePage() {
     setPassword("");
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setAnalytics(null);
-    setSetup({ displayName: "", whatsapp: "", reviewUrl: "" });
-  }
 
   async function loadSummary() {
     if (!businessId) return;
@@ -290,18 +284,6 @@ export default function DashboardHomePage() {
                   onClick={loadSummary}
                 >
                   Refresh
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    ...buttonStyle,
-                    background: "#fff",
-                    color: "#111827",
-                    border: "1px solid #d1d5db",
-                  }}
-                  onClick={handleLogout}
-                >
-                  Logout
                 </button>
               </div>
             </div>
