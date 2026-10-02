@@ -90,7 +90,7 @@ export default function AccessHubPage() {
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
           <h1 style={{ marginBottom: 8 }}>Menu Akses</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Halaman ini khusus tim Provider. Login melalui Provider Portal terlebih dahulu.
+            Halaman ini khusus tim Provider. Masuk melalui Provider Portal terlebih dahulu.
           </p>
           <Link href="/provider/cards" style={buttonStyle}>Buka Provider Portal</Link>
         </section>
