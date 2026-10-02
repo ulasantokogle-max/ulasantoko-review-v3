@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useBusinessContext } from "../../lib/useBusinessContext";
+import { useLanguage } from "../../lib/i18n";
 
 type AnalyticsData = {
   feedback?: {
@@ -162,15 +163,15 @@ export default function DashboardHomePage() {
   const progress = Math.round((completed / checklist.length) * 100);
 
   const metrics = [
-    ["Kartu Aktif", analytics?.cards?.activated ?? 0],
-    ["Total Masukan", analytics?.feedback?.total ?? 0],
+    [tr("Kartu Aktif", "Active Cards"), analytics?.cards?.activated ?? 0],
+    [tr("Total Masukan", "Total Feedback"), analytics?.feedback?.total ?? 0],
     [
-      "Rata-rata Rating",
+      tr("Rata-rata Rating", "Average Rating"),
       Number(analytics?.feedback?.average_rating ?? 0).toFixed(1),
     ],
-    ["Masukan Baru", analytics?.feedback?.new ?? 0],
-    ["7 Hari Terakhir", analytics?.feedback?.last_7_days ?? 0],
-    ["Bisa Dihubungi", analytics?.feedback?.contactable ?? 0],
+    [tr("Masukan Baru", "New Feedback"), analytics?.feedback?.new ?? 0],
+    [tr("7 Hari Terakhir", "Last 7 Days"), analytics?.feedback?.last_7_days ?? 0],
+    [tr("Bisa Dihubungi", "Contactable"), analytics?.feedback?.contactable ?? 0],
   ];
 
   const buttonStyle = {
@@ -454,10 +455,10 @@ export default function DashboardHomePage() {
                     </h2>
                     <div style={{ display: "grid", gap: 10 }}>
                       {[
-                        ["/dashboard/feedback", "Buka Masukan"],
-                        ["/dashboard/analytics", "Lihat Analitik"],
+                        ["/dashboard/feedback", tr("Buka Masukan", "Open Feedback")],
+                        ["/dashboard/analytics", tr("Lihat Analitik", "View Analytics")],
                         ["/dashboard/cards", "Kelola Kartu"],
-                        ["/dashboard/landing-page", "Pengeditan Halaman"],
+                        ["/dashboard/landing-page", tr("Pengeditan Halaman", "Edit Public Page")],
                       ].map(([href, label]) => (
                         <Link
                           key={href}
