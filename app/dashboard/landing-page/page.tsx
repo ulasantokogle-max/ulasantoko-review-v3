@@ -68,6 +68,8 @@ export default function LandingPageBuilderPage() {
   const [uploadingLogo, setUploadingLogo] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [uploadingPdf, setUploadingPdf] = useState(false);
+  const [whatsapp, setWhatsapp] = useState("");
+  const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail);
@@ -111,13 +113,28 @@ export default function LandingPageBuilderPage() {
 
   async function loadSettings() {
     setLoading(true);
+    setLoadingWhatsapp(true);
     setError("");
-    const { data, error } = await supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId });
+
+    const [{ data, error }, { data: contactData, error: contactError }] = await Promise.all([
+      supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId }),
+      supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId })
+    ]);
+
     setLoading(false);
+    setLoadingWhatsapp(false);
+
     if (error) {
       setError(error.message);
       return;
     }
+
+    if (contactError) {
+      setError(contactError.message);
+      return;
+    }
+
+    setWhatsapp(contactData?.whatsapp_number ?? "");
     setSettings({
       theme_key: (data?.theme_key ?? "warm_brown") as ThemeKey,
       hero_title: data?.hero_title ?? "",
@@ -260,6 +277,28 @@ export default function LandingPageBuilderPage() {
     setSaving(true);
     setError("");
     setMessage("");
+
+    const { data: contactData, error: contactError } = await supabase.rpc(
+      "v3_update_business_contact_settings",
+      {
+        p_business_id: businessId,
+        p_whatsapp_number: whatsapp
+      }
+    );
+
+    if (contactError) {
+      setSaving(false);
+      setError(contactError.message);
+      return;
+    }
+
+    if (contactData?.success === false) {
+      setSaving(false);
+      setError(contactData?.message ?? "Gagal menyimpan nomor WhatsApp.");
+      return;
+    }
+
+    setWhatsapp(contactData?.whatsapp_number ?? whatsapp);
 
     const { data, error } = await supabase.rpc("v3_update_landing_page_settings", {
       p_business_id: businessId,
@@ -542,6 +581,21 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>WhatsApp Bisnis</label>
+                <input
+                  style={inputStyle}
+                  inputMode="tel"
+                  placeholder="Contoh: 081234567890"
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  disabled={loadingWhatsapp}
+                />
+                <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
+                  Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
                 <label style={{ fontSize: 13, fontWeight: 900 }}>Instagram</label>
                 <input
                   style={inputStyle}
@@ -655,7 +709,12 @@ export default function LandingPageBuilderPage() {
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
                   {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
                   {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Menu PDF"} {isSmoothie ? "›" : ""}</div>}
-                  {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◉ WhatsApp</div>}
+                  {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
+                    <div>◉ WhatsApp</div>
+                    <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
+                      {whatsapp || "62 812-XXXX-XXXX"}
+                    </div>
+                  </div>}
                   {settings.show_instagram && settings.instagram_url && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
                 </div>
 
