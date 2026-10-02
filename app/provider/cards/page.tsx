@@ -41,6 +41,16 @@ type ResetPinResult = {
   message?: string;
 };
 
+type FactoryResetResult = {
+  success?: boolean;
+  card_id?: string;
+  card_code?: string;
+  activation_pin?: string;
+  previous_business_id?: string;
+  inventory_status?: string;
+  message?: string;
+};
+
 export default function ProviderCardsPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -64,6 +74,9 @@ export default function ProviderCardsPage() {
   const [resettingCardId, setResettingCardId] = useState<string | null>(null);
   const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
   const [resetPinError, setResetPinError] = useState("");
+  const [factoryResettingCardId, setFactoryResettingCardId] = useState<string | null>(null);
+  const [factoryResetResult, setFactoryResetResult] = useState<FactoryResetResult | null>(null);
+  const [factoryResetError, setFactoryResetError] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -221,6 +234,51 @@ export default function ProviderCardsPage() {
     }
 
     setResetPinResult(data as ResetPinResult);
+    await loadCards();
+  }
+
+  async function factoryResetCard(card: ProviderCard) {
+    const typed = window.prompt(
+      `FACTORY RESET ${card.card_code}\n\nKartu akan dilepas dari owner ${card.business_name || "saat ini"} dan kembali menjadi Ready to Sell. Data bisnis lama, feedback, dan analytics tidak dihapus.\n\nKetik ${card.card_code} untuk konfirmasi.`
+    );
+
+    if (typed !== card.card_code) {
+      if (typed !== null) {
+        setFactoryResetError("Factory reset dibatalkan karena Card Code tidak sesuai.");
+      }
+      return;
+    }
+
+    const reason = window.prompt(
+      "Alasan reset / transfer (opsional):",
+      "Transfer ke customer baru"
+    );
+
+    setFactoryResetError("");
+    setFactoryResetResult(null);
+    setFactoryResettingCardId(card.id);
+
+    const { data, error } = await supabase.rpc(
+      "v3_provider_factory_reset_card",
+      {
+        p_card_id: card.id,
+        p_reason: reason || null,
+      }
+    );
+
+    setFactoryResettingCardId(null);
+
+    if (error) {
+      setFactoryResetError(error.message);
+      return;
+    }
+
+    if (!data?.success) {
+      setFactoryResetError(data?.message ?? "Gagal melakukan factory reset.");
+      return;
+    }
+
+    setFactoryResetResult(data as FactoryResetResult);
     await loadCards();
   }
 
@@ -594,6 +652,52 @@ export default function ProviderCardsPage() {
                 </select>
               </div>
 
+              {factoryResetResult?.success && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 14,
+                    borderRadius: 12,
+                    background: "#eff6ff",
+                    border: "1px solid #bfdbfe",
+                    color: "#1e3a8a",
+                  }}
+                >
+                  <div style={{ fontWeight: 900, marginBottom: 6 }}>
+                    {factoryResetResult.card_code} siap dipindahkan ke owner baru
+                  </div>
+                  <div style={{ fontSize: 14, marginBottom: 10 }}>
+                    PIN Aktivasi Baru: <strong>{factoryResetResult.activation_pin}</strong>
+                  </div>
+                  <div style={{ fontSize: 12, marginBottom: 10 }}>
+                    Kartu sekarang kembali Ready to Sell. Simpan PIN baru ini untuk customer berikutnya.
+                  </div>
+                  <button
+                    type="button"
+                    style={buttonStyle}
+                    onClick={() =>
+                      copyText(factoryResetResult.activation_pin, "PIN transfer")
+                    }
+                  >
+                    Copy PIN Baru
+                  </button>
+                </div>
+              )}
+
+              {factoryResetError && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 12,
+                    borderRadius: 10,
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                  }}
+                >
+                  {factoryResetError}
+                </div>
+              )}
+
               {resetPinResult?.success && (
                 <div
                   style={{
@@ -786,6 +890,24 @@ export default function ProviderCardsPage() {
                         >
                           Copy Card Code
                         </button>
+
+                        {card.inventory_status === "activated" && (
+                          <button
+                            type="button"
+                            style={{
+                              ...buttonStyle,
+                              background: "#fef2f2",
+                              color: "#991b1b",
+                              border: "1px solid #fecaca",
+                            }}
+                            disabled={factoryResettingCardId === card.id}
+                            onClick={() => factoryResetCard(card)}
+                          >
+                            {factoryResettingCardId === card.id
+                              ? "Factory Reset..."
+                              : "Factory Reset / Transfer"}
+                          </button>
+                        )}
 
                         {card.inventory_status === "ready_to_sell" && (
                           <button
