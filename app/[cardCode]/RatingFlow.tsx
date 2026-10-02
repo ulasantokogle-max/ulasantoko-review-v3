@@ -169,6 +169,7 @@ export default function RatingFlow({
 
   return (
     <section
+      className={smoothMode ? "smoothie-rating-card" : undefined}
       style={{
         marginTop: smoothMode ? 18 : 24,
         padding: smoothMode ? "22px 18px 20px" : 0,
@@ -203,12 +204,14 @@ export default function RatingFlow({
       </div>
 
       <div
+        className={smoothMode ? "smoothie-stars" : undefined}
         style={{
-          display: "flex",
+          display: smoothMode ? "grid" : "flex",
+          gridTemplateColumns: smoothMode ? "repeat(5, minmax(0, 1fr))" : undefined,
           justifyContent: "center",
-          gap: smoothMode ? 10 : 6,
+          gap: smoothMode ? 8 : 6,
           marginTop: smoothMode ? 18 : 16,
-          flexWrap: "wrap",
+          flexWrap: smoothMode ? undefined : "wrap",
         }}
       >
         {[1, 2, 3, 4, 5].map((value) => (
@@ -220,10 +223,12 @@ export default function RatingFlow({
             style={{
               border: smoothMode ? "1px solid rgba(255,255,255,.8)" : 0,
               background: smoothMode ? "rgba(255,255,255,.72)" : "transparent",
-              fontSize: smoothMode ? 34 : 40,
+              fontSize: smoothMode ? "clamp(27px, 8vw, 34px)" : 40,
               lineHeight: 1,
               cursor: "pointer",
-              padding: smoothMode ? 10 : 5,
+              padding: smoothMode ? 8 : 5,
+              width: smoothMode ? "100%" : "auto",
+              minWidth: 0,
               borderRadius: smoothMode ? 16 : 0,
               boxShadow: smoothMode ? "0 8px 18px rgba(103,73,48,.08)" : "none",
               color:
