@@ -387,7 +387,7 @@ export default function ActivateCardPage() {
                 fontSize: 14,
               }}
             >
-              Login sebagai <strong>{userEmail}</strong>
+              Akun: <strong>{userEmail}</strong>
             </div>
 
             {businesses.length > 0 && (
