@@ -93,12 +93,6 @@ export default function DashboardHomePage() {
     setPassword("");
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setAnalytics(null);
-    setSetup({ displayName: "", whatsapp: "", reviewUrl: "" });
-  }
 
   async function loadSummary() {
     if (!businessId) return;
@@ -141,12 +135,12 @@ export default function DashboardHomePage() {
       {
         label: "Nama bisnis publik",
         done: Boolean(setup.displayName),
-        href: "/dashboard/google-review",
+        href: "/dashboard/landing-page",
       },
       {
         label: "Google Review",
         done: Boolean(setup.reviewUrl),
-        href: "/dashboard/google-review",
+        href: "/dashboard/landing-page",
       },
       {
         label: "WhatsApp bisnis",
@@ -290,18 +284,6 @@ export default function DashboardHomePage() {
                   onClick={loadSummary}
                 >
                   Refresh
-                </button>
-                <button
-                  type="button"
-                  style={{
-                    ...buttonStyle,
-                    background: "#fff",
-                    color: "#111827",
-                    border: "1px solid #d1d5db",
-                  }}
-                  onClick={handleLogout}
-                >
-                  Logout
                 </button>
               </div>
             </div>
@@ -473,7 +455,6 @@ export default function DashboardHomePage() {
                         ["/dashboard/feedback", "Buka Feedback Inbox"],
                         ["/dashboard/analytics", "Lihat Analytics Lengkap"],
                         ["/dashboard/cards", "Kelola Kartu"],
-                        ["/dashboard/google-review", "Atur Google Review"],
                         ["/dashboard/contact", "Atur WhatsApp"],
                       ].map(([href, label]) => (
                         <Link

@@ -89,11 +89,6 @@ export default function CardsDashboardPage() {
     setPassword("");
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setCards([]);
-  }
 
   async function loadCards() {
     setLoadError("");
@@ -367,18 +362,6 @@ export default function CardsDashboardPage() {
                   }}
                 >
                   Refresh
-                </button>
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  style={{
-                    ...buttonStyle,
-                    background: "#ffffff",
-                    color: "#111827",
-                    border: "1px solid #d1d5db",
-                  }}
-                >
-                  Logout
                 </button>
               </div>
             </div>
