@@ -400,8 +400,8 @@ export default function ProviderCardsPage() {
             >
               {[
                 ["Total Inventory", stats.total],
-                ["Ready to Sell", stats.ready],
-                ["Activated", stats.activated],
+                ["Siap Dijual", stats.ready],
+                ["Sudah Diaktifkan", stats.activated],
               ].map(([name, value]) => (
                 <div
                   key={String(name)}
@@ -459,7 +459,7 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={internalCode}
                   onChange={(e) => setInternalCode(e.target.value)}
-                  placeholder="Internal code / SKU (opsional)"
+                  placeholder="Kode internal / SKU (opsional)"
                 />
                 <button style={buttonStyle} type="submit" disabled={creating}>
                   {creating ? "Membuat..." : "Generate Card"}
@@ -596,8 +596,8 @@ export default function ProviderCardsPage() {
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="all">Semua status</option>
-                  <option value="ready_to_sell">Ready to Sell</option>
-                  <option value="activated">Activated</option>
+                  <option value="ready_to_sell">Siap Dijual</option>
+                  <option value="activated">Sudah Diaktifkan</option>
                 </select>
               </div>
 
