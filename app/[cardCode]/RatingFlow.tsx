@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { useLanguage } from "../../lib/i18n";
 
 type Props = {
   cardCode: string;
@@ -49,6 +50,7 @@ export default function RatingFlow({
   mutedColor = "#7A6659",
   smoothMode = false,
 }: Props) {
+  const { tr } = useLanguage();
   const [rating, setRating] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -64,7 +66,7 @@ export default function RatingFlow({
 
     if (value >= 4) {
       if (!reviewUrl) {
-        setError("Link Google Review belum tersedia. Silakan hubungi pemilik bisnis.");
+        setError(tr("Link Google Review belum tersedia. Silakan hubungi pemilik bisnis.", "Google Review link is not available yet. Please contact the business owner."));
         return;
       }
 
@@ -122,14 +124,14 @@ export default function RatingFlow({
           status: response.status,
           data
         });
-        setError("Masukan belum dapat dikirim. Silakan coba lagi.");
+        setError(tr("Masukan belum dapat dikirim. Silakan coba lagi.", "Feedback could not be sent. Please try again."));
         return;
       }
 
       setSent(true);
     } catch (err) {
       console.error("Private feedback request failed", err);
-      setError("Masukan belum dapat dikirim. Periksa koneksi lalu coba lagi.");
+      setError(tr("Masukan belum dapat dikirim. Periksa koneksi lalu coba lagi.", "Feedback could not be sent. Check your connection and try again."));
     } finally {
       setSending(false);
     }
@@ -158,10 +160,10 @@ export default function RatingFlow({
           </div>
         )}
         <div style={{ fontWeight: 900, fontSize: smoothMode ? 20 : 18, marginBottom: 8, color: textColor }}>
-          Terima kasih atas masukannya
+          {tr("Terima kasih atas masukannya", "Thank you for your feedback")}
         </div>
         <div style={{ color: mutedColor, lineHeight: 1.6 }}>
-          Masukan Anda sudah diterima oleh {businessName}.
+          {tr("Masukan Anda sudah diterima oleh", "Your feedback has been received by")} {businessName}.
         </div>
 
         {whatsappUrl && (
@@ -181,7 +183,7 @@ export default function RatingFlow({
               fontWeight: 800,
             }}
           >
-            Hubungi Bisnis via WhatsApp
+            {tr("Hubungi Bisnis via WhatsApp", "Contact Business via WhatsApp")}
           </a>
         )}
       </div>
@@ -211,7 +213,7 @@ export default function RatingFlow({
         </div>
       )}
       <div style={{ fontWeight: 900, fontSize: smoothMode ? 21 : 19, textAlign: "center", color: textColor }}>
-        {smoothMode ? "Beri kami ulasan Google" : "Bagaimana pengalaman Anda?"}
+        {smoothMode ? tr("Beri kami ulasan Google", "Leave us a Google review") : tr("Bagaimana pengalaman Anda?", "How was your experience?")}
       </div>
       <div
         style={{
@@ -221,7 +223,7 @@ export default function RatingFlow({
           marginTop: 6,
         }}
       >
-        {smoothMode ? "Hanya 10 detik, sangat berarti bagi kami" : "Pilih rating 1 sampai 5 bintang"}
+        {smoothMode ? tr("Hanya 10 detik, sangat berarti bagi kami", "It only takes 10 seconds and means a lot to us") : tr("Pilih rating 1 sampai 5 bintang", "Choose a rating from 1 to 5 stars")}
       </div>
 
       <div
@@ -239,7 +241,7 @@ export default function RatingFlow({
           <button
             key={value}
             type="button"
-            aria-label={`${value} bintang`}
+            aria-label={`${value} ${tr("bintang", "stars")}`}
             onClick={() => chooseRating(value)}
             style={{
               border: smoothMode ? "1px solid rgba(255,255,255,.8)" : 0,
@@ -273,7 +275,7 @@ export default function RatingFlow({
             lineHeight: 1.55,
           }}
         >
-          Mengarahkan ke halaman ulasan Google...
+          {tr("Mengarahkan ke halaman ulasan Google...", "Redirecting to Google Reviews...")}
         </div>
       )}
 
@@ -406,7 +408,7 @@ export default function RatingFlow({
                 color: "#ffffff",
               }}
             >
-              {sending ? "Mengirim..." : "Kirim Masukan Privat"}
+              {sending ? tr("Mengirim...", "Sending...") : tr("Kirim Masukan Privat", "Send Private Feedback")}
             </button>
           </div>
 
