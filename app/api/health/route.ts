@@ -13,7 +13,7 @@ export async function GET() {
         success: false,
         supabase_connected: false,
         public_card_ok: false,
-        error: "Supabase environment variables are missing",
+        status: "unavailable",
       },
       { status: 503 }
     );
@@ -29,6 +29,6 @@ export async function GET() {
     success: !error,
     supabase_connected: !error,
     public_card_ok: !!data,
-    error: error?.message ?? null,
+    status: error ? "degraded" : "ok",
   });
 }
