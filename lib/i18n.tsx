@@ -25,6 +25,7 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   function setLanguage(next: AppLanguage) {
     setLanguageState(next);
     window.localStorage.setItem("reputasipro-language", next);
+    document.cookie = "reputasipro-language=" + next + "; path=/; max-age=31536000; samesite=lax";
     document.documentElement.lang = next;
   }
 
