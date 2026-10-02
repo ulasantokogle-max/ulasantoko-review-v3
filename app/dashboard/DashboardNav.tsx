@@ -17,11 +17,6 @@ const items = [
     description: "QR/NFC, status & area kartu",
   },
   {
-    href: "/dashboard/google-review",
-    label: "Google Review Setup",
-    description: "Nama bisnis & Google Maps",
-  },
-  {
     href: "/dashboard/landing-page",
     label: "Landing Page",
     description: "Tema, konten & preview publik",
