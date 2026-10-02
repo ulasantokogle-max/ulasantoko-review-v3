@@ -8,6 +8,43 @@ function firstString(...values: unknown[]) {
   return null;
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ cardCode: string }>;
+}) {
+  const { cardCode } = await params;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return {
+      title: "Dokumen | ReputasiPro",
+      description: "Dokumen publik bisnis.",
+    };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data } = await supabase.rpc("v3_get_public_landing_page", {
+      p_card_code: cardCode,
+    });
+
+    const businessName = firstString(data?.business_name) ?? "ReputasiPro";
+    const title = firstString(data?.pdf_title) ?? "Dokumen";
+
+    return {
+      title: title + " | " + businessName,
+      description: "Dokumen publik " + businessName + " melalui ReputasiPro.",
+    };
+  } catch {
+    return {
+      title: "Dokumen | ReputasiPro",
+      description: "Dokumen publik bisnis.",
+    };
+  }
+}
+
 export default async function PublicPdfMenuPage({
   params,
 }: {
@@ -36,7 +73,7 @@ export default async function PublicPdfMenuPage({
     notFound();
   }
 
-  const title = firstString(data?.pdf_title) ?? "Menu & Daftar Harga";
+  const title = firstString(data?.pdf_title) ?? "Dokumen & Informasi";
   const businessName = firstString(data?.business_name) ?? "UlasanToko";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
