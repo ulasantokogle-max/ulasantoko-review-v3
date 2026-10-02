@@ -120,14 +120,14 @@ export default function AccessHubPage() {
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .8, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 32 }}>Menu Akses Sistem</h1>
           <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.6 }}>
-            Akses cepat untuk pengecekan alur Provider → Customer → End User.
+            Akses cepat untuk pengecekan alur Provider → Pemilik Bisnis → Pengunjung.
           </p>
         </header>
 
         <section style={{ ...cardStyle, marginBottom: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>Card Code untuk pengujian</div>
+          <div style={{ fontWeight: 900, marginBottom: 8 }}>Kode Kartu untuk pengujian</div>
           <p style={{ margin: "0 0 12px", color: "#6b7280", fontSize: 14 }}>
-            Masukkan Card Code yang ingin diuji. Menu End User dan Aktivasi akan menggunakan kode ini.
+            Masukkan Kode Kartu yang ingin diuji. Menu Pengunjung dan Aktivasi akan menggunakan kode ini.
           </p>
           <input
             value={cardCode}
@@ -151,14 +151,14 @@ export default function AccessHubPage() {
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 1</div>
             <h2 style={{ margin: "6px 0 8px" }}>Provider</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Produksi kartu, Card Code, PIN aktivasi, inventory, reset PIN, dan status aktivasi.
+              Produksi kartu, Kode Kartu, PIN aktivasi, inventori, reset PIN, dan status aktivasi.
             </p>
             <Link href="/provider/cards" style={buttonStyle}>Buka Provider Portal</Link>
           </section>
 
           <section style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 2</div>
-            <h2 style={{ margin: "6px 0 8px" }}>Customer / Owner</h2>
+            <h2 style={{ margin: "6px 0 8px" }}>Pemilik Bisnis</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
               Dashboard bisnis untuk kartu, landing page, Google Review, feedback, dan analitik.
             </p>
@@ -170,30 +170,30 @@ export default function AccessHubPage() {
 
           <section style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 3</div>
-            <h2 style={{ margin: "6px 0 8px" }}>Aktivasi Customer</h2>
+            <h2 style={{ margin: "6px 0 8px" }}>Aktivasi Pemilik</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
               Simulasi customer yang baru membeli kartu dan akan menghubungkannya ke bisnis.
             </p>
             {cardReady ? (
               <Link href={"/activate/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Buka Aktivasi</Link>
             ) : (
-              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Card Code terlebih dahulu.</div>
+              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Kode Kartu terlebih dahulu.</div>
             )}
           </section>
 
           <section style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 4</div>
-            <h2 style={{ margin: "6px 0 8px" }}>End User</h2>
+            <h2 style={{ margin: "6px 0 8px" }}>Pengunjung</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
               Tampilan yang dibuka pengunjung setelah scan QR atau tap NFC pada kartu aktif.
             </p>
             {cardReady ? (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <Link href={"/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Public Landing</Link>
+                <Link href={"/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Halaman Publik</Link>
                 <Link href={"/" + encodeURIComponent(normalizedCardCode) + "/menu"} style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Menu / PDF</Link>
               </div>
             ) : (
-              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Card Code terlebih dahulu.</div>
+              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Kode Kartu terlebih dahulu.</div>
             )}
           </section>
         </div>
@@ -201,12 +201,12 @@ export default function AccessHubPage() {
         <section style={{ ...cardStyle, marginTop: 14 }}>
           <h2 style={{ marginTop: 0 }}>Urutan Test End-to-End</h2>
           <div style={{ color: "#4b5563", lineHeight: 1.8, fontSize: 14 }}>
-            <strong>1.</strong> Provider membuat kartu → <strong>2.</strong> customer membuka aktivasi dan memasukkan PIN → <strong>3.</strong> customer mengatur Landing Page → <strong>4.</strong> end user scan QR/NFC → <strong>5.</strong> rating 4–5 ke Google Review, rating 1–3 masuk Feedback.
+            <strong>1.</strong> Provider membuat kartu → <strong>2.</strong> pemilik bisnis membuka aktivasi dan memasukkan PIN → <strong>3.</strong> pemilik bisnis mengatur halaman → <strong>4.</strong> pengunjung scan QR/NFC → <strong>5.</strong> rating 4–5 ke Google Review, rating 1–3 masuk Masukan.
           </div>
         </section>
 
         <div style={{ marginTop: 18, fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
-          Menu internal Provider · tidak ditampilkan pada navigasi customer atau halaman publik.
+          Menu internal Provider · tidak ditampilkan pada navigasi pemilik bisnis atau halaman publik.
         </div>
       </div>
     </main>
