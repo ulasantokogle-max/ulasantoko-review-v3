@@ -71,7 +71,8 @@ export default function CustomerOnboardingPage() {
 
     const firstError = setupResult.error || analyticsResult.error;
     if (firstError) {
-      setError(firstError.message);
+      console.error("Onboarding status load failed", firstError);
+      setError("Status setup belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
