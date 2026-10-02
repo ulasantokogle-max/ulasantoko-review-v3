@@ -6,7 +6,8 @@ create or replace function public.v3_get_business_analytics_period(
   p_business_id uuid,
   p_period text default 'day',
   p_start_at timestamptz default null,
-  p_end_at timestamptz default null
+  p_end_at timestamptz default null,
+  p_timezone text default 'Asia/Jakarta'
 )
 returns jsonb
 language plpgsql
@@ -41,17 +42,17 @@ begin
 
   case lower(coalesce(p_period, 'day'))
     when 'hour' then
-      v_start_at := date_trunc('hour', now());
+      v_start_at := date_trunc('hour', now() at time zone p_timezone) at time zone p_timezone;
       v_end_at := v_start_at + interval '1 hour';
     when 'day' then
-      v_start_at := date_trunc('day', now());
+      v_start_at := date_trunc('day', now() at time zone p_timezone) at time zone p_timezone;
       v_end_at := v_start_at + interval '1 day';
     when 'week' then
-      v_start_at := date_trunc('week', now());
+      v_start_at := date_trunc('week', now() at time zone p_timezone) at time zone p_timezone;
       v_end_at := v_start_at + interval '1 week';
     when 'month' then
-      v_start_at := date_trunc('month', now());
-      v_end_at := v_start_at + interval '1 month';
+      v_start_at := date_trunc('month', now() at time zone p_timezone) at time zone p_timezone;
+      v_end_at := (date_trunc('month', now() at time zone p_timezone) + interval '1 month') at time zone p_timezone;
     when 'custom' then
       if p_start_at is null or p_end_at is null or p_end_at <= p_start_at then
         raise exception 'INVALID_CUSTOM_RANGE';
@@ -109,6 +110,7 @@ begin
     'success', true,
     'business_id', p_business_id,
     'period', lower(coalesce(p_period, 'day')),
+    'timezone', p_timezone,
     'start_at', v_start_at,
     'end_at', v_end_at,
     'feedback', jsonb_build_object(
@@ -133,7 +135,7 @@ begin
 end;
 $$;
 
-revoke all on function public.v3_get_business_analytics_period(uuid, text, timestamptz, timestamptz) from public;
-grant execute on function public.v3_get_business_analytics_period(uuid, text, timestamptz, timestamptz) to authenticated;
+revoke all on function public.v3_get_business_analytics_period(uuid, text, timestamptz, timestamptz, text) from public;
+grant execute on function public.v3_get_business_analytics_period(uuid, text, timestamptz, timestamptz, text) to authenticated;
 
 notify pgrst, 'reload schema';
