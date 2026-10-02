@@ -241,10 +241,15 @@ export default async function PublicCardPage({
     coverPosition;
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
+  const instagramUrl = firstString(landingSettingsData?.instagram_url);
+  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? "Menu & Daftar Harga";
+  const pdfUrl = firstString(landingSettingsData?.pdf_url);
   const showGoogleReview = landingSettingsData?.show_google_review !== false;
   const showWhatsapp = landingSettingsData?.show_whatsapp !== false;
   const showAbout = landingSettingsData?.show_about !== false;
   const showPromo = landingSettingsData?.show_promo !== false;
+  const showInstagram = landingSettingsData?.show_instagram !== false;
+  const showPdf = landingSettingsData?.show_pdf !== false;
 
   return (
     <main
@@ -394,8 +399,7 @@ export default async function PublicCardPage({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              showGoogleReview && showWhatsapp ? "1fr 1fr" : "1fr",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
             gap: 10,
             marginBottom: 8,
           }}
@@ -437,6 +441,44 @@ export default async function PublicCardPage({
               }}
             >
               ◉&nbsp; WhatsApp
+            </a>
+          )}
+
+          {showInstagram && instagramUrl && (
+            <a
+              href={instagramUrl}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                textDecoration: "none",
+                textAlign: "center",
+                padding: "13px 14px",
+                borderRadius: 14,
+                background: theme.soft,
+                color: theme.text,
+                fontWeight: 900,
+                border: "1px solid rgba(0,0,0,.06)",
+              }}
+            >
+              ◎&nbsp; Instagram
+            </a>
+          )}
+
+          {showPdf && pdfUrl && (
+            <a
+              href={"/" + cardCode + "/menu"}
+              style={{
+                textDecoration: "none",
+                textAlign: "center",
+                padding: "13px 14px",
+                borderRadius: 14,
+                background: theme.soft,
+                color: theme.text,
+                fontWeight: 900,
+                border: "1px solid rgba(0,0,0,.06)",
+              }}
+            >
+              ▤&nbsp; {pdfTitle}
             </a>
           )}
         </div>
