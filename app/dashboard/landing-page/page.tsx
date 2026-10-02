@@ -52,6 +52,8 @@ export default function LandingPageBuilderPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail);
@@ -115,6 +117,66 @@ export default function LandingPageBuilderPage() {
       show_about: data?.show_about ?? true,
       show_promo: data?.show_promo ?? true
     });
+  }
+
+  async function uploadMedia(file: File, kind: "logo" | "cover") {
+    if (!userEmail) return;
+
+    const isImage = file.type.startsWith("image/");
+    if (!isImage) {
+      setError("File harus berupa gambar.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Ukuran gambar maksimal 5 MB.");
+      return;
+    }
+
+    const setUploading = kind === "logo" ? setUploadingLogo : setUploadingCover;
+    setUploading(true);
+    setError("");
+    setMessage("");
+
+    const { data: userData } = await supabase.auth.getUser();
+    const uid = userData.user?.id;
+
+    if (!uid) {
+      setUploading(false);
+      setError("Sesi login tidak ditemukan.");
+      return;
+    }
+
+    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
+    const path = uid + "/" + kind + "-" + Date.now() + "." + safeExt;
+
+    const { error: uploadError } = await supabase.storage
+      .from("landing-media")
+      .upload(path, file, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: file.type
+      });
+
+    if (uploadError) {
+      setUploading(false);
+      setError(uploadError.message);
+      return;
+    }
+
+    const { data: publicData } = supabase.storage
+      .from("landing-media")
+      .getPublicUrl(path);
+
+    if (kind === "logo") {
+      setSettings((s) => ({ ...s, logo_url: publicData.publicUrl }));
+    } else {
+      setSettings((s) => ({ ...s, cover_url: publicData.publicUrl }));
+    }
+
+    setUploading(false);
+    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {
@@ -277,9 +339,49 @@ export default function LandingPageBuilderPage() {
 
             <section style={{ display: "grid", gap: 10 }}>
               <h2 style={{ margin: 0, fontSize: 18 }}>Logo & Cover</h2>
-              <input style={inputStyle} placeholder="Logo URL (HTTPS)" value={settings.logo_url} onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))} />
-              <input style={inputStyle} placeholder="Cover URL (HTTPS)" value={settings.cover_url} onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))} />
-              <div style={{ color: "#6b7280", fontSize: 12 }}>V1 menerima URL gambar HTTPS. Upload langsung kita tambahkan setelah flow builder stabil.</div>
+              <div style={{ display: "grid", gap: 8 }}>
+                <label style={{ fontSize: 13, fontWeight: 800 }}>Logo Bisnis</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadMedia(file, "logo");
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <div style={{ fontSize: 12, color: "#6b7280" }}>
+                  PNG/JPG/WebP · maksimal 5 MB {uploadingLogo ? "· Uploading..." : ""}
+                </div>
+                <input
+                  style={inputStyle}
+                  placeholder="Atau paste Logo URL (HTTPS)"
+                  value={settings.logo_url}
+                  onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))}
+                />
+              </div>
+
+              <div style={{ display: "grid", gap: 8, marginTop: 8 }}>
+                <label style={{ fontSize: 13, fontWeight: 800 }}>Cover Landing Page</label>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) uploadMedia(file, "cover");
+                    e.currentTarget.value = "";
+                  }}
+                />
+                <div style={{ fontSize: 12, color: "#6b7280" }}>
+                  PNG/JPG/WebP · maksimal 5 MB {uploadingCover ? "· Uploading..." : ""}
+                </div>
+                <input
+                  style={inputStyle}
+                  placeholder="Atau paste Cover URL (HTTPS)"
+                  value={settings.cover_url}
+                  onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
+                />
+              </div>
             </section>
 
             <section style={{ display: "grid", gap: 8 }}>
