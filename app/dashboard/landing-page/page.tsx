@@ -611,7 +611,7 @@ export default function LandingPageBuilderPage() {
             <div style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
               <div
                 style={{
-                  aspectRatio: isSmoothie ? "16 / 9" : "16 / 7",
+                  aspectRatio: "16 / 7",
                   minHeight: 120,
                   backgroundImage: settings.cover_url
                     ? "url(" + settings.cover_url + ")"
@@ -628,9 +628,9 @@ export default function LandingPageBuilderPage() {
               />
               <div style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
                 {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="" style={{ width: isSmoothie ? 98 : 76, height: isSmoothie ? 98 : 76, objectFit: "cover", borderRadius: isSmoothie ? 999 : 20, marginTop: isSmoothie ? -50 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
+                  <img src={settings.logo_url} alt="" style={{ width: isSmoothie ? 92 : 76, height: isSmoothie ? 92 : 76, objectFit: "cover", borderRadius: isSmoothie ? 22 : 20, marginTop: isSmoothie ? -46 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
                 ) : (
-                  <div style={{ width: isSmoothie ? 98 : 76, height: isSmoothie ? 98 : 76, borderRadius: isSmoothie ? 999 : 20, margin: isSmoothie ? "-50px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
+                  <div style={{ width: isSmoothie ? 92 : 76, height: isSmoothie ? 92 : 76, borderRadius: isSmoothie ? 22 : 20, margin: isSmoothie ? "-46px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
                     {businessName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
