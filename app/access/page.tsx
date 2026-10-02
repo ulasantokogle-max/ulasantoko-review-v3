@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
+import { useLanguage } from "../../lib/i18n";
 
 export default function AccessHubPage() {
+  const { tr } = useLanguage();
   const [checking, setChecking] = useState(true);
   const [allowed, setAllowed] = useState(false);
   const [signedIn, setSignedIn] = useState(false);
