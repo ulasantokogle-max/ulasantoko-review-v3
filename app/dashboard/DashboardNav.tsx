@@ -27,11 +27,6 @@ const items = [
     description: "Kelola feedback 1–3 bintang",
   },
   {
-    href: "/dashboard/contact",
-    label: "Contact & WhatsApp",
-    description: "Nomor WhatsApp bisnis",
-  },
-  {
     href: "/dashboard/analytics",
     label: "Analytics & Insight",
     description: "Ringkasan feedback & kartu",

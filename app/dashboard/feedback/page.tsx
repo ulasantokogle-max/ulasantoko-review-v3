@@ -79,11 +79,6 @@ export default function FeedbackInboxPage() {
     setPassword("");
   }
 
-  async function handleLogout() {
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setFeedback([]);
-  }
 
   async function loadFeedback() {
     setLoadError("");
@@ -283,20 +278,6 @@ export default function FeedbackInboxPage() {
                     }}
                   >
                     Refresh
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    style={{
-                      ...buttonStyle,
-                      background: "#ffffff",
-                      color: "#111827",
-                      border: "1px solid #d1d5db",
-                      padding: "9px 12px",
-                    }}
-                  >
-                    Logout
                   </button>
                 </div>
               </div>

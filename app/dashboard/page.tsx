@@ -145,7 +145,7 @@ export default function DashboardHomePage() {
       {
         label: "WhatsApp bisnis",
         done: Boolean(setup.whatsapp),
-        href: "/dashboard/contact",
+        href: "/dashboard/landing-page",
       },
       {
         label: "Kartu sudah aktif",
@@ -455,7 +455,7 @@ export default function DashboardHomePage() {
                         ["/dashboard/feedback", "Buka Feedback Inbox"],
                         ["/dashboard/analytics", "Lihat Analytics Lengkap"],
                         ["/dashboard/cards", "Kelola Kartu"],
-                        ["/dashboard/contact", "Atur WhatsApp"],
+                        ["/dashboard/landing-page", "Atur Landing Page"],
                       ].map(([href, label]) => (
                         <Link
                           key={href}
