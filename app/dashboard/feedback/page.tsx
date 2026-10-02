@@ -94,7 +94,7 @@ export default function FeedbackInboxPage() {
 
     if (error) {
       console.error("Feedback inbox load failed", error);
-      setLoadError("Feedback belum dapat dimuat. Silakan coba lagi.");
+      setLoadError("Masukan belum dapat dimuat. Silakan coba lagi.");
       setFeedback([]);
       return;
     }
@@ -211,10 +211,10 @@ export default function FeedbackInboxPage() {
             ReputasiPro
           </div>
 
-            <h1 style={{ margin: 0, fontSize: 30 }}>Feedback Pelanggan</h1>
+            <h1 style={{ margin: 0, fontSize: 30 }}>Masukan Pelanggan</h1>
 
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Feedback privat dari pelanggan yang memberikan rating 1–3 bintang.
+            Masukan privat dari pelanggan yang memberikan rating 1–3 bintang.
           </p>
 
           {!userEmail ? (
@@ -295,8 +295,8 @@ export default function FeedbackInboxPage() {
                 }}
               >
                 {[
-                  ["Total Feedback", String(stats.total)],
-                  ["Status New", String(stats.newCount)],
+                  ["Total Masukan", String(stats.total)],
+                  ["Status Baru", String(stats.newCount)],
                   ["Rata-rata Rating", stats.avg],
                 ].map(([label, value]) => (
                   <div
@@ -522,11 +522,11 @@ export default function FeedbackInboxPage() {
                             fontWeight: 700,
                           }}
                         >
-                          <option value="new">New</option>
-                          <option value="viewed">Viewed</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="resolved">Resolved</option>
-                          <option value="closed">Closed</option>
+                          <option value="new">Baru</option>
+                          <option value="viewed">Dilihat</option>
+                          <option value="contacted">Dihubungi</option>
+                          <option value="resolved">Selesai</option>
+                          <option value="closed">Ditutup</option>
                         </select>
 
                         {item.status === "new" && (
