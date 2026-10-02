@@ -12,6 +12,7 @@ const themes = {
 } as const;
 
 type ThemeKey = keyof typeof themes;
+type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo";
 
 type Settings = {
   theme_key: ThemeKey;
@@ -123,6 +124,13 @@ export default function LandingPageBuilderPage() {
   const selectedBusiness = businesses.find((b) => b.business_id === businessId);
   const businessName = selectedBusiness?.display_name || selectedBusiness?.business_name || "Nama Bisnis";
 
+  const toggles: Array<[ToggleKey, string]> = [
+    ["show_google_review", "Tampilkan Google Review"],
+    ["show_whatsapp", "Tampilkan WhatsApp"],
+    ["show_about", "Tampilkan Tentang Bisnis"],
+    ["show_promo", "Tampilkan Promo"]
+  ];
+
   const inputStyle = {
     width: "100%",
     boxSizing: "border-box" as const,
@@ -198,15 +206,13 @@ export default function LandingPageBuilderPage() {
 
             <section style={{ display: "grid", gap: 8 }}>
               <h2 style={{ margin: 0, fontSize: 18 }}>Tampilkan Section</h2>
-              {[
-                ["show_google_review", "Tampilkan Google Review"],
-                ["show_whatsapp", "Tampilkan WhatsApp"],
-                ["show_about", "Tampilkan Tentang Bisnis"],
-                ["show_promo", "Tampilkan Promo"]
-              ].map(([key, label]) => (
+              {toggles.map(([key, label]) => (
                 <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "9px 0" }}>
-                  <input type="checkbox" checked={Boolean(settings[key as keyof Settings])}
-                    onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.checked }))} />
+                  <input
+                    type="checkbox"
+                    checked={settings[key]}
+                    onChange={(e) => setSettings((s) => ({ ...s, [key]: e.target.checked }))}
+                  />
                   <span>{label}</span>
                 </label>
               ))}
