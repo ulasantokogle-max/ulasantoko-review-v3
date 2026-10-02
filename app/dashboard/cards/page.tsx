@@ -81,7 +81,8 @@ export default function CardsDashboardPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Card dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -101,7 +102,8 @@ export default function CardsDashboardPage() {
     setLoadingCards(false);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Card list load failed", error);
+      setLoadError("Daftar kartu belum dapat dimuat. Silakan coba lagi.");
       setCards([]);
       return;
     }
@@ -142,12 +144,14 @@ export default function CardsDashboardPage() {
     setResettingId(null);
 
     if (error) {
-      setResetError(error.message);
+      console.error("Card setup reset failed", error);
+      setResetError("Setup kartu belum dapat direset. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
-      setResetError(data?.message ?? "Gagal mereset setup kartu.");
+      console.error("Card setup reset returned unsuccessful result", data);
+      setResetError("Setup kartu belum dapat direset. Silakan coba lagi.");
       return;
     }
 
@@ -171,12 +175,14 @@ export default function CardsDashboardPage() {
     setSavingId(null);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Card update failed", error);
+      setLoadError("Perubahan kartu belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
-      setLoadError(data?.message ?? "Gagal menyimpan kartu.");
+      console.error("Card update returned unsuccessful result", data);
+      setLoadError("Perubahan kartu belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
