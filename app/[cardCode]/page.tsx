@@ -324,6 +324,7 @@ export default async function PublicCardPage({
 
   return (
     <main
+      className={isSmoothie ? "smoothie-page" : undefined}
       style={{
         minHeight: "100vh",
         background: isSmoothie
@@ -335,7 +336,54 @@ export default async function PublicCardPage({
         color: theme.text,
       }}
     >
+      <style>{`
+        @media (max-width: 520px) {
+          .smoothie-page { padding: 0 !important; }
+          .smoothie-shell {
+            width: 100% !important;
+            max-width: none !important;
+            border-radius: 0 !important;
+            padding: 10px !important;
+            box-shadow: none !important;
+          }
+          .smoothie-hero {
+            min-height: 0 !important;
+            max-height: none !important;
+            aspect-ratio: 16 / 8 !important;
+            border-radius: 22px !important;
+          }
+          .smoothie-content {
+            padding-left: 10px !important;
+            padding-right: 10px !important;
+          }
+          .smoothie-title {
+            font-size: 29px !important;
+            line-height: 1.08 !important;
+          }
+          .smoothie-promo {
+            font-size: 13px !important;
+            padding: 12px 14px !important;
+          }
+          .smoothie-links {
+            grid-template-columns: 1fr !important;
+            gap: 10px !important;
+          }
+          .smoothie-link-card {
+            min-height: 78px !important;
+            width: 100% !important;
+            grid-column: 1 / -1 !important;
+          }
+          .smoothie-social-card {
+            min-height: 92px !important;
+          }
+          .smoothie-about {
+            text-align: center !important;
+          }
+        }
+      `}</style>
+
       <section
+        className={isSmoothie ? "smoothie-shell" : undefined}
         style={{
           maxWidth: 560,
           margin: "0 auto",
@@ -350,6 +398,7 @@ export default async function PublicCardPage({
         }}
       >
         <div
+          className={isSmoothie ? "smoothie-hero" : undefined}
           style={{
             aspectRatio: isSmoothie ? "16 / 9" : "16 / 7",
             minHeight: 150,
@@ -423,8 +472,9 @@ export default async function PublicCardPage({
           UlasanToko Review
         </div>
 
-        <div style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
+        <div className={isSmoothie ? "smoothie-content" : undefined} style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
         <h1
+          className={isSmoothie ? "smoothie-title" : undefined}
           style={{
             fontSize: isSmoothie ? 34 : 31,
             lineHeight: 1.12,
@@ -469,6 +519,7 @@ export default async function PublicCardPage({
 
         {showPromo && promoText && (
           <div
+            className={isSmoothie ? "smoothie-promo" : undefined}
             style={{
               margin: "4px 0 18px",
               padding: "14px 15px",
@@ -500,6 +551,7 @@ export default async function PublicCardPage({
         )}
 
         <div
+          className={isSmoothie ? "smoothie-links" : undefined}
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
@@ -530,6 +582,7 @@ export default async function PublicCardPage({
 
           {showWhatsapp && whatsappUrl && (
             <a
+              className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
               href={whatsappUrl}
               target="_blank"
               rel="noreferrer"
@@ -564,6 +617,7 @@ export default async function PublicCardPage({
 
           {showInstagram && instagramUrl && (
             <a
+              className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
               href={instagramUrl}
               target="_blank"
               rel="noreferrer"
@@ -599,6 +653,7 @@ export default async function PublicCardPage({
 
           {showPdf && pdfUrl && (
             <a
+              className={isSmoothie ? "smoothie-link-card" : undefined}
               href={"/" + cardCode + "/menu"}
               style={{
                 textDecoration: "none",
@@ -638,6 +693,7 @@ export default async function PublicCardPage({
 
         {showAbout && aboutText && (
           <div
+            className={isSmoothie ? "smoothie-about" : undefined}
             style={{
               marginTop: isSmoothie ? 22 : 20,
               padding: isSmoothie ? 20 : 18,
