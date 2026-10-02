@@ -273,7 +273,7 @@ export default function RatingFlow({
             lineHeight: 1.55,
           }}
         >
-          Mengarahkan ke Google Review...
+          Mengarahkan ke halaman ulasan Google...
         </div>
       )}
 
