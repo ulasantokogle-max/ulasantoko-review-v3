@@ -280,6 +280,9 @@ export default function ActivateCardPage() {
         color: "#111827",
       }}
     >
+      <div style={{ maxWidth: 520, margin: "0 auto 10px", display: "flex", justifyContent: "flex-end" }}>
+        <LanguageSwitcher />
+      </div>
       <section
         style={{
           maxWidth: 520,
@@ -294,10 +297,9 @@ export default function ActivateCardPage() {
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280", letterSpacing: .7 }}>
           REPUTASIPRO
         </div>
-        <h1 style={{ marginBottom: 8 }}>Aktivasi Kartu</h1>
+        <h1 style={{ marginBottom: 8 }}>{tr("Aktivasi Kartu", "Activate Card")}</h1>
         <p style={{ marginTop: 0, color: "#6b7280", lineHeight: 1.6 }}>
-          Kartu <strong>{cardCode}</strong> belum diaktifkan. Aktivasi sekali,
-          lalu QR dan NFC ini akan otomatis menjadi halaman publik bisnis Anda.
+          {tr("Kartu", "Card")} <strong>{cardCode}</strong> {tr("belum diaktifkan. Aktivasi sekali, lalu QR dan NFC ini akan otomatis menjadi halaman publik bisnis Anda.", "has not been activated yet. Activate it once and this QR/NFC will automatically become your business public page.")}
         </p>
 
         {!userEmail ? (
@@ -313,7 +315,7 @@ export default function ActivateCardPage() {
                   border: "1px solid #d1d5db",
                 }}
               >
-                Login
+                {tr("Masuk", "Sign In")}
               </button>
               <button
                 type="button"
@@ -325,7 +327,7 @@ export default function ActivateCardPage() {
                   border: "1px solid #d1d5db",
                 }}
               >
-                Buat Akun
+                {tr("Buat Akun", "Create Account")}
               </button>
             </div>
 
