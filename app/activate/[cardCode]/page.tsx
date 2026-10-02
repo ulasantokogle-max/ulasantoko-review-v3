@@ -289,7 +289,7 @@ export default function ActivateCardPage() {
         }}
       >
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280", letterSpacing: .7 }}>
-          ULASANTOKO
+          REPUTASIPRO
         </div>
         <h1 style={{ marginBottom: 8 }}>Aktivasi Kartu</h1>
         <p style={{ marginTop: 0, color: "#6b7280", lineHeight: 1.6 }}>
