@@ -486,8 +486,8 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ marginBottom: 8 }}>Landing Page Builder</h1>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW</div>
+          <h1 style={{ marginBottom: 8 }}>Pengaturan Landing Page</h1>
           <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
         </div>
       </main>
@@ -498,8 +498,8 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ margin: "6px 0 8px" }}>Landing Page Builder</h1>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW</div>
+          <h1 style={{ margin: "6px 0 8px" }}>Pengaturan Landing Page</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Login customer untuk mengatur landing page bisnis.
           </p>
@@ -538,8 +538,8 @@ export default function LandingPageBuilderPage() {
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Landing Page Builder</h1>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW</div>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Pengaturan Landing Page</h1>
           <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
         </div>
 
@@ -603,7 +603,7 @@ export default function LandingPageBuilderPage() {
                   required
                 />
                 <div style={{ color: "#6b7280", fontSize: 11, lineHeight: 1.5 }}>
-                  Nama ini dipakai di halaman publik customer. Mengubahnya tidak mengubah Business ID, kartu, atau link Google Review.
+                  Nama ini tampil di halaman publik customer. Perubahan nama tidak memengaruhi kartu atau link Google Review.
                 </div>
               </div>
               <input style={inputStyle} placeholder="Judul utama" value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
