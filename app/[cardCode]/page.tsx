@@ -321,8 +321,7 @@ export default async function PublicCardPage({
   const showPromo = landingSettingsData?.show_promo !== false;
   const showInstagram = landingSettingsData?.show_instagram !== false;
   const showPdf = landingSettingsData?.show_pdf !== false;
-  const whatsappAvailable = Boolean(showWhatsapp);
-  const whatsappLinked = Boolean(showWhatsapp && whatsappUrl);
+  const whatsappAvailable = Boolean(showWhatsapp && whatsappUrl);
   const instagramAvailable = Boolean(showInstagram && instagramUrl);
   const singleSocial = Number(whatsappAvailable) + Number(instagramAvailable) === 1;
 
@@ -597,73 +596,39 @@ export default async function PublicCardPage({
           )}
 
           {whatsappAvailable && (
-            whatsappLinked ? (
-              <a
-                className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-                href={whatsappUrl ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  textDecoration: "none",
-                  textAlign: "center",
-                  borderRadius: isSmoothie ? 24 : 14,
-                  background: isSmoothie
-                    ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                    : theme.soft,
-                  color: theme.text,
-                  fontWeight: 900,
-                  border: "1px solid rgba(0,0,0,.06)",
-                  minHeight: isSmoothie ? 116 : "auto",
-                  display: isSmoothie ? "grid" : "block",
-                  placeItems: isSmoothie ? "center" : "initial",
-                  fontSize: isSmoothie ? 17 : 14,
-                  boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                  order: isSmoothie ? 2 : "initial",
-                  gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-                }}
-              >
-                {isSmoothie ? (
-                  <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                    <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
-                    <span>WhatsApp</span>
-                  </span>
-                ) : (
-                  <>◉&nbsp; WhatsApp</>
-                )}
-              </a>
-            ) : (
-              <div
-                className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-                style={{
-                  textAlign: "center",
-                  borderRadius: isSmoothie ? 24 : 14,
-                  background: isSmoothie
-                    ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                    : theme.soft,
-                  color: theme.text,
-                  fontWeight: 900,
-                  border: "1px solid rgba(0,0,0,.06)",
-                  minHeight: isSmoothie ? 116 : "auto",
-                  display: isSmoothie ? "grid" : "block",
-                  placeItems: isSmoothie ? "center" : "initial",
-                  fontSize: isSmoothie ? 17 : 14,
-                  boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                  order: isSmoothie ? 2 : "initial",
-                  gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-                  opacity: .92,
-                }}
-              >
-                {isSmoothie ? (
-                  <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                    <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
-                    <span>WhatsApp</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: theme.muted }}>62 812-XXXX-XXXX</span>
-                  </span>
-                ) : (
-                  <>◉&nbsp; WhatsApp · 62 812-XXXX-XXXX</>
-                )}
-              </div>
-            )
+            <a
+              className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
+              href={whatsappUrl ?? "#"}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                textDecoration: "none",
+                textAlign: "center",
+                borderRadius: isSmoothie ? 24 : 14,
+                background: isSmoothie
+                  ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
+                  : theme.soft,
+                color: theme.text,
+                fontWeight: 900,
+                border: "1px solid rgba(0,0,0,.06)",
+                minHeight: isSmoothie ? 116 : "auto",
+                display: isSmoothie ? "grid" : "block",
+                placeItems: isSmoothie ? "center" : "initial",
+                fontSize: isSmoothie ? 17 : 14,
+                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
+                order: isSmoothie ? 2 : "initial",
+                gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
+              }}
+            >
+              {isSmoothie ? (
+                <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
+                  <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
+                  <span>WhatsApp</span>
+                </span>
+              ) : (
+                <>◉&nbsp; WhatsApp</>
+              )}
+            </a>
           )}
 
           {instagramAvailable && (
