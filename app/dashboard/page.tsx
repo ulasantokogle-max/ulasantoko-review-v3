@@ -163,12 +163,12 @@ export default function DashboardHomePage() {
 
   const metrics = [
     ["Kartu Aktif", analytics?.cards?.activated ?? 0],
-    ["Total Feedback", analytics?.feedback?.total ?? 0],
+    ["Total Masukan", analytics?.feedback?.total ?? 0],
     [
       "Rata-rata Rating",
       Number(analytics?.feedback?.average_rating ?? 0).toFixed(1),
     ],
-    ["Feedback Baru", analytics?.feedback?.new ?? 0],
+    ["Masukan Baru", analytics?.feedback?.new ?? 0],
     ["7 Hari Terakhir", analytics?.feedback?.last_7_days ?? 0],
     ["Bisa Dihubungi", analytics?.feedback?.contactable ?? 0],
   ];
@@ -454,10 +454,10 @@ export default function DashboardHomePage() {
                     </h2>
                     <div style={{ display: "grid", gap: 10 }}>
                       {[
-                        ["/dashboard/feedback", "Buka Feedback"],
+                        ["/dashboard/feedback", "Buka Masukan"],
                         ["/dashboard/analytics", "Lihat Analitik"],
                         ["/dashboard/cards", "Kelola Kartu"],
-                        ["/dashboard/landing-page", "Atur Landing Page"],
+                        ["/dashboard/landing-page", "Pengeditan Halaman"],
                       ].map(([href, label]) => (
                         <Link
                           key={href}
