@@ -529,7 +529,7 @@ export default function ProviderCardsPage() {
                       style={buttonStyle}
                       onClick={() => copyText(created.card_code, "Kode Kartu")}
                     >
-                      Copy Kode Kartu
+                      Salin Kode Kartu
                     </button>
                     <button
                       type="button"
@@ -808,7 +808,7 @@ export default function ProviderCardsPage() {
                           }}
                           onClick={() => copyText(card.card_code, "Kode Kartu")}
                         >
-                          Copy Kode Kartu
+                          Salin Kode Kartu
                         </button>
 
                         {card.inventory_status === "ready_to_sell" && (
