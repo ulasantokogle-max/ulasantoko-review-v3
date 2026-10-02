@@ -111,7 +111,7 @@ export default function CustomerOnboardingPage() {
         action:
           Number(analytics?.cards?.activated ?? 0) > 0
             ? "Kartu aktif"
-            : "Cek Card Management",
+            : "Kelola Kartu",
       },
     ],
     [setup, analytics]
@@ -144,7 +144,7 @@ export default function CustomerOnboardingPage() {
       <main style={pageStyle}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            ULASANTOKO REVIEW V3
+            ULASANTOKO REVIEW
           </div>
           <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
@@ -160,7 +160,7 @@ export default function CustomerOnboardingPage() {
       <main style={pageStyle}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            ULASANTOKO REVIEW V3
+            ULASANTOKO REVIEW
           </div>
           <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
@@ -190,7 +190,7 @@ export default function CustomerOnboardingPage() {
     <main style={pageStyle}>
       <section style={cardStyle}>
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          ULASANTOKO REVIEW V3
+          ULASANTOKO REVIEW
         </div>
         <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Setup Bisnis Anda</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6, marginTop: 0 }}>
@@ -206,7 +206,7 @@ export default function CustomerOnboardingPage() {
           }}
         >
           <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Login sebagai <strong>{userEmail}</strong>
+            Akun: <strong>{userEmail}</strong>
           </div>
           <div style={{ fontWeight: 900, marginTop: 3 }}>
             {selectedBusiness?.display_name ||
