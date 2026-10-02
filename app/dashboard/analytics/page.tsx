@@ -136,7 +136,7 @@ export default function AnalyticsDashboardPage() {
 
     if (error) {
       console.error("Analytics load failed", error);
-      setLoadError("Data analytics belum dapat dimuat. Silakan coba lagi.");
+      setLoadError("Data analitik belum dapat dimuat. Silakan coba lagi.");
       setAnalytics(null);
       return;
     }
@@ -215,7 +215,7 @@ export default function AnalyticsDashboardPage() {
             Analitik & Wawasan
           </h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Ringkasan feedback pelanggan dan performa kartu bisnis.
+            Ringkasan masukan pelanggan dan performa kartu bisnis.
           </p>
 
           {!userEmail ? (
