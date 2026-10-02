@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
 
 export async function POST(request: Request) {
   try {
@@ -6,16 +8,12 @@ export async function POST(request: Request) {
 
     if (!authorization?.startsWith("Bearer ")) {
       return NextResponse.json(
-        {
-          success: false,
-          message: "Authentication required",
-        },
+        { success: false, message: "Authentication required" },
         { status: 401 }
       );
     }
 
     const body = await request.json();
-
     const businessId = body?.business_id;
     const mapsUrl = body?.maps_url;
 
@@ -29,67 +27,80 @@ export async function POST(request: Request) {
       );
     }
 
-    const baseUrl = new URL(request.url).origin;
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-    const resolveResponse = await fetch(
-      `${baseUrl}/api/google-maps/resolve`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: authorization,
-        },
-        body: JSON.stringify({
-          maps_url: mapsUrl,
-        }),
-      }
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { success: false, message: "Supabase environment variables are missing" },
+        { status: 500 }
+      );
+    }
+
+    const token = authorization.slice("Bearer ".length).trim();
+    const authClient = createClient(supabaseUrl, supabaseKey);
+    const { data: userData, error: userError } = await authClient.auth.getUser(token);
+
+    if (userError || !userData.user) {
+      return NextResponse.json(
+        { success: false, message: "Invalid or expired session" },
+        { status: 401 }
+      );
+    }
+
+    const scopedClient = createClient(supabaseUrl, supabaseKey, {
+      global: { headers: { Authorization: authorization } },
+    });
+
+    const { data: limitData, error: limitError } = await scopedClient.rpc(
+      "v3_check_google_maps_resolver_rate_limit"
     );
 
-    const resolveData = await resolveResponse.json();
+    if (limitError) {
+      return NextResponse.json(
+        { success: false, message: "Unable to verify request limit" },
+        { status: 400 }
+      );
+    }
 
-    if (!resolveResponse.ok || !resolveData?.success) {
+    if (limitData?.success === false) {
+      return NextResponse.json(limitData, { status: 429 });
+    }
+
+    let resolved;
+    try {
+      resolved = await resolveGoogleMapsUrl(mapsUrl);
+    } catch (error) {
+      const typed = error as Error & { status?: number; details?: unknown };
+
       return NextResponse.json(
         {
           success: false,
           step: "resolve",
-          message:
-            resolveData?.message ??
-            "Gagal memproses Google Maps URL.",
-          details: resolveData,
+          message: typed.message || "Gagal memproses Google Maps URL.",
+          details: typed.details,
         },
-        { status: resolveResponse.status || 400 }
+        { status: typed.status ?? 400 }
       );
     }
 
-    const saveResponse = await fetch(
-      `${baseUrl}/api/google-review/profile`,
+    const { data: profile, error: saveError } = await scopedClient.rpc(
+      "v3_set_google_review_profile",
       {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: authorization,
-        },
-        body: JSON.stringify({
-          business_id: businessId,
-          maps_url: mapsUrl,
-          place_id: resolveData.place_id,
-        }),
+        p_business_id: businessId,
+        p_maps_url: mapsUrl,
+        p_place_id: resolved.place_id,
       }
     );
 
-    const saveData = await saveResponse.json();
-
-    if (!saveResponse.ok || !saveData?.success) {
+    if (saveError) {
       return NextResponse.json(
         {
           success: false,
           step: "save",
-          message:
-            saveData?.message ??
-            "Gagal menyimpan profil Google Review.",
-          details: saveData,
+          message: saveError.message,
         },
-        { status: saveResponse.status }
+        { status: 400 }
       );
     }
 
@@ -97,21 +108,18 @@ export async function POST(request: Request) {
       success: true,
       business_id: businessId,
       maps_url: mapsUrl,
-      place_id: resolveData.place_id,
-      business_name: resolveData.business_name,
-      formatted_address: resolveData.formatted_address,
-      review_url: resolveData.review_url,
-      profile: saveData.profile,
+      place_id: resolved.place_id,
+      business_name: resolved.business_name,
+      formatted_address: resolved.formatted_address,
+      review_url: resolved.review_url,
+      profile,
     });
   } catch (error) {
     return NextResponse.json(
       {
         success: false,
         message: "Google Review setup failed",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        error: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }
     );
