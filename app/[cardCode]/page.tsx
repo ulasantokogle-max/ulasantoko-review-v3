@@ -22,6 +22,15 @@ const themeMap: Record<string, {
     text: "#4B3428",
     muted: "#7A6659",
   },
+  soft_smoothie: {
+    bg: "#FBF5EC",
+    card: "#FFFDFC",
+    primary: "#9B6A43",
+    secondary: "#D7B08A",
+    soft: "#F4E7D7",
+    text: "#4A3023",
+    muted: "#8A7567",
+  },
   soft_tosca: {
     bg: "#F0FBF9",
     card: "#FFFFFF",
@@ -230,6 +239,7 @@ export default async function PublicCardPage({
 
   const themeKey = firstString(landingSettingsData?.theme_key) ?? "warm_brown";
   const theme = themeMap[themeKey] ?? themeMap.warm_brown;
+  const isSmoothie = themeKey === "soft_smoothie";
   const logoUrl = firstString(landingSettingsData?.logo_url);
   const coverUrl = firstString(landingSettingsData?.cover_url);
   const coverPosition = firstString(landingSettingsData?.cover_position) ?? "center";
@@ -255,9 +265,10 @@ export default async function PublicCardPage({
     <main
       style={{
         minHeight: "100vh",
-        background:
-          "radial-gradient(circle at top, " + theme.soft + " 0%, " + theme.bg + " 42%, " + theme.bg + " 100%)",
-        padding: "18px 14px 40px",
+        background: isSmoothie
+          ? "radial-gradient(circle at 50% 0%, #fffaf4 0%, #fbf5ec 38%, #f5eadc 100%)"
+          : "radial-gradient(circle at top, " + theme.soft + " 0%, " + theme.bg + " 42%, " + theme.bg + " 100%)",
+        padding: isSmoothie ? "10px 10px 36px" : "18px 14px 40px",
         fontFamily:
           "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
         color: theme.text,
@@ -267,19 +278,22 @@ export default async function PublicCardPage({
         style={{
           maxWidth: 560,
           margin: "0 auto",
-          background: theme.card,
-          border: "1px solid rgba(0,0,0,.055)",
-          borderRadius: 28,
-          padding: 14,
-          boxShadow: "0 28px 80px rgba(75,52,40,.13)",
+          background: isSmoothie ? "rgba(255,253,250,.92)" : theme.card,
+          border: isSmoothie ? "1px solid rgba(255,255,255,.75)" : "1px solid rgba(0,0,0,.055)",
+          borderRadius: isSmoothie ? 38 : 28,
+          padding: isSmoothie ? 12 : 14,
+          boxShadow: isSmoothie
+            ? "0 34px 90px rgba(103,73,48,.15), inset 0 1px 0 rgba(255,255,255,.9)"
+            : "0 28px 80px rgba(75,52,40,.13)",
+          overflow: "hidden",
         }}
       >
         <div
           style={{
-            aspectRatio: "16 / 7",
+            aspectRatio: isSmoothie ? "16 / 9" : "16 / 7",
             minHeight: 150,
-            maxHeight: 230,
-            borderRadius: 24,
+            maxHeight: isSmoothie ? 280 : 230,
+            borderRadius: isSmoothie ? 30 : 24,
             marginBottom: 0,
             overflow: "hidden",
             backgroundImage: coverUrl
@@ -291,17 +305,23 @@ export default async function PublicCardPage({
           }}
         />
 
-        <div style={{ marginTop: -48, position: "relative", paddingLeft: 14 }}>
+        <div style={{
+          marginTop: isSmoothie ? -60 : -48,
+          position: "relative",
+          paddingLeft: isSmoothie ? 0 : 14,
+          display: isSmoothie ? "flex" : "block",
+          justifyContent: isSmoothie ? "center" : "initial"
+        }}>
           {logoUrl ? (
             <img
               src={logoUrl}
               alt={businessName}
               style={{
-                width: 88,
-                height: 88,
+                width: isSmoothie ? 118 : 88,
+                height: isSmoothie ? 118 : 88,
                 objectFit: "cover",
-                borderRadius: 24,
-                border: "5px solid " + theme.card,
+                borderRadius: isSmoothie ? 999 : 24,
+                border: (isSmoothie ? "7px" : "5px") + " solid " + theme.card,
                 background: theme.card,
                 boxShadow: "0 14px 34px rgba(0,0,0,.14)",
               }}
@@ -309,10 +329,10 @@ export default async function PublicCardPage({
           ) : (
             <div
               style={{
-                width: 88,
-                height: 88,
-                borderRadius: 24,
-                border: "5px solid " + theme.card,
+                width: isSmoothie ? 118 : 88,
+                height: isSmoothie ? 118 : 88,
+                borderRadius: isSmoothie ? 999 : 24,
+                border: (isSmoothie ? "7px" : "5px") + " solid " + theme.card,
                 background: theme.soft,
                 display: "grid",
                 placeItems: "center",
@@ -334,20 +354,23 @@ export default async function PublicCardPage({
             letterSpacing: 0.8,
             color: theme.muted,
             textTransform: "uppercase",
-            marginTop: 14,
+            marginTop: isSmoothie ? 18 : 14,
             marginBottom: 10,
+            textAlign: isSmoothie ? "center" : "left",
           }}
         >
           UlasanToko Review
         </div>
 
-        <div style={{ padding: "0 10px 10px" }}>
+        <div style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
         <h1
           style={{
-            fontSize: 31,
+            fontSize: isSmoothie ? 34 : 31,
             lineHeight: 1.12,
             letterSpacing: "-0.4px",
-            margin: "0 0 8px",
+            margin: "0 0 10px",
+            fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit",
+            fontWeight: isSmoothie ? 700 : 900,
           }}
         >
           {pageTitle}
@@ -364,6 +387,7 @@ export default async function PublicCardPage({
               fontSize: 12,
               fontWeight: 700,
               marginBottom: 14,
+              boxShadow: isSmoothie ? "inset 0 1px 0 rgba(255,255,255,.75)" : "none",
             }}
           >
             {category}
@@ -374,7 +398,9 @@ export default async function PublicCardPage({
           style={{
             color: theme.muted,
             lineHeight: 1.65,
-            margin: "4px 0 20px",
+            margin: "4px auto 20px",
+            maxWidth: isSmoothie ? 430 : "none",
+            fontSize: isSmoothie ? 16 : 14,
           }}
         >
           {pageDescription}
@@ -385,8 +411,10 @@ export default async function PublicCardPage({
             style={{
               margin: "4px 0 18px",
               padding: "14px 15px",
-              borderRadius: 16,
-              background: theme.soft,
+              borderRadius: isSmoothie ? 22 : 16,
+              background: isSmoothie
+                ? "linear-gradient(135deg, rgba(255,255,255,.76), rgba(244,231,215,.92))"
+                : theme.soft,
               color: theme.text,
               fontWeight: 800,
               border: "1px solid rgba(0,0,0,.05)",
@@ -396,15 +424,30 @@ export default async function PublicCardPage({
           </div>
         )}
 
+        {isSmoothie && (
+          <RatingFlow
+            cardCode={cardCode}
+            businessName={businessName}
+            reviewUrl={showGoogleReview ? reviewUrl : null}
+            whatsappUrl={showWhatsapp ? whatsappUrl : null}
+            primaryColor={theme.primary}
+            softColor={theme.soft}
+            textColor={theme.text}
+            mutedColor={theme.muted}
+            smoothMode
+          />
+        )}
+
         <div
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: 10,
+            gap: isSmoothie ? 12 : 10,
+            marginTop: isSmoothie ? 18 : 0,
             marginBottom: 8,
           }}
         >
-          {showGoogleReview && reviewUrl && (
+          {!isSmoothie && showGoogleReview && reviewUrl && (
             <a
               href={reviewUrl}
               target="_blank"
@@ -438,6 +481,12 @@ export default async function PublicCardPage({
                 color: theme.text,
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
+                minHeight: isSmoothie ? 92 : "auto",
+                display: isSmoothie ? "grid" : "block",
+                placeItems: isSmoothie ? "center" : "initial",
+                fontSize: isSmoothie ? 16 : 14,
+                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
+                order: isSmoothie ? 2 : "initial",
               }}
             >
               ◉&nbsp; WhatsApp
@@ -458,6 +507,12 @@ export default async function PublicCardPage({
                 color: theme.text,
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
+                minHeight: isSmoothie ? 92 : "auto",
+                display: isSmoothie ? "grid" : "block",
+                placeItems: isSmoothie ? "center" : "initial",
+                fontSize: isSmoothie ? 16 : 14,
+                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
+                order: isSmoothie ? 3 : "initial",
               }}
             >
               ◎&nbsp; Instagram
@@ -476,9 +531,18 @@ export default async function PublicCardPage({
                 color: theme.text,
                 fontWeight: 900,
                 border: "1px solid rgba(0,0,0,.06)",
+                gridColumn: isSmoothie ? "1 / -1" : "auto",
+                minHeight: isSmoothie ? 68 : "auto",
+                display: isSmoothie ? "flex" : "block",
+                alignItems: isSmoothie ? "center" : "initial",
+                justifyContent: isSmoothie ? "space-between" : "initial",
+                padding: isSmoothie ? "18px 20px" : "13px 14px",
+                fontSize: isSmoothie ? 17 : 14,
+                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
+                order: isSmoothie ? 1 : "initial",
               }}
             >
-              ▤&nbsp; {pdfTitle}
+              <span>▤&nbsp; {pdfTitle}</span>{isSmoothie && <span>›</span>}
             </a>
           )}
         </div>
@@ -486,10 +550,10 @@ export default async function PublicCardPage({
         {showAbout && aboutText && (
           <div
             style={{
-              marginTop: 20,
-              padding: 18,
-              borderRadius: 18,
-              background: theme.soft,
+              marginTop: isSmoothie ? 22 : 20,
+              padding: isSmoothie ? 20 : 18,
+              borderRadius: isSmoothie ? 24 : 18,
+              background: isSmoothie ? "rgba(244,231,215,.72)" : theme.soft,
               border: "1px solid rgba(0,0,0,.05)",
             }}
           >
@@ -502,8 +566,8 @@ export default async function PublicCardPage({
 
         </div>
 
-        <div style={{ padding: "0 10px 10px" }}>
-        <RatingFlow
+        <div style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px" }}>
+        {!isSmoothie && <RatingFlow
           cardCode={cardCode}
           businessName={businessName}
           reviewUrl={showGoogleReview ? reviewUrl : null}
@@ -512,7 +576,7 @@ export default async function PublicCardPage({
           softColor={theme.soft}
           textColor={theme.text}
           mutedColor={theme.muted}
-        />
+        />}
 
         {mapsUrl && (
           <a
@@ -609,7 +673,7 @@ export default async function PublicCardPage({
 
         <div
           style={{
-            marginTop: 18,
+            marginTop: isSmoothie ? 22 : 18,
             paddingTop: 18,
             borderTop: "1px solid rgba(0,0,0,.08)",
             display: "flex",
