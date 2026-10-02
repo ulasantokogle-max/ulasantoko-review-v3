@@ -187,7 +187,7 @@ export async function generateMetadata({
   if (!supabaseUrl || !supabaseKey) {
     return {
       title: "ReputasiPro",
-      description: "Bagikan pengalaman dan feedback Anda.",
+      description: "Bagikan pengalaman dan masukan Anda.",
     };
   }
 
@@ -202,12 +202,12 @@ export async function generateMetadata({
 
     return {
       title: name + " | ReputasiPro",
-      description: "Bagikan pengalaman dan feedback Anda untuk " + name + ".",
+      description: "Bagikan pengalaman dan masukan Anda untuk " + name + ".",
     };
   } catch {
     return {
       title: "ReputasiPro",
-      description: "Bagikan pengalaman dan feedback Anda.",
+      description: "Bagikan pengalaman dan masukan Anda.",
     };
   }
 }
