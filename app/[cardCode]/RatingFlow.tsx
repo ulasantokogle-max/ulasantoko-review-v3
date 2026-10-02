@@ -62,8 +62,13 @@ export default function RatingFlow({
     setRating(value);
     setError("");
 
-    if (value >= 4 && reviewUrl) {
-      window.open(reviewUrl, "_blank", "noopener,noreferrer");
+    if (value >= 4) {
+      if (!reviewUrl) {
+        setError("Link Google Review belum tersedia. Silakan hubungi pemilik bisnis.");
+        return;
+      }
+
+      window.location.assign(reviewUrl);
     }
   }
 
@@ -251,7 +256,7 @@ export default function RatingFlow({
         ))}
       </div>
 
-      {rating !== null && rating >= 4 && (
+      {rating !== null && rating >= 4 && reviewUrl && (
         <div
           style={{
             marginTop: 14,
@@ -263,19 +268,23 @@ export default function RatingFlow({
             lineHeight: 1.55,
           }}
         >
-          Terima kasih. Halaman Google Review sudah dibuka.
-          {reviewUrl && (
-            <div style={{ marginTop: 8 }}>
-              <a
-                href={reviewUrl}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: primaryColor, fontWeight: 800 }}
-              >
-                Buka Google Review lagi
-              </a>
-            </div>
-          )}
+          Mengarahkan ke Google Review...
+        </div>
+      )}
+
+      {error && rating !== null && rating >= 4 && (
+        <div
+          style={{
+            marginTop: 12,
+            padding: 12,
+            borderRadius: 12,
+            background: "#fef2f2",
+            color: "#991b1b",
+            textAlign: "center",
+            fontSize: 13,
+          }}
+        >
+          {error}
         </div>
       )}
 
