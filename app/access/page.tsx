@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../lib/i18n";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function AccessHubPage() {
   const { tr } = useLanguage();
@@ -119,6 +120,9 @@ export default function AccessHubPage() {
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "30px 16px 48px", fontFamily: "Inter, ui-sans-serif, system-ui", color: "#111827" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
         <header style={{ marginBottom: 22 }}>
+          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+            <LanguageSwitcher />
+          </div>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .8, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 32 }}>Menu Akses Sistem</h1>
           <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.6 }}>
