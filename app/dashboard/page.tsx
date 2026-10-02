@@ -245,7 +245,7 @@ export default function DashboardHomePage() {
               required
             />
             <button style={buttonStyle} type="submit" disabled={loadingLogin}>
-              {loadingLogin ? "Login..." : "Login"}
+              {loadingLogin ? "Masuk..." : "Masuk"}
             </button>
             {loginError && <div style={{ color: "#991b1b" }}>{loginError}</div>}
           </form>
