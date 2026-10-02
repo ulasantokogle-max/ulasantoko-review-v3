@@ -1,6 +1,6 @@
 export const metadata = {
-  title: "UlasanToko Review V3",
-  description: "Google Review Card Platform",
+  title: "UlasanToko Review",
+  description: "Platform kartu QR & NFC untuk ulasan dan feedback pelanggan.",
 };
 
 export default function RootLayout({
