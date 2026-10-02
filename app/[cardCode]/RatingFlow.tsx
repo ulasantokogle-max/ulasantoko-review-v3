@@ -118,13 +118,18 @@ export default function RatingFlow({
       const data = await response.json();
 
       if (!response.ok || !data?.success) {
-        setError(data?.message ?? "Feedback gagal dikirim.");
+        console.error("Private feedback submission failed", {
+          status: response.status,
+          data
+        });
+        setError("Feedback belum dapat dikirim. Silakan coba lagi.");
         return;
       }
 
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Feedback gagal dikirim.");
+      console.error("Private feedback request failed", err);
+      setError("Feedback belum dapat dikirim. Periksa koneksi lalu coba lagi.");
     } finally {
       setSending(false);
     }
