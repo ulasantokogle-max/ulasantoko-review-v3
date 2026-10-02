@@ -87,7 +87,7 @@ export default function AccessHubPage() {
     return (
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f5f7fb", padding: 20, fontFamily: "Inter, ui-sans-serif, system-ui" }}>
         <section style={{ ...cardStyle, maxWidth: 480, width: "100%", textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>ULASANTOKO INTERNAL</div>
+          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
           <h1 style={{ marginBottom: 8 }}>Menu Akses</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Halaman ini khusus tim Provider. Login melalui Provider Portal terlebih dahulu.
@@ -102,7 +102,7 @@ export default function AccessHubPage() {
     return (
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f5f7fb", padding: 20, fontFamily: "Inter, ui-sans-serif, system-ui" }}>
         <section style={{ ...cardStyle, maxWidth: 480, width: "100%", textAlign: "center" }}>
-          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>ULASANTOKO INTERNAL</div>
+          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
           <h1 style={{ marginBottom: 8 }}>Akses Terbatas</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             Akun ini tidak memiliki izin untuk membuka Menu Akses Provider.
@@ -117,7 +117,7 @@ export default function AccessHubPage() {
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "30px 16px 48px", fontFamily: "Inter, ui-sans-serif, system-ui", color: "#111827" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
         <header style={{ marginBottom: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .8, color: "#6b7280" }}>ULASANTOKO INTERNAL</div>
+          <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .8, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 32 }}>Menu Akses Sistem</h1>
           <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.6 }}>
             Akses cepat untuk pengecekan alur Provider → Customer → End User.
