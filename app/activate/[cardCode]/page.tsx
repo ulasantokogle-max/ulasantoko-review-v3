@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 type Business = {
   business_id: string;
@@ -138,7 +139,7 @@ export default function ActivateCardPage() {
       return;
     }
 
-    setAuthMessage("Akun berhasil dibuat dan Anda sudah masuk.");
+    setAuthMessage(tr("Akun berhasil dibuat dan Anda sudah masuk.", "Account created and you are signed in."));
   }
 
   async function resendConfirmation() {
