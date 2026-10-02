@@ -125,7 +125,7 @@ export default function CardsDashboardPage() {
 
     if (typed !== card.card_code) {
       if (typed !== null) {
-        setResetError("Reset dibatalkan karena Card Code tidak sesuai.");
+        setResetError("Reset dibatalkan karena Kode Kartu tidak sesuai.");
       }
       return;
     }
@@ -295,7 +295,7 @@ export default function CardsDashboardPage() {
                 style={buttonStyle}
                 disabled={loadingLogin}
               >
-                {loadingLogin ? "Login..." : "Login"}
+                {loadingLogin ? "Masuk..." : "Masuk"}
               </button>
             </div>
             {loginError && (
@@ -381,8 +381,8 @@ export default function CardsDashboardPage() {
               }}
             >
               {[
-                ["Total Card", stats.total],
-                ["Card Aktif", stats.active],
+                ["Total Kartu", stats.total],
+                ["Kartu Aktif", stats.active],
                 ["Sudah Diaktifkan", stats.activated],
               ].map(([label, value]) => (
                 <div
@@ -672,7 +672,7 @@ export default function CardsDashboardPage() {
                                   textDecoration: "none",
                                 }}
                               >
-                                Preview Halaman Publik
+                                Lihat Halaman Publik
                               </a>
                             )}
 
@@ -686,7 +686,7 @@ export default function CardsDashboardPage() {
                                 border: "1px solid #d1d5db",
                               }}
                             >
-                              Edit Card
+                              Edit Kartu
                             </button>
 
                             {card.activation_status === "activated" && (
