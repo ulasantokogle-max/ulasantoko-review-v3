@@ -605,7 +605,7 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari card code, label, area, SKU, pemilik bisnis..."
+                  placeholder="Cari kode kartu, label, area, SKU, pemilik bisnis..."
                 />
                 <select
                   style={inputStyle}
@@ -763,7 +763,11 @@ export default function ProviderCardsPage() {
                                   : "#1d4ed8",
                           }}
                         >
-                          {card.inventory_status.replaceAll("_", " ")}
+                          {card.inventory_status === "ready_to_sell"
+                            ? "Siap Dijual"
+                            : card.inventory_status === "activated"
+                              ? "Sudah Diaktifkan"
+                              : card.inventory_status}
                         </span>
                       </div>
 
@@ -778,9 +782,9 @@ export default function ProviderCardsPage() {
                       >
                         <div><strong>Area:</strong> {card.area || "-"}</div>
                         <div>
-                          <strong>QR:</strong> {card.qr_enabled ? "Ready" : "Off"}
+                          <strong>QR:</strong> {card.qr_enabled ? "Aktif" : "Nonaktif"}
                           {" · "}
-                          <strong>NFC:</strong> {card.nfc_enabled ? "Ready" : "Off"}
+                          <strong>NFC:</strong> {card.nfc_enabled ? "Aktif" : "Nonaktif"}
                         </div>
                         <div>
                           <strong>Pemilik:</strong> {card.business_name || "Belum ada"}
