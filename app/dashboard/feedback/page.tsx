@@ -71,7 +71,8 @@ export default function FeedbackInboxPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Feedback dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -92,7 +93,8 @@ export default function FeedbackInboxPage() {
     setLoadingFeedback(false);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Feedback inbox load failed", error);
+      setLoadError("Feedback belum dapat dimuat. Silakan coba lagi.");
       setFeedback([]);
       return;
     }
@@ -112,12 +114,14 @@ export default function FeedbackInboxPage() {
     setUpdatingId(null);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Feedback status update failed", error);
+      setLoadError("Status feedback belum dapat diperbarui. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
-      setLoadError(data?.message ?? "Gagal mengubah status feedback.");
+      console.error("Feedback status update returned unsuccessful result", data);
+      setLoadError("Status feedback belum dapat diperbarui. Silakan coba lagi.");
       return;
     }
 
