@@ -10,7 +10,7 @@ export default function ErrorPage({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("UlasanToko page error", error);
+    console.error("ReputasiPro page error", error);
   }, [error]);
 
   return (
@@ -39,7 +39,7 @@ export default function ErrorPage({
         }}
       >
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          ULASANTOKO REVIEW
+          REPUTASIPRO
         </div>
         <h1 style={{ margin: "8px 0 10px", fontSize: 26 }}>
           Ada kendala sementara
