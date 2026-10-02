@@ -40,6 +40,8 @@ export default async function PublicPdfMenuPage({
   const businessName = firstString(data?.business_name) ?? "UlasanToko";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
+  const mobileViewerUrl =
+    "https://docs.google.com/gview?embedded=1&url=" + encodeURIComponent(pdfUrl);
 
   return (
     <main
@@ -118,6 +120,7 @@ export default async function PublicPdfMenuPage({
         </div>
 
         <iframe
+          className="pdf-viewer-desktop"
           src={pdfUrl}
           title={title}
           style={{
@@ -127,6 +130,20 @@ export default async function PublicPdfMenuPage({
             border: 0,
             display: "block",
             background: "#f7f3ef",
+          }}
+        />
+
+        <iframe
+          className="pdf-viewer-mobile"
+          src={mobileViewerUrl}
+          title={title + " mobile"}
+          style={{
+            width: "100%",
+            height: "calc(100vh - 112px)",
+            minHeight: 620,
+            border: 0,
+            display: "none",
+            background: "#fff",
           }}
         />
       </section>
@@ -142,9 +159,15 @@ export default async function PublicPdfMenuPage({
             border-radius: 0 !important;
             box-shadow: none !important;
           }
-          iframe {
+          .pdf-viewer-desktop {
+            display: none !important;
+          }
+          .pdf-viewer-mobile {
+            display: block !important;
+            width: 100% !important;
             min-height: calc(100vh - 112px) !important;
             height: calc(100vh - 112px) !important;
+            border: 0 !important;
           }
         }
       `}</style>
