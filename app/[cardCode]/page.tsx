@@ -354,8 +354,8 @@ export default async function PublicCardPage({
           .smoothie-hero {
             min-height: 0 !important;
             max-height: none !important;
-            aspect-ratio: 16 / 8 !important;
-            border-radius: 22px !important;
+            aspect-ratio: 16 / 7 !important;
+            border-radius: 20px !important;
           }
           .smoothie-content {
             width: 100% !important;
@@ -412,10 +412,10 @@ export default async function PublicCardPage({
         <div
           className={isSmoothie ? "smoothie-hero" : undefined}
           style={{
-            aspectRatio: isSmoothie ? "16 / 9" : "16 / 7",
+            aspectRatio: isSmoothie ? "16 / 7" : "16 / 7",
             minHeight: 150,
-            maxHeight: isSmoothie ? 280 : 230,
-            borderRadius: isSmoothie ? 30 : 24,
+            maxHeight: isSmoothie ? 230 : 230,
+            borderRadius: isSmoothie ? 24 : 24,
             marginBottom: 0,
             overflow: "hidden",
             backgroundImage: coverUrl
@@ -428,7 +428,7 @@ export default async function PublicCardPage({
         />
 
         <div style={{
-          marginTop: isSmoothie ? -60 : -48,
+          marginTop: isSmoothie ? -52 : -48,
           position: "relative",
           paddingLeft: isSmoothie ? 0 : 14,
           display: isSmoothie ? "flex" : "block",
@@ -439,11 +439,11 @@ export default async function PublicCardPage({
               src={logoUrl}
               alt={businessName}
               style={{
-                width: isSmoothie ? 118 : 88,
-                height: isSmoothie ? 118 : 88,
+                width: isSmoothie ? 104 : 88,
+                height: isSmoothie ? 104 : 88,
                 objectFit: "cover",
-                borderRadius: isSmoothie ? 999 : 24,
-                border: (isSmoothie ? "7px" : "5px") + " solid " + theme.card,
+                borderRadius: isSmoothie ? 24 : 24,
+                border: (isSmoothie ? "6px" : "5px") + " solid " + theme.card,
                 background: theme.card,
                 boxShadow: "0 14px 34px rgba(0,0,0,.14)",
               }}
@@ -451,10 +451,10 @@ export default async function PublicCardPage({
           ) : (
             <div
               style={{
-                width: isSmoothie ? 118 : 88,
-                height: isSmoothie ? 118 : 88,
-                borderRadius: isSmoothie ? 999 : 24,
-                border: (isSmoothie ? "7px" : "5px") + " solid " + theme.card,
+                width: isSmoothie ? 104 : 88,
+                height: isSmoothie ? 104 : 88,
+                borderRadius: isSmoothie ? 24 : 24,
+                border: (isSmoothie ? "6px" : "5px") + " solid " + theme.card,
                 background: theme.soft,
                 display: "grid",
                 placeItems: "center",
