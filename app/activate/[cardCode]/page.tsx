@@ -348,7 +348,7 @@ export default function ActivateCardPage() {
                 {authLoading
                   ? "Memproses..."
                   : mode === "login"
-                    ? "Login & Lanjut Aktivasi"
+                    ? "Masuk & Lanjut Aktivasi"
                     : "Buat Akun"}
               </button>
             </form>
