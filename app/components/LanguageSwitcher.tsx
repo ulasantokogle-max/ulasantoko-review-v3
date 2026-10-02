@@ -1,9 +1,11 @@
 "use client";
 
 import { useLanguage } from "../../lib/i18n";
+import { useRouter } from "next/navigation";
 
 export default function LanguageSwitcher() {
   const { language, setLanguage, tr } = useLanguage();
+  const router = useRouter();
 
   return (
     <div
@@ -25,7 +27,7 @@ export default function LanguageSwitcher() {
         <button
           key={key}
           type="button"
-          onClick={() => setLanguage(key)}
+          onClick={() => { setLanguage(key); router.refresh(); }}
           aria-pressed={language === key}
           title={key === "id" ? "Bahasa Indonesia" : "English"}
           style={{
