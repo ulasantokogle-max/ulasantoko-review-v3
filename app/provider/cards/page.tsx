@@ -33,6 +33,14 @@ type CreateResult = {
   message?: string;
 };
 
+type ResetPinResult = {
+  success?: boolean;
+  card_id?: string;
+  card_code?: string;
+  activation_pin?: string;
+  message?: string;
+};
+
 export default function ProviderCardsPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -53,6 +61,9 @@ export default function ProviderCardsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copied, setCopied] = useState("");
+  const [resettingCardId, setResettingCardId] = useState<string | null>(null);
+  const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
+  const [resetPinError, setResetPinError] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -177,6 +188,40 @@ export default function ProviderCardsPage() {
     await navigator.clipboard.writeText(value);
     setCopied(label || "Tersalin");
     window.setTimeout(() => setCopied(""), 1800);
+  }
+
+  async function resetActivationPin(card: ProviderCard) {
+    const confirmed = window.confirm(
+      `Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`
+    );
+
+    if (!confirmed) return;
+
+    setResetPinError("");
+    setResetPinResult(null);
+    setResettingCardId(card.id);
+
+    const { data, error } = await supabase.rpc(
+      "v3_provider_reset_activation_pin",
+      {
+        p_card_id: card.id,
+      }
+    );
+
+    setResettingCardId(null);
+
+    if (error) {
+      setResetPinError(error.message);
+      return;
+    }
+
+    if (!data?.success) {
+      setResetPinError(data?.message ?? "Gagal mereset PIN.");
+      return;
+    }
+
+    setResetPinResult(data as ResetPinResult);
+    await loadCards();
   }
 
   const stats = useMemo(() => {
@@ -549,6 +594,52 @@ export default function ProviderCardsPage() {
                 </select>
               </div>
 
+              {resetPinResult?.success && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 14,
+                    borderRadius: 12,
+                    background: "#fff7ed",
+                    border: "1px solid #fed7aa",
+                    color: "#9a3412",
+                  }}
+                >
+                  <div style={{ fontWeight: 900, marginBottom: 6 }}>
+                    PIN baru untuk {resetPinResult.card_code}
+                  </div>
+                  <div style={{ fontSize: 14, marginBottom: 10 }}>
+                    PIN Aktivasi: <strong>{resetPinResult.activation_pin}</strong>
+                  </div>
+                  <div style={{ fontSize: 12, marginBottom: 10 }}>
+                    Simpan PIN ini sekarang. Setelah panel ini hilang, PIN tidak dapat dilihat kembali.
+                  </div>
+                  <button
+                    type="button"
+                    style={buttonStyle}
+                    onClick={() =>
+                      copyText(resetPinResult.activation_pin, "PIN baru")
+                    }
+                  >
+                    Copy PIN Baru
+                  </button>
+                </div>
+              )}
+
+              {resetPinError && (
+                <div
+                  style={{
+                    marginBottom: 12,
+                    padding: 12,
+                    borderRadius: 10,
+                    background: "#fef2f2",
+                    color: "#991b1b",
+                  }}
+                >
+                  {resetPinError}
+                </div>
+              )}
+
               {copied && (
                 <div
                   style={{
@@ -695,6 +786,24 @@ export default function ProviderCardsPage() {
                         >
                           Copy Card Code
                         </button>
+
+                        {card.inventory_status === "ready_to_sell" && (
+                          <button
+                            type="button"
+                            style={{
+                              ...buttonStyle,
+                              background: "#fff7ed",
+                              color: "#9a3412",
+                              border: "1px solid #fed7aa",
+                            }}
+                            disabled={resettingCardId === card.id}
+                            onClick={() => resetActivationPin(card)}
+                          >
+                            {resettingCardId === card.id
+                              ? "Resetting..."
+                              : "Reset PIN"}
+                          </button>
+                        )}
 
                         {card.qr_url && (
                           <>
