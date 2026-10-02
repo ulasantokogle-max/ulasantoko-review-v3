@@ -136,7 +136,7 @@ export default function ActivateCardPage() {
       return;
     }
 
-    setAuthMessage("Akun berhasil dibuat dan Anda sudah login.");
+    setAuthMessage("Akun berhasil dibuat dan Anda sudah masuk.");
   }
 
   async function resendConfirmation() {
@@ -294,7 +294,7 @@ export default function ActivateCardPage() {
         <h1 style={{ marginBottom: 8 }}>Aktivasi Kartu</h1>
         <p style={{ marginTop: 0, color: "#6b7280", lineHeight: 1.6 }}>
           Kartu <strong>{cardCode}</strong> belum diaktifkan. Aktivasi sekali,
-          lalu QR dan NFC ini akan otomatis menjadi landing page bisnis Anda.
+          lalu QR dan NFC ini akan otomatis menjadi halaman publik bisnis Anda.
         </p>
 
         {!userEmail ? (
