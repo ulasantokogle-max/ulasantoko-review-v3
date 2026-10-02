@@ -70,6 +70,8 @@ export default function LandingPageBuilderPage() {
   const [uploadingPdf, setUploadingPdf] = useState(false);
   const [whatsapp, setWhatsapp] = useState("");
   const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
+  const [mapsUrl, setMapsUrl] = useState("");
+  const [loadingGoogleReview, setLoadingGoogleReview] = useState(false);
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail);
@@ -277,6 +279,63 @@ export default function LandingPageBuilderPage() {
     setSaving(true);
     setError("");
     setMessage("");
+
+    if (mapsUrl.trim()) {
+      setLoadingGoogleReview(true);
+
+      const {
+        data: { session },
+        error: sessionError
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session?.access_token) {
+        setLoadingGoogleReview(false);
+        setSaving(false);
+        setError("Session login tidak ditemukan. Silakan login ulang.");
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/google-review/setup", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            business_id: businessId,
+            maps_url: mapsUrl.trim()
+          })
+        });
+
+        const googleData = await response.json();
+
+        if (!response.ok || !googleData?.success) {
+          setLoadingGoogleReview(false);
+          setSaving(false);
+          setError(
+            googleData?.message ??
+              (googleData?.step
+                ? `Google Review gagal di tahap: ${googleData.step}`
+                : "Gagal menyimpan Google Maps URL.")
+          );
+          return;
+        }
+
+        setMapsUrl(googleData?.maps_url ?? mapsUrl.trim());
+      } catch (googleError) {
+        setLoadingGoogleReview(false);
+        setSaving(false);
+        setError(
+          googleError instanceof Error
+            ? googleError.message
+            : "Gagal memproses Google Maps URL."
+        );
+        return;
+      }
+
+      setLoadingGoogleReview(false);
+    }
 
     const { data: contactData, error: contactError } = await supabase.rpc(
       "v3_update_business_contact_settings",
@@ -576,7 +635,22 @@ export default function LandingPageBuilderPage() {
               <div>
                 <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
-                  Tambahkan Instagram dan PDF menu/katalog langsung di landing page.
+                  Atur Google Review, WhatsApp, Instagram, dan PDF menu/katalog langsung dari satu halaman.
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>Google Maps / Google Review</label>
+                <input
+                  style={inputStyle}
+                  type="url"
+                  placeholder="https://maps.app.goo.gl/..."
+                  value={mapsUrl}
+                  onChange={(e) => setMapsUrl(e.target.value)}
+                  disabled={loadingGoogleReview}
+                />
+                <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
+                  Paste link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.
                 </div>
               </div>
 
@@ -656,7 +730,11 @@ export default function LandingPageBuilderPage() {
 
             <button type="submit" disabled={saving || loading || !businessId}
               style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "#111827", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
-              {saving ? "Menyimpan..." : "Simpan Landing Page"}
+              {saving
+                ? loadingGoogleReview
+                  ? "Memproses Google Review..."
+                  : "Menyimpan..."
+                : "Simpan Landing Page"}
             </button>
           </form>
 
