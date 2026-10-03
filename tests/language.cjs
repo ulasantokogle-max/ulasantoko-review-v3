@@ -26,6 +26,22 @@ function text(tree) { if (tree == null)
     return tree; if (Array.isArray(tree))
     return tree.map(text).join(' '); return text(tree.children); }
 (async () => {
+    storage.set('reputasipro-language', 'id');
+    let reloadTree;
+    await act(async () => { reloadTree = create(React.createElement(LanguageProvider, { initialLanguage: 'en' }, React.createElement(Probe))); });
+    assert.equal(control.language, 'en', 'Server cookie must override stale browser storage');
+    assert.equal(storage.get('reputasipro-language'), 'en');
+    assert(document.cookie.startsWith('reputasipro-language=en;'));
+    await act(async () => reloadTree.unmount());
+    const availableStorage = window.localStorage;
+    window.localStorage = { getItem() { throw new Error('Unavailable'); }, setItem() { throw new Error('Unavailable'); } };
+    await act(async () => { reloadTree = create(React.createElement(LanguageProvider, { initialLanguage: 'en' }, React.createElement(Probe))); });
+    await act(async () => control.setLanguage('id'));
+    assert.equal(control.language, 'id');
+    assert(document.cookie.startsWith('reputasipro-language=id;'));
+    await act(async () => reloadTree.unmount());
+    window.localStorage = availableStorage;
+    console.log('PASS reload language consistency and unavailable local storage');
     for (const [file, id, en] of [['app/dashboard/page.tsx', 'Ringkasan Dasbor', 'Dashboard Overview'], ['app/dashboard/cards/page.tsx', 'Manajemen Kartu', 'Card Management'], ['app/dashboard/feedback/page.tsx', 'Masukan Pelanggan', 'Customer Feedback'], ['app/dashboard/analytics/page.tsx', 'Analitik & Wawasan', 'Analytics & Insights'], ['app/dashboard/landing-page/page.tsx', 'Pengeditan Halaman', 'Page Editor'], ['app/dashboard/onboarding/page.tsx', 'Siapkan Bisnis Anda', 'Set Up Your Business'], ['app/provider/cards/page.tsx', 'Pusat Kartu', 'Card Center'], ['app/access/page.tsx', 'Menu Akses Sistem', 'System Access Menu']]) {
         storage.clear();
         const Page = require(cwd + '/' + file).default;

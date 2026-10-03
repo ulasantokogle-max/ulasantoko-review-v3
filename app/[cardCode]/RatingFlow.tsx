@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { getFeedbackError } from "../../lib/feedbackErrors";
 import { useLanguage } from "../../lib/i18n";
 
 type Props = {
@@ -124,7 +125,8 @@ export default function RatingFlow({
           status: response.status,
           data
         });
-        setError(tr("Masukan belum dapat dikirim. Silakan coba lagi.", "Feedback could not be sent. Please try again."));
+        const failure = getFeedbackError(data?.code);
+        setError(failure ? tr(failure.id, failure.en) : tr("Masukan belum dapat dikirim. Silakan coba lagi.", "Feedback could not be sent. Please try again."));
         return;
       }
 

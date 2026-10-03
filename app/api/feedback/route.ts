@@ -1,19 +1,38 @@
 import { NextResponse } from "next/server";
+import { getFeedbackError } from "../../../lib/feedbackErrors";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      const parsed = await request.json();
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("Invalid feedback payload");
+      }
+      body = parsed;
+    } catch {
+      return NextResponse.json({ success: false, message: "Data masukan tidak valid." }, { status: 400 });
+    }
 
-    const cardCode = body?.card_code;
-    const rating = Number(body?.rating);
+    const cardCode = typeof body.card_code === "string" ? body.card_code.trim() : "";
+    const rating = typeof body.rating === "number" || typeof body.rating === "string" ? Number(body.rating) : NaN;
     const customerName = body?.customer_name ?? null;
     const customerPhone = body?.customer_phone ?? null;
     const message = body?.message ?? null;
     const category = body?.category ?? null;
-    const contactConsent = Boolean(body?.contact_consent);
+    const contactConsent = body.contact_consent === true;
 
-    if (!cardCode || !Number.isInteger(rating) || rating < 1 || rating > 3) {
+    const textLimits: Record<string, number> = {
+      customer_name: 120, customer_phone: 32, message: 2000, category: 80, session_id: 160,
+    };
+    const invalidText = Object.entries(textLimits).some(([key, maxLength]) => {
+      const value = body[key];
+      return value != null && (typeof value !== "string" || Array.from(value.trim()).length > maxLength);
+    });
+    const invalidConsent = body.contact_consent != null && typeof body.contact_consent !== "boolean";
+
+    if (!cardCode || !Number.isInteger(rating) || rating < 1 || rating > 3 || invalidText || invalidConsent) {
       return NextResponse.json(
         {
           success: false,
@@ -60,8 +79,15 @@ export async function POST(request: Request) {
       );
     }
 
-    if (data?.success === false) {
-      console.error("Feedback RPC returned unsuccessful result", data);
+    if (data?.success !== true) {
+      console.error("Feedback RPC returned unsuccessful result", { code: data?.code });
+      const failure = getFeedbackError(data?.code);
+      if (failure) {
+        return NextResponse.json(
+          { success: false, code: data.code, message: failure.id },
+          { status: failure.status }
+        );
+      }
       return NextResponse.json(
         {
           success: false,
