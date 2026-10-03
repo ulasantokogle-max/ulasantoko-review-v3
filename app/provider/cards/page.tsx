@@ -7,6 +7,7 @@ import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import DownloadCardQr from "../../components/DownloadCardQr";
+import WriteCardNfc from "../../components/WriteCardNfc";
 
 type ProviderCard = {
   id: string;
@@ -563,6 +564,7 @@ function ProviderCardsPageContent() {
                     {created.card_code && created.qr_url && (
                       <DownloadCardQr cardCode={created.card_code} url={created.qr_url} />
                     )}
+                    {created.card_code && (created.nfc_url || created.qr_url) && <WriteCardNfc cardCode={created.card_code} url={(created.nfc_url || created.qr_url)!} />}
                   </div>
                 </div>
               )}
@@ -861,6 +863,7 @@ function ProviderCardsPageContent() {
                               {tr("Salin URL")}
                             </button>
                             <DownloadCardQr cardCode={card.card_code} url={card.qr_url} enabled={card.qr_enabled} />
+                            <WriteCardNfc cardCode={card.card_code} url={card.qr_url} enabled={card.nfc_enabled} />
                             <a
                               href={card.qr_url}
                               target="_blank"
