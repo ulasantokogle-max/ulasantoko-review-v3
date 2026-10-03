@@ -1,5 +1,8 @@
 "use client";
 
+import "../../components/public-landing.css";
+import BusinessTitle from "../../components/BusinessTitle";
+import type { CSSProperties } from "react";
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
@@ -585,7 +588,7 @@ export default function LandingPageBuilderPage() {
                       }} />
                       <strong>{tr(item.label)}</strong>
                       {key === "soft_smoothie" && (
-                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>{tr("Creamy · rounded · premium")}</div>
+                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>{tr("Modern · lembut · elegan", "Modern · soft · elegant")}</div>
                       )}
                     </button>
                   );
@@ -821,10 +824,11 @@ export default function LandingPageBuilderPage() {
             </button>
           </form>
 
-          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
+          <aside className="modern-landing landing-preview" data-theme={settings.theme_key} style={{ ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties), position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
             <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>{tr("LIVE PREVIEW")}</div>
-            <div style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
+            <div className="public-shell" style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
               <div
+                className="public-hero"
                 style={{
                   aspectRatio: "16 / 7",
                   minHeight: 120,
@@ -843,24 +847,24 @@ export default function LandingPageBuilderPage() {
                     settings.cover_position
                 }}
               />
-              <div style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
+              <div className="public-content" style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
                 {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, objectFit: "cover", borderRadius: isSmoothie ? 24 : 20, marginTop: isSmoothie ? -52 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
+                  <img className="preview-logo" src={settings.logo_url} alt="" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, objectFit: "cover", borderRadius: isSmoothie ? 24 : 20, marginTop: isSmoothie ? -52 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
                 ) : (
-                  <div style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, borderRadius: isSmoothie ? 24 : 20, margin: isSmoothie ? "-52px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
+                  <div className="preview-logo" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, borderRadius: isSmoothie ? 24 : 20, margin: isSmoothie ? "-52px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
                     {businessName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
 
-                <h2 style={{ margin: "14px 0 6px", fontSize: isSmoothie ? 29 : 26, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{settings.hero_title || businessName}</h2>
-                <p style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}</p>
+                <BusinessTitle style={{ margin: "20px 0 10px", fontSize: 32, fontWeight: 800 }}>{settings.hero_title || businessName}</BusinessTitle>
+                <p className="public-description" style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}</p>
 
                 {settings.show_promo && settings.promo_text && (
-                  <div style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
+                  <div className="public-promo" style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
                 )}
 
                 {isSmoothie && settings.show_google_review && (
-                  <div style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
+                  <div className="public-rating" style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
                     <div style={{ fontWeight: 900, marginBottom: 4 }}>{tr("Beri kami ulasan Google")}</div>
                     <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>{tr("Hanya 10 detik, sangat berarti bagi kami")}</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
@@ -869,20 +873,20 @@ export default function LandingPageBuilderPage() {
                   </div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
-                  {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>{tr("★ Beri Ulasan")}</div>}
-                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || tr("Informasi", "Information")} {isSmoothie ? "›" : ""}</div>}
-                  {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
+                <div className="public-links" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
+                  {!isSmoothie && settings.show_google_review && <div className="public-link" style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>{tr("★ Beri Ulasan")}</div>}
+                  {settings.show_pdf && settings.pdf_url && <div className="public-link" style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || tr("Informasi", "Information")} {isSmoothie ? "›" : ""}</div>}
+                  {settings.show_whatsapp && <div className="public-link" style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
                     <div>◉ WhatsApp</div>
                     <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
                       {whatsapp || "62 812-XXXX-XXXX"}
                     </div>
                   </div>}
-                  {settings.show_instagram && settings.instagram_url && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
+                  {settings.show_instagram && settings.instagram_url && <div className="public-link" style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
                 </div>
 
                 {settings.show_about && settings.about_text && (
-                  <div style={{ marginTop: 18 }}>
+                  <div className="public-about" style={{ marginTop: 18 }}>
                     <div style={{ fontWeight: 900, marginBottom: 6 }}>{tr("Tentang Kami")}</div>
                     <div style={{ color: theme.muted, lineHeight: 1.55, fontSize: 14 }}>{settings.about_text}</div>
                   </div>

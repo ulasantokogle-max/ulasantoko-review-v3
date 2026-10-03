@@ -194,7 +194,7 @@ export default function RatingFlow({
 
   return (
     <section
-      className={smoothMode ? "smoothie-rating-card" : undefined}
+      className={"public-rating " + (smoothMode ? "smoothie-rating-card" : "")}
       style={{
         marginTop: smoothMode ? 18 : 24,
         padding: smoothMode ? "22px 18px 20px" : 0,

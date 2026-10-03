@@ -12,6 +12,7 @@ export default function BusinessTitle({ children, style }: {
   const [fontSize, setFontSize] = useState(baseSize);
 
   useEffect(() => {
+    if (!heading.current) return;
     let disposed = false;
     const fit = () => {
       if (disposed || !heading.current || !text.current) return;
