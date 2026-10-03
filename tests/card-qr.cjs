@@ -13,6 +13,10 @@ let clicks = 0;
 let removals = 0;
 global.document = {
   createElement: tag => {
+    if (tag === 'canvas') {
+      let pixels;
+      return { width:0,height:0,getContext:()=>({ createImageData:(width,height)=>({width,height,data:new Uint8ClampedArray(width*height*4)}), putImageData:image=>{pixels=image;} }), toDataURL:()=> 'data:image/png;base64,'+PNG.sync.write({width:pixels.width,height:pixels.height,data:Buffer.from(pixels.data)}).toString('base64') };
+    }
     assert.equal(tag, 'a');
     return { click() { downloaded = { href: this.href, name: this.download }; clicks++; }, remove() { removals++; } };
   },
@@ -28,7 +32,7 @@ Module._load = function(id, parent, main) {
 };
 const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
 (async () => {
-  for (const palette of ['mocha','matcha','classic']) for (const url of ['https://reputasipro.ulasantoko.space/ULAS-01007', 'https://ulasantoko-review-v3.vercel.app/ULAS-01006']) {
+  for (const palette of ['rainbow','classic']) for (const url of ['https://reputasipro.ulasantoko.space/ULAS-01007', 'https://ulasantoko-review-v3.vercel.app/ULAS-01006']) {
     let ui;
     await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'ULAS-01007', url })); });
     assert.equal(ui.root.findByType('button').children.join(''), 'Unduh QR (PNG)');
@@ -37,10 +41,15 @@ const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
     assert.equal(downloaded.name, 'ULAS-01007-QR.png');
     const png = PNG.sync.read(Buffer.from(downloaded.href.split(',')[1], 'base64'));
     assert(png.width >= 1000);
-    const expectedLight={mocha:[255,248,240,255],matcha:[245,250,243,255],classic:[255,255,255,255]}[palette];
-    const expectedDark={mocha:[91,61,46,255],matcha:[36,78,66,255],classic:[0,0,0,255]}[palette];
-    assert.deepEqual(Array.from(png.data.subarray(0,4)),expectedLight);
-    assert.deepEqual(Array.from(png.data.subarray((128*png.width+128)*4,(128*png.width+128)*4+4)),expectedDark);
+    assert.deepEqual(Array.from(png.data.subarray(0,4)),[255,255,255,255]);
+    const colors=new Set();
+    for(let i=0;i<png.data.length;i+=4) {
+      if(png.data[i]===255 && png.data[i+1]===255 && png.data[i+2]===255) continue;
+      colors.add(png.data[i]+','+png.data[i+1]+','+png.data[i+2]);
+      assert.equal(png.data[i+3],255);
+    }
+    if(palette==='rainbow') assert(colors.size>100,'Rainbow must contain an actual continuous gradient');
+    else assert.deepEqual([...colors],['0,0,0']);
     const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
     assert(decoded, 'Downloaded PNG must be decodable');
     assert.equal(decoded.data, url, 'QR must encode the exact stored destination');
@@ -52,8 +61,8 @@ const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
   await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'CARD', url: 'javascript:alert(1)' })); });
   assert.equal(ui.root.findByType('button').children.join(''), 'Download QR (PNG)');
   await act(async () => { await ui.root.findByType('button').props.onClick(); });
-  assert.equal(clicks, 6);
-  assert.equal(removals, 6);
+  assert.equal(clicks, 4);
+  assert.equal(removals, 4);
   assert(ui.root.findByProps({ role: 'alert' }).children.join('').includes('Could not download'));
   await act(async () => ui.unmount());
   await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'CARD', url: 'https://example.com', enabled: false })); });

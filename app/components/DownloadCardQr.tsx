@@ -2,12 +2,7 @@
 
 import { useState } from "react";
 import { useLanguage } from "../../lib/i18n";
-
-const palettes = {
-  mocha: { dark: "#5b3d2eff", light: "#fff8f0ff" },
-  matcha: { dark: "#244e42ff", light: "#f5faf3ff" },
-  classic: { dark: "#000000ff", light: "#ffffffff" },
-};
+import { rainbowQrPng } from "../../lib/rainbow-qr";
 
 export default function DownloadCardQr({ cardCode, url, enabled = true }: {
   cardCode: string;
@@ -17,22 +12,22 @@ export default function DownloadCardQr({ cardCode, url, enabled = true }: {
   const { tr } = useLanguage();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
-  const [palette, setPalette] = useState<keyof typeof palettes>("mocha");
+  const [palette, setPalette] = useState<"rainbow" | "classic">("rainbow");
 
   async function download() {
     setBusy(true);
     setError(false);
     try {
       // Generate in the browser. No card URL or activation PIN is sent to a QR service.
-      const { toDataURL } = await import("qrcode");
+      const { toDataURL, create } = await import("qrcode");
       const destination = new URL(url);
       if (destination.protocol !== "https:") throw new Error("Invalid card URL");
-      const image = await toDataURL(url, {
+      const image = palette === "rainbow" ? rainbowQrPng(create(url, { errorCorrectionLevel: "M" }).modules) : await toDataURL(url, {
         type: "image/png",
         errorCorrectionLevel: "M",
         margin: 4,
         scale: 32,
-        color: palettes[palette],
+        color: { dark: "#000000ff", light: "#ffffffff" },
       });
       const link = document.createElement("a");
       link.href = image;
@@ -53,11 +48,10 @@ export default function DownloadCardQr({ cardCode, url, enabled = true }: {
         aria-label={tr("Warna QR", "QR color")}
         value={palette}
         disabled={busy || !enabled}
-        onChange={event => setPalette(event.target.value as keyof typeof palettes)}
-        style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e4d6c8", background: palettes[palette].light.slice(0, 7), color: palettes[palette].dark.slice(0, 7), fontWeight: 700 }}
+        onChange={event => setPalette(event.target.value === "classic" ? "classic" : "rainbow")}
+        style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #d8d3ef", background: "#ffffff", color: palette === "rainbow" ? "#6d28d9" : "#111827", fontWeight: 700 }}
       >
-        <option value="mocha">{tr("Mocha · krem hangat", "Mocha · warm cream")}</option>
-        <option value="matcha">{tr("Matcha · hijau lembut", "Matcha · soft green")}</option>
+        <option value="rainbow">{tr("Rainbow · gradasi pelangi", "Rainbow · gradient")}</option>
         <option value="classic">{tr("Klasik · hitam putih", "Classic · black and white")}</option>
       </select>
       <button
