@@ -182,7 +182,7 @@ export default function AnalyticsDashboardPage() {
     fontSize: 14,
     fontWeight: 800,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 

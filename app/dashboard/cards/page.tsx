@@ -231,7 +231,7 @@ export default function CardsDashboardPage() {
     fontSize: 13,
     fontWeight: 800,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 

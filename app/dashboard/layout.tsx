@@ -11,14 +11,18 @@ import DashboardNav from "./DashboardNav";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 import ProviderMfaGate from "../components/ProviderMfaGate";
 import "./dashboard.css";
+import { cookies } from "next/headers";
+import { DashboardThemeShell, DashboardThemePicker } from "./DashboardTheme";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const savedTheme = (await cookies()).get("reputasipro-dashboard-theme")?.value;
+  const initialTheme = savedTheme === "smoothie" || savedTheme === "ocean" ? savedTheme : "modern";
   return (
-    <ProviderMfaGate allowCustomers><div className="dashboard-shell">
+    <ProviderMfaGate allowCustomers><DashboardThemeShell initialTheme={initialTheme}>
       <div className="dashboard-grid">
         <aside className="dashboard-sidebar">
           <div
@@ -48,12 +52,13 @@ export default function DashboardLayout({
           </div>
 
           <div style={{ marginBottom: 14 }}><LanguageSwitcher /></div>
+          <DashboardThemePicker />
 
           <DashboardNav />
         </aside>
 
         <div className="dashboard-content">{children}</div>
       </div>
-    </div></ProviderMfaGate>
+    </DashboardThemeShell></ProviderMfaGate>
   );
 }

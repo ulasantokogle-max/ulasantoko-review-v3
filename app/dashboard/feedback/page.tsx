@@ -192,7 +192,7 @@ export default function FeedbackInboxPage() {
     fontSize: 14,
     fontWeight: 700,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 

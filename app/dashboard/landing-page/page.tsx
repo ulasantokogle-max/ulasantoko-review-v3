@@ -815,7 +815,7 @@ export default function LandingPageBuilderPage() {
             {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{tr(message)}</div>}
 
             <button type="submit" disabled={saving || loading || !businessId}
-              style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "#111827", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
+              style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "var(--dashboard-accent, #111827)", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
               {saving
                 ? loadingGoogleReview
                   ? tr("Memproses Google Review...")

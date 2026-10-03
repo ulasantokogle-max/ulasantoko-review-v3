@@ -182,7 +182,7 @@ export default function DashboardHomePage() {
     fontSize: 14,
     fontWeight: 800,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 
@@ -415,7 +415,7 @@ export default function DashboardHomePage() {
                         style={{
                           height: "100%",
                           width: progress + "%",
-                          background: "#111827",
+                          background: "var(--dashboard-accent, #111827)",
                         }}
                       />
                     </div>

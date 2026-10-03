@@ -175,7 +175,7 @@ export default function CustomerOnboardingPage() {
               marginTop: 10,
               padding: "12px 16px",
               borderRadius: 10,
-              background: "#111827",
+              background: "var(--dashboard-accent, #111827)",
               color: "#fff",
               textDecoration: "none",
               fontWeight: 800,
@@ -294,7 +294,7 @@ export default function CustomerOnboardingPage() {
                 style={{
                   width: progress + "%",
                   height: "100%",
-                  background: "#111827",
+                  background: "var(--dashboard-accent, #111827)",
                 }}
               />
             </div>
@@ -377,7 +377,7 @@ export default function CustomerOnboardingPage() {
                   textDecoration: "none",
                   padding: "12px 16px",
                   borderRadius: 10,
-                  background: "#111827",
+                  background: "var(--dashboard-accent, #111827)",
                   color: "#fff",
                   fontWeight: 900,
                 }}
