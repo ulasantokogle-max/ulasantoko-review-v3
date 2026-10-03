@@ -6,7 +6,7 @@ Database migration 0037 preserves existing data and RPC signatures. It adds a ca
 
 ## Apply to the V3 database
 
-No live database credentials or direct connection are available in this session. These SQL changes have NOT been applied to live Supabase. Do not apply them to V1 or WiV1.
+No live database credentials or direct connection are available in this session. The user applied the checkpoint and migration 0037 in the standalone V3 Supabase SQL Editor on 3 October 2026; screenshots show both succeeded. Do not apply them to V1 or WiV1.
 
 1. Confirm the selected Supabase project belongs to this standalone V3 repository. Verify earlier migrations through 0036 and current backups.
 2. Run `supabase/checkpoints/2026-10-03_pre_security_v2.sql` in the V3 SQL Editor. It saves the affected function definitions and bucket settings in a private schema, without copying customer submissions.
@@ -16,6 +16,10 @@ No live database credentials or direct connection are available in this session.
 6. If an actual regression requires rollback, use `supabase/rollbacks/0037_security_release_hardening_v2_rollback.sql`; it restores checkpoint definitions and bucket settings without deleting files or feedback.
 
 ## Evidence and remaining release gate
+
+Live screenshots confirm the PIN helper is inaccessible to anon/authenticated roles, and the combined checks for RLS, private-table grants, feedback locking/card cap, and bucket limits all return true. The authenticated public-page editor saved successfully. Card ULAS-00136 renders the saved business content; a two-star submission appears in the owner's feedback inbox as NEW. The high-rating flow opens the Google review form for BANANA KREZZZ KEMUNING. This evidence does not establish cross-account isolation or anonymous access through the protected Vercel preview.
+
+The stored QR link `https://ulasantoko.space/ULAS-00136` displays a short-link-service 404. The dashboard's View Public Page action now opens the same-deployment card route instead of that stored QR URL. This does not change printed QR/NFC destinations or repair the external short-link mapping. That mapping remains a release issue to verify separately.
 
 `npm run test:security` executes PostgreSQL via PGlite with real RLS, SECURITY DEFINER, roles, and pgcrypto; Supabase Auth claim functions and Storage tables are local fixtures. Tests cover tenant isolation, forbidden admin operations, PIN secrecy, storage path ownership, changing session IDs against the card-wide cap, resolver limits, activation lockouts, valid activation, verification SQL, rollback, and reapplication. API tests cover bounded bodies, login checks, limiter failures, unsafe destinations, redirects, and timeout configuration.
 

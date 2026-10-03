@@ -672,9 +672,9 @@ export default function CardsDashboardPage() {
                               flexWrap: "wrap",
                             }}
                           >
-                            {card.qr_url && (
+                            {card.card_code && (
                               <a
-                                href={card.qr_url}
+                                href={`/${encodeURIComponent(card.card_code)}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{
