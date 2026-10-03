@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import BusinessTitle from "../components/BusinessTitle";
 import RatingFlow from "./RatingFlow";
 
 type AnyObject = Record<string, any>;
@@ -411,10 +412,6 @@ export default async function PublicCardPage({
             padding-left: 10px !important;
             padding-right: 10px !important;
           }
-          .smoothie-title {
-            font-size: 29px !important;
-            line-height: 1.08 !important;
-          }
           .smoothie-promo {
             font-size: 13px !important;
             padding: 12px 14px !important;
@@ -537,8 +534,7 @@ export default async function PublicCardPage({
         </div>
 
         <div className={isSmoothie ? "smoothie-content" : undefined} style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
-        <h1
-          className={isSmoothie ? "smoothie-title" : undefined}
+        <BusinessTitle
           style={{
             fontSize: isSmoothie ? 34 : 31,
             lineHeight: 1.12,
@@ -549,7 +545,7 @@ export default async function PublicCardPage({
           }}
         >
           {pageTitle}
-        </h1>
+        </BusinessTitle>
 
         {category && (
           <div
