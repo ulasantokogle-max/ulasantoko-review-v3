@@ -40,6 +40,29 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
   await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid??'']);
   try { return await db.query(sql,args); } finally { await db.exec('reset role'); }
  }
+ const googleMigration = fs.readFileSync('supabase/migrations/0040_google_review_profile_rpc.sql','utf8');
+ await db.exec(googleMigration);
+ await db.exec(googleMigration);
+ const googleSave = 'select v3_set_google_review_profile($1,$2,$3) as value';
+ const googleArgs = [businessA,'https://maps.app.goo.gl/BusinessA','ChIJ_Test-123'];
+ await assert.rejects(as('anon',null,googleSave,googleArgs),/permission denied/);
+ await assert.rejects(as('authenticated',null,googleSave,googleArgs),/AUTH_REQUIRED/);
+ await assert.rejects(as('authenticated',uidB,googleSave,googleArgs),/FORBIDDEN/);
+ const savedGoogle = (await as('authenticated',uidA,googleSave,googleArgs)).rows[0].value;
+ assert.equal(savedGoogle.success,true);
+ assert.equal(savedGoogle.review_url,'https://search.google.com/local/writereview?placeid=ChIJ_Test-123');
+ await db.query("update google_review_profiles set business_name='Keep name' where business_id=$1",[businessA]);
+ await as('authenticated',uidA,googleSave,[businessA,'https://www.google.co.id/maps/place/Test','ChIJ_Updated']);
+ const googleRows = (await db.query('select * from google_review_profiles where business_id=$1',[businessA])).rows;
+ assert.equal(googleRows.length,1); assert.equal(googleRows[0].business_name,'Keep name');
+ assert.equal(googleRows[0].place_id,'ChIJ_Updated');
+ for (const url of ['https://google.com.evil.test/maps','http://google.com/maps','https://user@google.com/maps','https://google.com:8443/maps'])
+   await assert.rejects(as('authenticated',uidA,googleSave,[businessA,url,'ChIJ_Valid']),/INVALID_GOOGLE_REVIEW_PROFILE/);
+ await assert.rejects(as('authenticated',uidA,googleSave,[businessA,googleArgs[1],'Bad&redirect=evil']),/INVALID_GOOGLE_REVIEW_PROFILE/);
+ await db.query("update businesses set status='suspended' where id=$1",[businessA]);
+ await assert.rejects(as('authenticated',uidA,googleSave,googleArgs),/BUSINESS_INACTIVE/);
+ await db.query("update businesses set status='active' where id=$1",[businessA]);
+ console.log('PASS Google Review RPC: repeatable migration, member save/update, preserved name, cross-tenant/anonymous/inactive/invalid input denied');
  assert.equal((await as('authenticated',uidA,'select id from businesses')).rows.length,1);
  assert.equal((await as('authenticated',uidB,'select id from cards')).rows.length,0);
  await assert.rejects(as('authenticated',uidB,'select * from v3_get_cards($1)',[businessA]),/FORBIDDEN/);
