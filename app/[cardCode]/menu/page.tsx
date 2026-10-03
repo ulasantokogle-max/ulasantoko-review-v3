@@ -1,7 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 function firstString(...values: unknown[]) {
   for (const value of values) {
@@ -125,7 +124,6 @@ export default async function PublicPdfMenuPage({
           }}
         >
           <div>
-            <LanguageSwitcher />
             <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#8B5E3C" }}>
               {businessName}
             </div>

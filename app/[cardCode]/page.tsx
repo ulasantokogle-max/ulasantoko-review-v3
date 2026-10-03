@@ -3,7 +3,6 @@ import "../components/public-landing.css";
 import { createClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
 import { cookies } from "next/headers";
-import LanguageSwitcher from "../components/LanguageSwitcher";
 import BusinessTitle from "../components/BusinessTitle";
 import RatingFlow from "./RatingFlow";
 
@@ -442,10 +441,6 @@ export default async function PublicCardPage({
           }
         }
       `}</style>
-
-      <div style={{ maxWidth: 760, margin: "0 auto 10px", display: "flex", justifyContent: "flex-end" }}>
-        <LanguageSwitcher />
-      </div>
 
       <section
         className={"public-shell " + (isSmoothie ? "smoothie-shell" : "")}
