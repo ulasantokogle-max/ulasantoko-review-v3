@@ -291,7 +291,7 @@ export default function RatingFlow({
             fontSize: 13,
           }}
         >
-          {error}
+          {tr(error)}
         </div>
       )}
 
@@ -307,7 +307,7 @@ export default function RatingFlow({
           }}
         >
           <div style={{ fontWeight: 800, marginBottom: 6 }}>
-            Kami ingin memperbaiki pengalaman Anda
+            {tr("Kami ingin memperbaiki pengalaman Anda")}
           </div>
           <div
             style={{
@@ -317,15 +317,14 @@ export default function RatingFlow({
               marginBottom: 14,
             }}
           >
-            Masukan ini dikirim secara privat ke bisnis dan tidak diposting ke
-            Google.
+            {tr("Masukan ini dikirim secara privat ke bisnis dan tidak diposting ke Google.")}
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nama (opsional)"
+              placeholder={tr("Nama (opsional)")}
               maxLength={120}
               style={{
                 width: "100%",
@@ -342,7 +341,7 @@ export default function RatingFlow({
             <input
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              placeholder="No. WhatsApp (opsional)"
+              placeholder={tr("No. WhatsApp (opsional)")}
               maxLength={32}
               inputMode="tel"
               style={{
@@ -360,7 +359,7 @@ export default function RatingFlow({
             <textarea
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Ceritakan apa yang bisa kami perbaiki..."
+              placeholder={tr("Ceritakan apa yang bisa kami perbaiki...")}
               required
               maxLength={2000}
               rows={4}
@@ -392,7 +391,7 @@ export default function RatingFlow({
                 onChange={(event) => setConsent(event.target.checked)}
                 style={{ marginTop: 2 }}
               />
-              Saya bersedia dihubungi oleh bisnis terkait masukan ini.
+              {tr("Saya bersedia dihubungi oleh bisnis terkait masukan ini.")}
             </label>
 
             <button
@@ -423,7 +422,7 @@ export default function RatingFlow({
                 fontSize: 13,
               }}
             >
-              {error}
+              {tr(error)}
             </div>
           )}
         </form>

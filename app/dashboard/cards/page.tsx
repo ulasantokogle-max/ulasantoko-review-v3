@@ -122,7 +122,7 @@ export default function CardsDashboardPage() {
 
   async function resetCardSetup(card: CardRow) {
     const typed = window.prompt(
-      `Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, masukan, analitik, QR/NFC, dan status aktivasi tetap dipertahankan.\n\nKetik ${card.card_code} untuk konfirmasi.`
+      tr(`Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, masukan, analitik, QR/NFC, dan status aktivasi tetap dipertahankan.\n\nKetik ${card.card_code} untuk konfirmasi.`, `Reset setup for ${card.card_code}?\n\nGoogle Review and business WhatsApp will be cleared. Card ownership, feedback, analytics, QR/NFC, and activation status will be retained.\n\nType ${card.card_code} to confirm.`)
     );
 
     if (typed !== card.card_code) {
@@ -158,7 +158,7 @@ export default function CardsDashboardPage() {
     }
 
     setResetMessage(
-      `Setup ${card.card_code} berhasil direset. Kartu tetap menjadi milik bisnis Anda.`
+      tr(`Setup ${card.card_code} berhasil direset. Kartu tetap menjadi milik bisnis Anda.`, `Setup for ${card.card_code} has been reset. The card still belongs to your business.`)
     );
     await loadCards();
   }
@@ -268,9 +268,9 @@ export default function CardsDashboardPage() {
           ReputasiPro
         </div>
 
-        <h1 style={{ margin: 0, fontSize: 30 }}>Manajemen Kartu</h1>
+        <h1 style={{ margin: 0, fontSize: 30 }}>{tr("Manajemen Kartu")}</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-          Kelola kartu QR/NFC, status operasional, label, dan area penggunaan.
+          {tr("Kelola kartu QR/NFC, status operasional, label, dan area penggunaan.")}
         </p>
 
         {!userEmail ? (
@@ -287,7 +287,7 @@ export default function CardsDashboardPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="Password"
+                placeholder={tr("Password")}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -297,11 +297,11 @@ export default function CardsDashboardPage() {
                 style={buttonStyle}
                 disabled={loadingLogin}
               >
-                {loadingLogin ? "Masuk..." : "Masuk"}
+                {loadingLogin ? tr("Masuk...") : tr("Masuk")}
               </button>
             </div>
             {loginError && (
-              <p style={{ color: "#b91c1c", marginTop: 12 }}>{loginError}</p>
+              <p style={{ color: "#b91c1c", marginTop: 12 }}>{tr(loginError)}</p>
             )}
           </form>
         ) : (
@@ -337,7 +337,7 @@ export default function CardsDashboardPage() {
                   color: businessError ? "#991b1b" : "#6b7280",
                 }}
               >
-                {businessError || "Memuat bisnis..."}
+                {tr(businessError) || tr("Memuat bisnis...")}
               </div>
             )}
 
@@ -355,7 +355,7 @@ export default function CardsDashboardPage() {
               }}
             >
               <span style={{ fontSize: 14 }}>
-                Akun: <strong>{userEmail}</strong>
+                {tr("Akun:")} <strong>{userEmail}</strong>
               </span>
 
               <div style={{ display: "flex", gap: 8 }}>
@@ -369,7 +369,7 @@ export default function CardsDashboardPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Muat Ulang
+                  {tr("Muat Ulang")}
                 </button>
               </div>
             </div>
@@ -420,7 +420,7 @@ export default function CardsDashboardPage() {
                   marginBottom: 16,
                 }}
               >
-                <div style={{ fontWeight: 800 }}>{resetMessage}</div>
+                <div style={{ fontWeight: 800 }}>{tr(resetMessage)}</div>
                 <a
                   href="/dashboard/onboarding"
                   style={{
@@ -430,7 +430,7 @@ export default function CardsDashboardPage() {
                     fontWeight: 800,
                   }}
                 >
-                  Setup ulang bisnis
+                  {tr("Setup ulang bisnis")}
                 </a>
               </div>
             )}
@@ -445,7 +445,7 @@ export default function CardsDashboardPage() {
                   marginBottom: 16,
                 }}
               >
-                {resetError}
+                {tr(resetError)}
               </div>
             )}
 
@@ -459,12 +459,12 @@ export default function CardsDashboardPage() {
                   marginBottom: 16,
                 }}
               >
-                {loadError}
+                {tr(loadError)}
               </div>
             )}
 
             {loadingCards ? (
-              <p>Memuat kartu...</p>
+              <p>{tr("Memuat kartu...")}</p>
             ) : cards.length === 0 ? (
               <div
                 style={{
@@ -475,7 +475,7 @@ export default function CardsDashboardPage() {
                   textAlign: "center",
                 }}
               >
-                Belum ada kartu.
+                {tr("Belum ada kartu.")}
               </div>
             ) : (
               <div style={{ display: "grid", gap: 14 }}>
@@ -578,14 +578,14 @@ export default function CardsDashboardPage() {
                             style={inputStyle}
                             value={draftLabel}
                             onChange={(event) => setDraftLabel(event.target.value)}
-                            placeholder="Label kartu"
+                            placeholder={tr("Label kartu")}
                           />
 
                           <input
                             style={inputStyle}
                             value={draftArea}
                             onChange={(event) => setDraftArea(event.target.value)}
-                            placeholder="Area"
+                            placeholder={tr("Area")}
                           />
 
                           <select
@@ -597,9 +597,9 @@ export default function CardsDashboardPage() {
                               )
                             }
                           >
-                            <option value="active">Aktif</option>
-                            <option value="suspended">Ditangguhkan</option>
-                            <option value="retired">Tidak Digunakan</option>
+                            <option value="active">{tr("Aktif")}</option>
+                            <option value="suspended">{tr("Ditangguhkan")}</option>
+                            <option value="retired">{tr("Tidak Digunakan")}</option>
                           </select>
 
                           <div
@@ -616,8 +616,8 @@ export default function CardsDashboardPage() {
                               onClick={() => saveCard(card)}
                             >
                               {savingId === card.id
-                                ? "Menyimpan..."
-                                : "Simpan Perubahan"}
+                                ? tr("Menyimpan...")
+                                : tr("Simpan Perubahan")}
                             </button>
 
                             <button
@@ -630,7 +630,7 @@ export default function CardsDashboardPage() {
                                 border: "1px solid #d1d5db",
                               }}
                             >
-                              Batal
+                              {tr("Batal")}
                             </button>
                           </div>
                         </div>
@@ -646,18 +646,18 @@ export default function CardsDashboardPage() {
                             }}
                           >
                             <div>
-                              <strong>Label:</strong> {card.label || "-"}
+                              <strong>{tr("Label:")}</strong> {card.label || "-"}
                             </div>
                             <div>
-                              <strong>Area:</strong> {card.area || "-"}
+                              <strong>{tr("Area:")}</strong> {card.area || "-"}
                             </div>
                             <div>
                               <strong>QR:</strong>{" "}
-                              {card.qr_enabled ? tr("Aktif", "Active") : "Nonaktif"}
+                              {card.qr_enabled ? tr("Aktif", "Active") : tr("Nonaktif")}
                             </div>
                             <div>
                               <strong>NFC:</strong>{" "}
-                              {card.nfc_enabled ? tr("Aktif", "Active") : "Nonaktif"}
+                              {card.nfc_enabled ? tr("Aktif", "Active") : tr("Nonaktif")}
                               {card.nfc_identifier
                                 ? ` · ${card.nfc_identifier}`
                                 : ""}
@@ -682,7 +682,7 @@ export default function CardsDashboardPage() {
                                   textDecoration: "none",
                                 }}
                               >
-                                Lihat Halaman Publik
+                                {tr("Lihat Halaman Publik")}
                               </a>
                             )}
 
@@ -696,7 +696,7 @@ export default function CardsDashboardPage() {
                                 border: "1px solid #d1d5db",
                               }}
                             >
-                              Edit Kartu
+                              {tr("Edit Kartu")}
                             </button>
 
                             {card.activation_status === "activated" && (
@@ -712,8 +712,8 @@ export default function CardsDashboardPage() {
                                 }}
                               >
                                 {resettingId === card.id
-                                  ? "Mereset..."
-                                  : "Reset Setup"}
+                                  ? tr("Mereset...")
+                                  : tr("Reset Setup")}
                               </button>
                             )}
                           </div>

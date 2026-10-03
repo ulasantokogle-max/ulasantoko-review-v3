@@ -134,7 +134,7 @@ export default function ActivateCardPage() {
 
     if (!data.session) {
       setAuthMessage(
-        "Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini."
+        tr("Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini.")
       );
       return;
     }
@@ -171,7 +171,7 @@ export default function ActivateCardPage() {
     }
 
     setAuthMessage(
-      "Email konfirmasi baru sudah dikirim. Gunakan email terbaru karena link lama bisa kedaluwarsa."
+      tr("Email konfirmasi baru sudah dikirim. Gunakan email terbaru karena link lama bisa kedaluwarsa.")
     );
   }
 
@@ -230,7 +230,7 @@ export default function ActivateCardPage() {
   if (stateLoading) {
     return (
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center" }}>
-        Memeriksa kartu...
+        {tr("Memeriksa kartu...")}
       </main>
     );
   }
@@ -257,12 +257,12 @@ export default function ActivateCardPage() {
             textAlign: "center",
           }}
         >
-          <h1>Kartu sudah aktif</h1>
+          <h1>{tr("Kartu sudah aktif")}</h1>
           <p style={{ color: "#6b7280" }}>
-            Kartu {cardCode} sudah terhubung ke bisnis.
+            Kartu {cardCode} {tr("sudah terhubung ke bisnis.")}
           </p>
           <a href={`/${cardCode}`} style={{ ...buttonStyle, display: "block", textDecoration: "none", boxSizing: "border-box" }}>
-            Buka Halaman Publik
+            {tr("Buka Halaman Publik")}
           </a>
         </section>
       </main>
@@ -343,7 +343,7 @@ export default function ActivateCardPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="Password minimal 6 karakter"
+                placeholder={tr("Password minimal 6 karakter")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 minLength={6}
@@ -351,17 +351,17 @@ export default function ActivateCardPage() {
               />
               <button style={buttonStyle} type="submit" disabled={authLoading}>
                 {authLoading
-                  ? "Memproses..."
+                  ? tr("Memproses...")
                   : mode === "login"
                     ? tr("Masuk & Lanjut Aktivasi", "Sign In & Continue Activation")
-                    : "Buat Akun"}
+                    : tr("Buat Akun")}
               </button>
             </form>
 
-            {authError && <p style={{ color: "#b91c1c" }}>{authError}</p>}
+            {authError && <p style={{ color: "#b91c1c" }}>{tr(authError)}</p>}
             {authMessage && (
               <div style={{ display: "grid", gap: 8 }}>
-                <p style={{ color: "#166534", marginBottom: 0 }}>{authMessage}</p>
+                <p style={{ color: "#166534", marginBottom: 0 }}>{tr(authMessage)}</p>
                 {mode === "signup" && email && (
                   <button
                     type="button"
@@ -375,8 +375,8 @@ export default function ActivateCardPage() {
                     }}
                   >
                     {resendLoading
-                      ? "Mengirim ulang..."
-                      : "Kirim Ulang Email Konfirmasi"}
+                      ? tr("Mengirim ulang...")
+                      : tr("Kirim Ulang Email Konfirmasi")}
                   </button>
                 )}
               </div>
@@ -392,7 +392,7 @@ export default function ActivateCardPage() {
                 fontSize: 14,
               }}
             >
-              Akun: <strong>{userEmail}</strong>
+              {tr("Akun:")} <strong>{userEmail}</strong>
             </div>
 
             {businesses.length > 0 && (
@@ -407,7 +407,7 @@ export default function ActivateCardPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Bisnis Saya
+                  {tr("Bisnis Saya")}
                 </button>
                 <button
                   type="button"
@@ -419,7 +419,7 @@ export default function ActivateCardPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Bisnis Baru
+                  {tr("Bisnis Baru")}
                 </button>
               </div>
             )}
@@ -441,7 +441,7 @@ export default function ActivateCardPage() {
               <>
                 <input
                   style={inputStyle}
-                  placeholder="Nama bisnis / restoran"
+                  placeholder={tr("Nama bisnis / restoran")}
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
                   required
@@ -451,11 +451,11 @@ export default function ActivateCardPage() {
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
                 >
-                  <option value="restaurant">Restoran / Cafe</option>
-                  <option value="retail">Retail / Toko</option>
-                  <option value="service">Jasa</option>
-                  <option value="hotel">Hotel / Penginapan</option>
-                  <option value="other">Lainnya</option>
+                  <option value="restaurant">{tr("Restoran / Cafe")}</option>
+                  <option value="retail">{tr("Retail / Toko")}</option>
+                  <option value="service">{tr("Jasa")}</option>
+                  <option value="hotel">{tr("Hotel / Penginapan")}</option>
+                  <option value="other">{tr("Lainnya")}</option>
                 </select>
               </>
             )}
@@ -464,14 +464,14 @@ export default function ActivateCardPage() {
               style={inputStyle}
               type="password"
               inputMode="numeric"
-              placeholder="PIN aktivasi kartu"
+              placeholder={tr("PIN aktivasi kartu")}
               value={pin}
               onChange={(e) => setPin(e.target.value)}
               required
             />
 
             <button style={buttonStyle} type="submit" disabled={activating}>
-              {activating ? "Mengaktifkan..." : "Aktifkan Kartu"}
+              {activating ? tr("Mengaktifkan...") : tr("Aktifkan Kartu")}
             </button>
 
             {activationError && (

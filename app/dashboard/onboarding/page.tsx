@@ -91,32 +91,32 @@ export default function CustomerOnboardingPage() {
       {
         number: 1,
         title: "Google Review",
-        description: "Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review.",
+        description: tr("Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review."),
         done: Boolean(setup.google_review_configured),
         href: "/dashboard/landing-page",
         action: setup.google_review_configured ? tr("Sudah terhubung", "Connected") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),
       },
       {
         number: 2,
-        title: "WhatsApp Bisnis",
-        description: "Tambahkan nomor WhatsApp agar customer bisa menghubungi bisnis setelah memberi feedback privat.",
+        title: tr("WhatsApp Bisnis"),
+        description: tr("Tambahkan nomor WhatsApp agar customer bisa menghubungi bisnis setelah memberi feedback privat."),
         done: Boolean(setup.whatsapp_number),
         href: "/dashboard/landing-page",
         action: setup.whatsapp_number ? tr("Sudah tersimpan", "Saved") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),
       },
       {
         number: 3,
-        title: "Cek Kartu",
-        description: "Pastikan kartu sudah aktif dan siap dipakai melalui QR maupun NFC.",
+        title: tr("Cek Kartu"),
+        description: tr("Pastikan kartu sudah aktif dan siap dipakai melalui QR maupun NFC."),
         done: Number(analytics?.cards?.activated ?? 0) > 0,
         href: "/dashboard/cards",
         action:
           Number(analytics?.cards?.activated ?? 0) > 0
-            ? "Kartu aktif"
-            : "Kelola Kartu",
+            ? tr("Kartu aktif")
+            : tr("Kelola Kartu"),
       },
     ],
-    [setup, analytics]
+    [setup, analytics, tr]
   );
 
   const completed = steps.filter((item) => item.done).length;
@@ -148,9 +148,9 @@ export default function CustomerOnboardingPage() {
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
             REPUTASIPRO
           </div>
-          <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
+          <h1 style={{ marginBottom: 8 }}>{tr("Onboarding Bisnis")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Memeriksa sesi...
+            {tr("Memeriksa sesi...")}
           </p>
         </section>
       </main>
@@ -164,9 +164,9 @@ export default function CustomerOnboardingPage() {
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
             REPUTASIPRO
           </div>
-          <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
+          <h1 style={{ marginBottom: 8 }}>{tr("Onboarding Bisnis")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Silakan masuk kembali dari dashboard untuk melanjutkan pengaturan bisnis.
+            {tr("Silakan masuk kembali dari dashboard untuk melanjutkan pengaturan bisnis.")}
           </p>
           <Link
             href="/dashboard"
@@ -181,7 +181,7 @@ export default function CustomerOnboardingPage() {
               fontWeight: 800,
             }}
           >
-            Buka Dashboard
+            {tr("Buka Dashboard")}
           </Link>
         </section>
       </main>
@@ -194,9 +194,9 @@ export default function CustomerOnboardingPage() {
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
           REPUTASIPRO
         </div>
-        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Siapkan Bisnis Anda</h1>
+        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Siapkan Bisnis Anda")}</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6, marginTop: 0 }}>
-          Kartu sudah aktif. Selesaikan beberapa langkah ini agar ReputasiPro siap digunakan pelanggan.
+          {tr("Kartu sudah aktif. Selesaikan beberapa langkah ini agar ReputasiPro siap digunakan pelanggan.")}
         </p>
 
         <div
@@ -208,13 +208,13 @@ export default function CustomerOnboardingPage() {
           }}
         >
           <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Akun: <strong>{userEmail}</strong>
+            {tr("Akun:")} <strong>{userEmail}</strong>
           </div>
           <div style={{ fontWeight: 900, marginTop: 3 }}>
             {selectedBusiness?.display_name ||
               selectedBusiness?.business_name ||
               setup.display_name ||
-              "Bisnis"}
+              tr("Bisnis")}
           </div>
         </div>
 
@@ -246,7 +246,7 @@ export default function CustomerOnboardingPage() {
               color: businessError ? "#991b1b" : "#6b7280",
             }}
           >
-            {businessError || "Memuat bisnis..."}
+            {tr(businessError) || tr("Memuat bisnis...")}
           </div>
         )}
 
@@ -260,12 +260,12 @@ export default function CustomerOnboardingPage() {
               borderRadius: 10,
             }}
           >
-            {error}
+            {tr(error)}
           </div>
         )}
 
         {loading ? (
-          <p>Memuat status setup...</p>
+          <p>{tr("Memuat status setup...")}</p>
         ) : (
           <>
             <div
@@ -277,7 +277,7 @@ export default function CustomerOnboardingPage() {
                 marginBottom: 8,
               }}
             >
-              <strong>Progress setup</strong>
+              <strong>{tr("Progress setup")}</strong>
               <strong>{progress}%</strong>
             </div>
 
@@ -321,7 +321,7 @@ export default function CustomerOnboardingPage() {
                   >
                     <div>
                       <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
-                        LANGKAH {step.number}
+                        {tr("LANGKAH")} {step.number}
                       </div>
                       <div style={{ fontWeight: 900, fontSize: 17, marginTop: 3 }}>
                         {step.title}
@@ -337,7 +337,7 @@ export default function CustomerOnboardingPage() {
                         color: step.done ? "#166534" : "#9a3412",
                       }}
                     >
-                      {step.done ? "SELESAI" : "BELUM"}
+                      {step.done ? tr("SELESAI") : tr("BELUM")}
                     </span>
                   </div>
 
@@ -382,7 +382,7 @@ export default function CustomerOnboardingPage() {
                   fontWeight: 900,
                 }}
               >
-                Buka Dashboard
+                {tr("Buka Dashboard")}
               </Link>
 
               {progress === 100 && (
@@ -397,7 +397,7 @@ export default function CustomerOnboardingPage() {
                     fontWeight: 900,
                   }}
                 >
-                  Lihat Kartu Saya
+                  {tr("Lihat Kartu Saya")}
                 </Link>
               )}
             </div>

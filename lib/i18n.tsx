@@ -1,5 +1,6 @@
 "use client";
 
+import { translateInterface } from "./translations";
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export type AppLanguage = "id" | "en";
@@ -7,7 +8,7 @@ export type AppLanguage = "id" | "en";
 type LanguageContextValue = {
   language: AppLanguage;
   setLanguage: (language: AppLanguage) => void;
-  tr: (idText: string, enText: string) => string;
+  tr: (idText: string, enText?: string) => string;
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -33,8 +34,8 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     () => ({
       language,
       setLanguage,
-      tr: (idText: string, enText: string) =>
-        language === "en" ? enText : idText,
+      tr: (idText: string, enText?: string) =>
+        language === "en" ? (enText ?? translateInterface(idText, language)) : translateInterface(idText, language),
     }),
     [language]
   );

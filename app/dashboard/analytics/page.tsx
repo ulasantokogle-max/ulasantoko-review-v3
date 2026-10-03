@@ -36,7 +36,7 @@ type AnalyticsData = {
 };
 
 export default function AnalyticsDashboardPage() {
-  const { tr } = useLanguage();
+  const { tr, language } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -214,28 +214,28 @@ export default function AnalyticsDashboardPage() {
             REPUTASIPRO
           </div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>
-            Analitik & Wawasan
+            {tr("Analitik & Wawasan")}
           </h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Ringkasan masukan pelanggan dan performa kartu bisnis.
+            {tr("Ringkasan masukan pelanggan dan performa kartu bisnis.")}
           </p>
 
           {!userEmail ? (
             <form onSubmit={handleLogin} style={{ maxWidth: 440, display: "grid", gap: 10 }}>
               <input style={inputStyle} type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              <input style={inputStyle} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input style={inputStyle} type="password" placeholder={tr("Password")} value={password} onChange={(e) => setPassword(e.target.value)} required />
               <button style={buttonStyle} type="submit" disabled={loadingLogin}>
-                {loadingLogin ? "Masuk..." : "Masuk"}
+                {loadingLogin ? tr("Masuk...") : tr("Masuk")}
               </button>
-              {loginError && <div style={{ color: "#991b1b" }}>{loginError}</div>}
+              {loginError && <div style={{ color: "#991b1b" }}>{tr(loginError)}</div>}
             </form>
           ) : (
             <>
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center", padding: 12, background: "#f9fafb", borderRadius: 10, marginBottom: 18 }}>
-                <span style={{ fontSize: 14 }}>Akun: <strong>{userEmail}</strong></span>
+                <span style={{ fontSize: 14 }}>{tr("Akun:")} <strong>{userEmail}</strong></span>
                 <div style={{ display: "flex", gap: 8 }}>
                   <button type="button" style={{ ...buttonStyle, background: "#fff", color: "#111827", border: "1px solid #d1d5db" }} onClick={loadAnalytics}>
-                    Muat Ulang
+                    {tr("Muat Ulang")}
                   </button>
                 </div>
               </div>
@@ -250,7 +250,7 @@ export default function AnalyticsDashboardPage() {
                 }}
               >
                 <div style={{ fontSize: 13, fontWeight: 900, marginBottom: 10 }}>
-                  Pilih Periode
+                  {tr("Pilih Periode")}
                 </div>
                 <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {([
@@ -286,7 +286,7 @@ export default function AnalyticsDashboardPage() {
                     }}
                   >
                     <label style={{ display: "grid", gap: 6, fontSize: 13, fontWeight: 800 }}>
-                      Mulai
+                      {tr("Mulai")}
                       <input
                         type="datetime-local"
                         value={customStart}
@@ -295,7 +295,7 @@ export default function AnalyticsDashboardPage() {
                       />
                     </label>
                     <label style={{ display: "grid", gap: 6, fontSize: 13, fontWeight: 800 }}>
-                      Sampai
+                      {tr("Sampai")}
                       <input
                         type="datetime-local"
                         value={customEnd}
@@ -308,7 +308,7 @@ export default function AnalyticsDashboardPage() {
 
                 {analytics?.start_at && analytics?.end_at && (
                   <div style={{ marginTop: 10, color: "#6b7280", fontSize: 12 }}>
-                    Data periode: {new Date(analytics.start_at).toLocaleString("id-ID")} – {new Date(analytics.end_at).toLocaleString("id-ID")}
+                    {tr("Data periode:")} {new Date(analytics.start_at).toLocaleString(language === "en" ? "en-US" : "id-ID", { timeZone: "Asia/Jakarta" })} – {new Date(analytics.end_at).toLocaleString(language === "en" ? "en-US" : "id-ID", { timeZone: "Asia/Jakarta" })}
                   </div>
                 )}
               </section>
@@ -329,18 +329,18 @@ export default function AnalyticsDashboardPage() {
 
               {(businessLoading || businessError) && (
                 <div style={{ marginBottom: 12, color: businessError ? "#991b1b" : "#6b7280" }}>
-                  {businessError || "Memuat bisnis..."}
+                  {tr(businessError) || tr("Memuat bisnis...")}
                 </div>
               )}
 
               {loadError && (
                 <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b", marginBottom: 16 }}>
-                  {loadError}
+                  {tr(loadError)}
                 </div>
               )}
 
               {loading ? (
-                <p>Memuat analitik...</p>
+                <p>{tr("Memuat analitik...")}</p>
               ) : analytics ? (
                 <>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 12, marginBottom: 22 }}>
@@ -354,7 +354,7 @@ export default function AnalyticsDashboardPage() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
                     <section style={{ padding: 18, borderRadius: 14, border: "1px solid #e5e7eb" }}>
-                      <h2 style={{ marginTop: 0, fontSize: 18 }}>Distribusi Rating Masukan</h2>
+                      <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Distribusi Rating Masukan")}</h2>
                       {[
                         ["★", feedback.rating_1 ?? 0],
                         ["★★", feedback.rating_2 ?? 0],
@@ -368,7 +368,7 @@ export default function AnalyticsDashboardPage() {
                     </section>
 
                     <section style={{ padding: 18, borderRadius: 14, border: "1px solid #e5e7eb" }}>
-                      <h2 style={{ marginTop: 0, fontSize: 18 }}>Status Masukan</h2>
+                      <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Status Masukan")}</h2>
                       {[
                         [tr("Baru", "New"), feedback.new ?? 0],
                         [tr("Dilihat", "Viewed"), feedback.viewed ?? 0],
@@ -387,7 +387,7 @@ export default function AnalyticsDashboardPage() {
                   </div>
                 </>
               ) : (
-                <div style={{ color: "#6b7280" }}>Belum ada data analitik.</div>
+                <div style={{ color: "#6b7280" }}>{tr("Belum ada data analitik.")}</div>
               )}
             </>
           )}

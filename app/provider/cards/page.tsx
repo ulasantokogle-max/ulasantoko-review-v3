@@ -195,13 +195,13 @@ export default function ProviderCardsPage() {
   async function copyText(value?: string, label?: string) {
     if (!value) return;
     await navigator.clipboard.writeText(value);
-    setCopied(label || "Tersalin");
+    setCopied(label || tr("Tersalin"));
     window.setTimeout(() => setCopied(""), 1800);
   }
 
   async function resetActivationPin(card: ProviderCard) {
     const confirmed = window.confirm(
-      `Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`
+      tr(`Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`, `Reset the activation PIN for ${card.card_code}? The old PIN will stop working immediately.`)
     );
 
     if (!confirmed) return;
@@ -323,9 +323,9 @@ export default function ProviderCardsPage() {
             >
               REPUTASIPRO PROVIDER
             </div>
-            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Pusat Kartu</h1>
+            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>{tr("Pusat Kartu")}</h1>
             <p style={{ margin: "7px 0 0", color: "#6b7280" }}>
-              Produksi kartu QR + NFC siap jual sebelum diaktifkan pemilik bisnis.
+              {tr("Produksi kartu QR + NFC siap jual sebelum diaktifkan pemilik bisnis.")}
             </p>
           </div>
 
@@ -342,7 +342,7 @@ export default function ProviderCardsPage() {
                     textDecoration: "none",
                   }}
                 >
-                  Menu Akses
+                  {tr("Menu Akses")}
                 </Link>
               )}
               <button
@@ -371,12 +371,12 @@ export default function ProviderCardsPage() {
               padding: 22,
             }}
           >
-            <h2 style={{ marginTop: 0 }}>Masuk Provider</h2>
+            <h2 style={{ marginTop: 0 }}>{tr("Masuk Provider")}</h2>
             <form onSubmit={handleLogin} style={{ display: "grid", gap: 10 }}>
               <input
                 style={inputStyle}
                 type="email"
-                placeholder="Email provider"
+                placeholder={tr("Email provider")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -384,16 +384,16 @@ export default function ProviderCardsPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="Password"
+                placeholder={tr("Password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button style={buttonStyle} type="submit">
-                Masuk Provider
+                {tr("Masuk Provider")}
               </button>
             </form>
-            {loginError && <p style={{ color: "#b91c1c" }}>{loginError}</p>}
+            {loginError && <p style={{ color: "#b91c1c" }}>{tr(loginError)}</p>}
           </section>
         ) : providerAllowed === false ? (
           <section
@@ -405,10 +405,10 @@ export default function ProviderCardsPage() {
               color: "#991b1b",
             }}
           >
-            Akun <strong>{userEmail}</strong> tidak memiliki akses provider.
+            {tr("Akun")} <strong>{userEmail}</strong> {tr("tidak memiliki akses provider.")}
           </section>
         ) : providerAllowed === null ? (
-          <p>Memeriksa akses provider...</p>
+          <p>{tr("Memeriksa akses provider...")}</p>
         ) : (
           <>
             <section
@@ -450,10 +450,9 @@ export default function ProviderCardsPage() {
                 marginBottom: 18,
               }}
             >
-              <h2 style={{ marginTop: 0 }}>Buat Kartu Baru</h2>
+              <h2 style={{ marginTop: 0 }}>{tr("Buat Kartu Baru")}</h2>
               <p style={{ color: "#6b7280", lineHeight: 1.5 }}>
-                Kode Kartu dan PIN dibuat otomatis. PIN hanya ditampilkan setelah
-                kartu dibuat, jadi simpan/cetak bersama kartu fisik.
+                {tr("Kode Kartu dan PIN dibuat otomatis. PIN hanya ditampilkan setelah kartu dibuat, jadi simpan/cetak bersama kartu fisik.")}
               </p>
 
               <form
@@ -468,22 +467,22 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  placeholder="Label (opsional)"
+                  placeholder={tr("Label (opsional)")}
                 />
                 <input
                   style={inputStyle}
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="Area / batch (opsional)"
+                  placeholder={tr("Area / batch (opsional)")}
                 />
                 <input
                   style={inputStyle}
                   value={internalCode}
                   onChange={(e) => setInternalCode(e.target.value)}
-                  placeholder="Kode internal / SKU (opsional)"
+                  placeholder={tr("Kode internal / SKU (opsional)")}
                 />
                 <button style={buttonStyle} type="submit" disabled={creating}>
-                  {creating ? "Membuat..." : tr("Buat Kartu", "Create Card")}
+                  {creating ? tr("Membuat...") : tr("Buat Kartu", "Create Card")}
                 </button>
               </form>
 
@@ -511,10 +510,10 @@ export default function ProviderCardsPage() {
                     border: "1px solid #bbf7d0",
                   }}
                 >
-                  <h3 style={{ marginTop: 0 }}>Kartu siap dijual ✅</h3>
+                  <h3 style={{ marginTop: 0 }}>{tr("Kartu siap dijual ✅")}</h3>
                   <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
-                    <div><strong>Kode Kartu:</strong> {created.card_code}</div>
-                    <div><strong>PIN Aktivasi:</strong> {created.activation_pin}</div>
+                    <div><strong>{tr("Kode Kartu:")}</strong> {created.card_code}</div>
+                    <div><strong>{tr("PIN Aktivasi:")}</strong> {created.activation_pin}</div>
                     <div style={{ overflowWrap: "anywhere" }}>
                       <strong>QR / NFC URL:</strong> {created.qr_url}
                     </div>
@@ -533,14 +532,14 @@ export default function ProviderCardsPage() {
                       style={buttonStyle}
                       onClick={() => copyText(created.card_code, tr("Kode Kartu", "Card Code"))}
                     >
-                      Salin Kode Kartu
+                      {tr("Salin Kode Kartu")}
                     </button>
                     <button
                       type="button"
                       style={buttonStyle}
                       onClick={() => copyText(created.activation_pin, "PIN")}
                     >
-                      Salin PIN
+                      {tr("Salin PIN")}
                     </button>
                     <button
                       type="button"
@@ -552,7 +551,7 @@ export default function ProviderCardsPage() {
                       }}
                       onClick={() => copyText(created.qr_url, "URL")}
                     >
-                      Salin URL
+                      {tr("Salin URL")}
                     </button>
                   </div>
                 </div>
@@ -578,9 +577,9 @@ export default function ProviderCardsPage() {
                 }}
               >
                 <div>
-                  <h2 style={{ margin: 0 }}>Inventori Kartu</h2>
+                  <h2 style={{ margin: 0 }}>{tr("Inventori Kartu")}</h2>
                   <div style={{ color: "#6b7280", fontSize: 13, marginTop: 4 }}>
-                    Kartu provider, baik belum terjual maupun sudah aktif.
+                    {tr("Kartu provider, baik belum terjual maupun sudah aktif.")}
                   </div>
                 </div>
                 <button
@@ -593,7 +592,7 @@ export default function ProviderCardsPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Muat Ulang
+                  {tr("Muat Ulang")}
                 </button>
               </div>
 
@@ -609,16 +608,16 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder=tr("Cari kode kartu, label, area, SKU, pemilik bisnis...", "Search card code, label, area, SKU, owner...")
+                  placeholder={tr("Cari kode kartu, label, area, SKU, pemilik bisnis...", "Search card code, label, area, SKU, owner...")}
                 />
                 <select
                   style={inputStyle}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="all">Semua status</option>
-                  <option value="ready_to_sell">Siap Dijual</option>
-                  <option value="activated">Sudah Diaktifkan</option>
+                  <option value="all">{tr("Semua status")}</option>
+                  <option value="ready_to_sell">{tr("Siap Dijual")}</option>
+                  <option value="activated">{tr("Sudah Diaktifkan")}</option>
                 </select>
               </div>
 
@@ -634,22 +633,22 @@ export default function ProviderCardsPage() {
                   }}
                 >
                   <div style={{ fontWeight: 900, marginBottom: 6 }}>
-                    PIN baru untuk {resetPinResult.card_code}
+                    {tr("PIN baru untuk")} {resetPinResult.card_code}
                   </div>
                   <div style={{ fontSize: 14, marginBottom: 10 }}>
-                    PIN Aktivasi: <strong>{resetPinResult.activation_pin}</strong>
+                    {tr("PIN Aktivasi:")} <strong>{resetPinResult.activation_pin}</strong>
                   </div>
                   <div style={{ fontSize: 12, marginBottom: 10 }}>
-                    Simpan PIN ini sekarang. Setelah panel ini hilang, PIN tidak dapat dilihat kembali.
+                    {tr("Simpan PIN ini sekarang. Setelah panel ini hilang, PIN tidak dapat dilihat kembali.")}
                   </div>
                   <button
                     type="button"
                     style={buttonStyle}
                     onClick={() =>
-                      copyText(resetPinResult.activation_pin, "PIN baru")
+                      copyText(resetPinResult.activation_pin, tr("PIN baru"))
                     }
                   >
-                    Salin PIN Baru
+                    {tr("Salin PIN Baru")}
                   </button>
                 </div>
               )}
@@ -664,7 +663,7 @@ export default function ProviderCardsPage() {
                     color: "#991b1b",
                   }}
                 >
-                  {resetPinError}
+                  {tr(resetPinError)}
                 </div>
               )}
 
@@ -680,7 +679,7 @@ export default function ProviderCardsPage() {
                     fontWeight: 800,
                   }}
                 >
-                  {copied} berhasil disalin.
+                  {copied} {tr("berhasil disalin.")}
                 </div>
               )}
 
@@ -694,17 +693,17 @@ export default function ProviderCardsPage() {
                     marginBottom: 12,
                   }}
                 >
-                  {loadError}
+                  {tr(loadError)}
                 </div>
               )}
 
               {loadingCards ? (
-                <p>Memuat inventory...</p>
+                <p>{tr("Memuat inventory...")}</p>
               ) : cards.length === 0 ? (
-                <div style={{ color: "#6b7280" }}>Belum ada inventory.</div>
+                <div style={{ color: "#6b7280" }}>{tr("Belum ada inventory.")}</div>
               ) : filteredCards.length === 0 ? (
                 <div style={{ color: "#6b7280" }}>
-                  Tidak ada kartu yang cocok dengan filter.
+                  {tr("Tidak ada kartu yang cocok dengan filter.")}
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>
@@ -741,7 +740,7 @@ export default function ProviderCardsPage() {
                               marginTop: 3,
                             }}
                           >
-                            {card.label || "Tanpa label"}
+                            {card.label || tr("Tanpa label")}
                             {card.internal_code ? ` · ${card.internal_code}` : ""}
                           </div>
                         </div>
@@ -784,14 +783,14 @@ export default function ProviderCardsPage() {
                           fontSize: 13,
                         }}
                       >
-                        <div><strong>Area:</strong> {card.area || "-"}</div>
+                        <div><strong>{tr("Area:")}</strong> {card.area || "-"}</div>
                         <div>
                           <strong>QR:</strong> {card.qr_enabled ? tr("Aktif", "Active") : tr("Nonaktif", "Inactive")}
                           {" · "}
                           <strong>NFC:</strong> {card.nfc_enabled ? tr("Aktif", "Active") : tr("Nonaktif", "Inactive")}
                         </div>
                         <div>
-                          <strong>Pemilik:</strong> {card.business_name || tr("Belum ada", "None")}
+                          <strong>{tr("Pemilik:")}</strong> {card.business_name || tr("Belum ada", "None")}
                         </div>
                         <div style={{ overflowWrap: "anywhere" }}>
                           <strong>URL:</strong> {card.qr_url || "-"}
@@ -816,7 +815,7 @@ export default function ProviderCardsPage() {
                           }}
                           onClick={() => copyText(card.card_code, tr("Kode Kartu", "Card Code"))}
                         >
-                          Salin Kode Kartu
+                          {tr("Salin Kode Kartu")}
                         </button>
 
                         {card.inventory_status === "ready_to_sell" && (
@@ -832,8 +831,8 @@ export default function ProviderCardsPage() {
                             onClick={() => resetActivationPin(card)}
                           >
                             {resettingCardId === card.id
-                              ? "Resetting..."
-                              : "Reset PIN"}
+                              ? tr("Resetting...")
+                              : tr("Reset PIN")}
                           </button>
                         )}
 
@@ -849,7 +848,7 @@ export default function ProviderCardsPage() {
                               }}
                               onClick={() => copyText(card.qr_url ?? undefined, "QR/NFC URL")}
                             >
-                              Salin URL
+                              {tr("Salin URL")}
                             </button>
                             <a
                               href={card.qr_url}
@@ -861,7 +860,7 @@ export default function ProviderCardsPage() {
                                 textDecoration: "none",
                               }}
                             >
-                              Uji Kartu
+                              {tr("Uji Kartu")}
                             </a>
                           </>
                         )}
