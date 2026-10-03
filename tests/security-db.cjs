@@ -12,7 +12,7 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
  await db.exec(`create role anon; create role authenticated;
  create schema auth; create schema extensions; create extension pgcrypto with schema extensions;
  create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
- create function auth.jwt() returns jsonb language sql stable as $$ select '{}'::jsonb $$;
+ create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
  grant usage on schema public,auth to anon,authenticated;
  create schema storage;
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
@@ -91,6 +91,31 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
  assert.equal((await db.query('select qr_url from card_provisioning where card_id=$1',[fresh.card_id])).rows[0].qr_url,existingDestination);
  await db.exec(fs.readFileSync('supabase/rollbacks/0038_reputasipro_card_domain_rollback.sql','utf8'));
  assert.equal((await db.query("select pg_get_functiondef('public.v3_provider_create_card(text,text,text)'::regprocedure) as definition")).rows[0].definition,originalProvider);
+ // MFA is mandatory even for active providers without an enrolled factor.
+ await db.exec(fs.readFileSync('supabase/migrations/0039_provider_mfa.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/0039_provider_mfa.sql','utf8'));
+ for (const claims of [{}, {aal:'aal1'}, {aal:'unexpected'}]) {
+  await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify(claims)]);
+  assert.equal((await as('authenticated',provider,'select v3_is_provider_member() as allowed')).rows[0].allowed,true);
+  assert.equal((await as('authenticated',provider,'select v3_is_provider_admin() as allowed')).rows[0].allowed,false);
+  await assert.rejects(as('authenticated',provider,'select v3_provider_list_cards()'),/FORBIDDEN/);
+  await assert.rejects(as('authenticated',provider,'select v3_provider_create_card()'),/FORBIDDEN/);
+  await assert.rejects(as('authenticated',provider,'select v3_provider_reset_activation_pin($1)',[fresh.card_id]),/FORBIDDEN/);
+ }
+ await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({aal:'aal2'})]);
+ assert.equal((await as('authenticated',provider,'select v3_is_provider_admin() as allowed')).rows[0].allowed,true);
+ assert((await as('authenticated',provider,'select * from v3_provider_list_cards()')).rows.length>0);
+ const mfaCard=(await as('authenticated',provider,'select v3_provider_create_card() as value')).rows[0].value;
+ assert.equal(mfaCard.success,true);
+ assert.equal((await as('authenticated',provider,'select v3_provider_reset_activation_pin($1) as value',[mfaCard.card_id])).rows[0].value.success,true);
+ await assert.rejects(as('authenticated',uidB,'select v3_provider_create_card()'),/FORBIDDEN/);
+ await assert.rejects(as('anon',null,'select v3_is_provider_member()'),/permission denied/);
+ const verification=await db.query(fs.readFileSync('supabase/checkpoints/2026-10-03_verify_provider_mfa.sql','utf8'));
+ assert(Object.values(verification.rows[0]).every(value=>value===true));
+ await db.query("update provider_admins set status='suspended' where user_id=$1",[provider]);
+ assert.equal((await as('authenticated',provider,'select v3_is_provider_admin() as allowed')).rows[0].allowed,false);
+ await assert.rejects(as('authenticated',provider,'select v3_provider_list_cards()'),/FORBIDDEN/);
+ console.log('PASS provider MFA: missing/aal1/unknown denied, aal2 provider allowed, customers/anonymous/suspended denied');
  console.log('PASS PostgreSQL tenant isolation, provider/anonymous denial, PIN secrecy, storage ownership, card-wide spam limit and resolver throttle');
  } finally { await db.close(); }
 })().catch(e=>{console.error(e.message);process.exitCode=1});

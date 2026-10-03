@@ -32,3 +32,12 @@ The user selected `reputasipro.ulasantoko.space`. DNS and deployment assignment 
 ## Domain and provisioning evidence update
 
 Screenshots on the new hostname show the public BISNIS TES B page and separate customer dashboards: account A displays BANANA KREZZZ and account B displays BISNIS TES B with zero feedback. After assigning the selected subdomain to the cleanup preview branch, the UI displays ReputasiPro with ID/EN navigation. Migration 0038 reports SQL success and subsequent provider-created ULAS-01007 returns the new hostname in its stored QR/NFC URL. A second-card claim into the same business remains pending. Provider QR PNG downloads are implemented and locally verified by decoding actual generated images; physical scanning/browser downloads remain to be checked.
+
+
+## Provider MFA update — 3 October 2026
+
+Migration `0039_provider_mfa.sql` separates active provider membership (`v3_is_provider_member`) from operational permission (`v3_is_provider_admin`). Operational permission requires a signed session with `aal2`; absent/unknown levels fail closed even for an active provider with no enrolled factor. Existing create/list/reset RPCs continue to call that operational check. Customer access and public activation are unchanged.
+
+Both `/provider/cards` and `/access` are gated by the enrollment/challenge UI. Until migration 0039 is applied, the new UI fails closed with a migration instruction. Database enforcement is pending manual application in the live V3 project; deploying the UI alone does not enforce MFA on direct live RPC calls.
+
+Follow `PROVIDER_MFA_SETUP.md`. Local PostgreSQL tests cover missing/aal1/unknown claims, aal2 success for active providers, and rejection of customers, anonymous users and suspended providers. UI tests cover setup, invalid codes, successful verification, session downgrade and missing migrations. Build and language checks pass. Actual live authenticator enrollment and direct RPC verification remain pending.

@@ -1,12 +1,17 @@
 "use client";
 
 import Link from "next/link";
+import ProviderMfaGate from "../components/ProviderMfaGate";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../lib/i18n";
 import LanguageSwitcher from "../components/LanguageSwitcher";
 
 export default function AccessHubPage() {
+  return <ProviderMfaGate><AccessHubPageContent /></ProviderMfaGate>;
+}
+
+function AccessHubPageContent() {
   const { tr } = useLanguage();
   const [checking, setChecking] = useState(true);
   const [allowed, setAllowed] = useState(false);

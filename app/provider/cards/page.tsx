@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ProviderMfaGate from "../../components/ProviderMfaGate";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
@@ -46,6 +47,10 @@ type ResetPinResult = {
 };
 
 export default function ProviderCardsPage() {
+  return <ProviderMfaGate><ProviderCardsPageContent /></ProviderMfaGate>;
+}
+
+function ProviderCardsPageContent() {
   const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");

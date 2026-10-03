@@ -9,7 +9,8 @@
     "test:language": "node tests/language.cjs",
     "test:public": "node tests/public-flow.cjs",
     "test:security": "node tests/security-db.cjs && node tests/security-api.cjs",
-    "test:qr": "node tests/card-qr.cjs"
+    "test:qr": "node tests/card-qr.cjs",
+    "test:mfa": "node tests/provider-mfa.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
