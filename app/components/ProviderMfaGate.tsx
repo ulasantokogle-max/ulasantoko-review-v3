@@ -10,6 +10,7 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState<"checking" | "login" | "denied" | "mfa" | "ready" | "error">("checking");
   const [factorId, setFactorId] = useState("");
+  const [factors, setFactors] = useState<{ id: string; name: string }[]>([]);
   const [qr, setQr] = useState("");
   const [secret, setSecret] = useState("");
   const [code, setCode] = useState("");
@@ -41,10 +42,12 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
         if (level.error) throw level.error;
         if (!active) return;
         if (level.data.currentLevel === "aal2") { setState("ready"); return; }
-        const factors = await supabase.auth.mfa.listFactors();
-        if (factors.error) throw factors.error;
+        const listed = await supabase.auth.mfa.listFactors();
+        if (listed.error) throw listed.error;
         if (!active) return;
-        setFactorId(factors.data.totp.find(factor => factor.status === "verified")?.id ?? "");
+        const verified = listed.data.totp.filter(factor => factor.status === "verified");
+        setFactors(verified.map((factor, index) => ({ id: factor.id, name: factor.friendly_name || `Authenticator ${index + 1}` })));
+        setFactorId(verified[0]?.id ?? "");
         setState("mfa");
       } catch {
         if (active) setState("error");
@@ -105,6 +108,7 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
         {!factorId && <button disabled={busy} onClick={enroll}>{tr("Siapkan Authenticator", "Set Up Authenticator")}</button>}
         {qr && <><p>{tr("Pindai QR ini dengan aplikasi authenticator, atau masukkan kunci berikut secara manual di HP yang sama. Jangan bagikan QR atau kunci ini.", "Scan this QR with an authenticator app, or enter the key manually on the same phone. Do not share this QR or key.")}</p><img src={qr} alt={tr("QR pengaturan authenticator", "Authenticator setup QR")} width={220} height={220} style={{ maxWidth: "100%", height: "auto" }} /><details><summary>{tr("Kunci pengaturan manual", "Manual setup key")}</summary><code style={{ overflowWrap: "anywhere" }}>{secret}</code></details></>}
         {factorId && <form onSubmit={verify} style={{ display: "grid", gap: 12 }}>
+          {factors.length > 1 && <label>{tr("Pilih authenticator", "Choose authenticator")}<select aria-label={tr("Pilih authenticator", "Choose authenticator")} disabled={busy} value={factorId} onChange={event => { setFactorId(event.target.value); setCode(""); setError(""); }} style={{ display: "block", width: "100%", padding: 12 }}>{factors.map(factor => <option key={factor.id} value={factor.id}>{factor.name}</option>)}</select></label>}
           <label>{tr("Kode 6 digit", "6-digit code")}<input aria-label={tr("Kode 6 digit", "6-digit code")} value={code} onChange={event => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))} inputMode="numeric" autoComplete="one-time-code" maxLength={6} style={{ display: "block", padding: 12, fontSize: 20, width: "100%", boxSizing: "border-box" }} /></label>
           <button disabled={busy || code.length !== 6}>{tr("Verifikasi dan masuk", "Verify and continue")}</button>
         </form>}

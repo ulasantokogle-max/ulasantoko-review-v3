@@ -337,6 +337,7 @@ function ProviderCardsPageContent() {
 
           {userEmail && (
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {providerAllowed && <Link href="/provider/security" style={{ ...buttonStyle, textDecoration: "none" }}>{tr("Keamanan 2FA", "2FA Security")}</Link>}
               {providerAllowed && (
                 <Link
                   href="/access"

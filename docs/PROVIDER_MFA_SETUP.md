@@ -34,3 +34,11 @@ Validation: `npm run test:security`, `npm run test:mfa`, `npm run test:language`
 ## Dashboard navigation fix
 
 Provider MFA screens no longer offer a Dashboard escape link. The dashboard layout uses the same gate for active providers, so direct entry to any `/dashboard` route also requires verification before customer page components mount. Ordinary customer sessions continue without mandatory provider MFA. Existing migration 0039 enforces provider create/list/reset RPCs; this navigation fix requires no additional SQL. This does not introduce a universal MFA requirement for customer RPCs.
+
+## Add a backup authenticator
+
+After verifying the existing factor, open **Keamanan 2FA** in the Provider Portal, or `/provider/security`. Give the backup a name, select **Tambah Authenticator Cadangan**, and add the new QR/manual key to the backup authenticator. Enter a code from that backup to activate it. Existing verified factors are preserved; only unfinished setups made by the backup screen are cleaned up on a new attempt. Cancelling deletes only the current unverified setup.
+
+The login screen lists all verified TOTP factors when more than one is present. Select the matching authenticator before entering its code. Switching the selection clears the previous code. A backup has its own secret and is an alternative second factor; the provider does not need both codes for one login. No new SQL is needed beyond migration 0039. Provider membership plus AAL2 is checked again before enrollment begins.
+
+Mocked UI checks cover backup selection, invalid/valid verification, cancellation, provider denial and preservation of existing factors. A real backup setup and subsequent login still need testing in the live V3 project. The app displays no verified factor secrets, and sends no keys to third-party TOTP websites.
