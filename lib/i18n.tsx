@@ -13,21 +13,37 @@ type LanguageContextValue = {
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<AppLanguage>("id");
+export function LanguageProvider({ children, initialLanguage }: {
+  children: React.ReactNode;
+  initialLanguage?: AppLanguage;
+}) {
+  const [language, setLanguageState] = useState<AppLanguage>(initialLanguage ?? "id");
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("reputasipro-language");
-    const next: AppLanguage = saved === "en" ? "en" : "id";
+    let saved: string | null = null;
+    try {
+      saved = window.localStorage.getItem("reputasipro-language");
+    } catch {
+      // Cookie-based language selection also works when local storage is unavailable.
+    }
+    const next: AppLanguage = initialLanguage ?? (saved === "en" ? "en" : "id");
     setLanguageState(next);
+    persistLanguage(next);
+  }, [initialLanguage]);
+
+  function persistLanguage(next: AppLanguage) {
+    try {
+      window.localStorage.setItem("reputasipro-language", next);
+    } catch {
+      // Keep the cookie and current page in sync without requiring local storage.
+    }
+    document.cookie = "reputasipro-language=" + next + "; path=/; max-age=31536000; samesite=lax";
     document.documentElement.lang = next;
-  }, []);
+  }
 
   function setLanguage(next: AppLanguage) {
     setLanguageState(next);
-    window.localStorage.setItem("reputasipro-language", next);
-    document.cookie = "reputasipro-language=" + next + "; path=/; max-age=31536000; samesite=lax";
-    document.documentElement.lang = next;
+    persistLanguage(next);
   }
 
   const value = useMemo(
