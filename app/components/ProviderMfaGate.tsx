@@ -5,7 +5,7 @@ import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../lib/i18n";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-export default function ProviderMfaGate({ children }: { children: ReactNode }) {
+export default function ProviderMfaGate({ children, allowCustomers = false }: { children: ReactNode; allowCustomers?: boolean }) {
   const { tr } = useLanguage();
   const [revision, setRevision] = useState(0);
   const [state, setState] = useState<"checking" | "login" | "denied" | "mfa" | "ready" | "error">("checking");
@@ -36,7 +36,7 @@ export default function ProviderMfaGate({ children }: { children: ReactNode }) {
         const member = await supabase.rpc("v3_is_provider_member");
         if (member.error) throw member.error;
         if (!active) return;
-        if (member.data !== true) { setState("denied"); return; }
+        if (member.data !== true) { setState(allowCustomers ? "ready" : "denied"); return; }
         const level = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (level.error) throw level.error;
         if (!active) return;
@@ -52,7 +52,7 @@ export default function ProviderMfaGate({ children }: { children: ReactNode }) {
     }
     check();
     return () => { active = false; };
-  }, [revision]);
+  }, [revision, allowCustomers]);
 
   async function enroll() {
     if (busy) return;
@@ -110,7 +110,7 @@ export default function ProviderMfaGate({ children }: { children: ReactNode }) {
         </form>}
         {error && <p role="alert">{error}</p>}
       </>}
-      {state !== "checking" && <p><button disabled={busy} onClick={() => supabase.auth.signOut()}>{tr("Keluar", "Sign out")}</button> · <a href="/dashboard">{tr("Dashboard", "Dashboard")}</a></p>}
+      {state !== "checking" && <p><button disabled={busy} onClick={() => supabase.auth.signOut()}>{tr("Keluar", "Sign out")}</button></p>}
     </section>
   </main>;
 }

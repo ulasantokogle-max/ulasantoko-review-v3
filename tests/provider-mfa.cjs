@@ -8,7 +8,7 @@ const original=Module._load;
 Module._load=function(id,parent,main){if(id.endsWith('/supabase'))return {supabase};if(id.endsWith('/i18n'))return {useLanguage:()=>({tr:id=>id})};if(id==='./LanguageSwitcher')return {__esModule:true,default:()=>null};return original.call(this,id,parent,main);};
 const Gate=require('../app/components/ProviderMfaGate.tsx').default;
 function text(node){return !node?'':typeof node==='string'?node:Array.isArray(node)?node.map(text).join(' '):text(node.children);}
-async function mount(){let tree;await act(async()=>{tree=create(React.createElement(Gate,null,React.createElement('div',null,'PRIVATE INVENTORY')));});return tree;}
+async function mount(allowCustomers=false){let tree;await act(async()=>{tree=create(React.createElement(Gate,{allowCustomers},React.createElement('div',null,'PRIVATE INVENTORY')));});return tree;}
 (async()=>{
  let tree=await mount(); assert(!text(tree.toJSON()).includes('PRIVATE INVENTORY'));assert(text(tree.toJSON()).includes('Siapkan Authenticator'));
  await act(async()=>tree.root.findAllByType('button').find(b=>b.children.includes('Siapkan Authenticator')).props.onClick());assert.equal(enrollCalls,1);assert(tree.root.findByType('img').props.src.startsWith('data:image/svg+xml'));assert(text(tree.toJSON()).includes('setup-secret'));
@@ -19,5 +19,17 @@ async function mount(){let tree;await act(async()=>{tree=create(React.createElem
  await act(async()=>{member=false;callback('SIGNED_IN');});assert(text(tree.toJSON()).includes('tidak memiliki akses'));assert.equal(tree.root.findAllByType('input').length,0);
  await act(async()=>{member=true;rpcError=true;callback('TOKEN_REFRESHED');});assert(text(tree.toJSON()).includes('migrasi 0039'));assert(!text(tree.toJSON()).includes('PRIVATE INVENTORY'));
  await act(async()=>tree.unmount());
+ session=true;member=true;rpcError=false;factor=true;level='aal1';
+ tree=await mount(true);
+ assert(!text(tree.toJSON()).includes('PRIVATE INVENTORY'),'Direct dashboard entry must block unverified providers');
+ assert.equal(tree.root.findAllByType('a').length,0,'MFA screen must not link around verification');
+ await act(async()=>{level='aal2';callback('MFA_CHALLENGE_VERIFIED');});
+ assert(text(tree.toJSON()).includes('PRIVATE INVENTORY'));
+ await act(async()=>{level='aal1';callback('SIGNED_IN');});
+ assert(!text(tree.toJSON()).includes('PRIVATE INVENTORY'));
+ await act(async()=>{member=false;callback('SIGNED_IN');});
+ assert(text(tree.toJSON()).includes('PRIVATE INVENTORY'),'Ordinary customer dashboard does not require provider MFA');
+ await act(async()=>tree.unmount());
+ console.log('PASS direct dashboard entry requires provider MFA; customers retain access; no dashboard escape link');
  console.log('PASS provider MFA gate: enrollment, invalid code, successful verification, session downgrade, customer denial and missing-migration failure');
 })().catch(e=>{console.error(e);process.exitCode=1;});

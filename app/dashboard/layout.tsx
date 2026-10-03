@@ -9,6 +9,7 @@ export const metadata = {
 import LocalizedText from "../components/LocalizedText";
 import DashboardNav from "./DashboardNav";
 import LanguageSwitcher from "../components/LanguageSwitcher";
+import ProviderMfaGate from "../components/ProviderMfaGate";
 import "./dashboard.css";
 
 export default function DashboardLayout({
@@ -17,7 +18,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="dashboard-shell">
+    <ProviderMfaGate allowCustomers><div className="dashboard-shell">
       <div className="dashboard-grid">
         <aside className="dashboard-sidebar">
           <div
@@ -53,6 +54,6 @@ export default function DashboardLayout({
 
         <div className="dashboard-content">{children}</div>
       </div>
-    </div>
+    </div></ProviderMfaGate>
   );
 }

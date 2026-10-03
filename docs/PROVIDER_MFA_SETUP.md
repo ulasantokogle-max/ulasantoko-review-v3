@@ -30,3 +30,7 @@ MFA protects password-only sessions. A stolen already-verified session token rem
 References: https://supabase.com/docs/guides/auth/auth-mfa and https://supabase.com/docs/guides/auth/auth-mfa/totp
 
 Validation: `npm run test:security`, `npm run test:mfa`, `npm run test:language`, `npm run build`.
+
+## Dashboard navigation fix
+
+Provider MFA screens no longer offer a Dashboard escape link. The dashboard layout uses the same gate for active providers, so direct entry to any `/dashboard` route also requires verification before customer page components mount. Ordinary customer sessions continue without mandatory provider MFA. Existing migration 0039 enforces provider create/list/reset RPCs; this navigation fix requires no additional SQL. This does not introduce a universal MFA requirement for customer RPCs.
