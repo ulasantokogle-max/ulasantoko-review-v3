@@ -240,7 +240,7 @@ export default function LandingPageBuilderPage() {
     }
 
     setUploading(false);
-    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan.");
+    setMessage((kind === "logo" ? "Logo" : tr("Cover")) + tr(" berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan."));
   }
 
   async function uploadPdf(file: File) {
@@ -464,14 +464,14 @@ export default function LandingPageBuilderPage() {
     displayName ||
     selectedBusiness?.display_name ||
     selectedBusiness?.business_name ||
-    "Nama Bisnis";
+    tr("Nama Bisnis");
 
   const toggles: Array<[ToggleKey, string]> = [
     ["show_google_review", tr("Tampilkan Google Review", "Show Google Review")],
-    ["show_whatsapp", "Tampilkan WhatsApp"],
-    ["show_about", "Tampilkan Tentang Bisnis"],
-    ["show_promo", "Tampilkan Promo"],
-    ["show_instagram", "Tampilkan Instagram"],
+    ["show_whatsapp", tr("Tampilkan WhatsApp")],
+    ["show_about", tr("Tampilkan Tentang Bisnis")],
+    ["show_promo", tr("Tampilkan Promo")],
+    ["show_instagram", tr("Tampilkan Instagram")],
     ["show_pdf", tr("Tampilkan File PDF", "Show PDF File")]
   ];
 
@@ -490,8 +490,8 @@ export default function LandingPageBuilderPage() {
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ marginBottom: 8 }}>Pengeditan Halaman</h1>
-          <p style={{ color: "#6b7280" }}>Memeriksa sesi...</p>
+          <h1 style={{ marginBottom: 8 }}>{tr("Pengeditan Halaman")}</h1>
+          <p style={{ color: "#6b7280" }}>{tr("Memeriksa sesi...")}</p>
         </div>
       </main>
     );
@@ -502,9 +502,9 @@ export default function LandingPageBuilderPage() {
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ margin: "6px 0 8px" }}>Pengeditan Halaman</h1>
+          <h1 style={{ margin: "6px 0 8px" }}>{tr("Pengeditan Halaman")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Masuk untuk mengatur halaman bisnis Anda.
+            {tr("Masuk untuk mengatur halaman bisnis Anda.")}
           </p>
           <form onSubmit={handleLogin} style={{ display: "grid", gap: 10, marginTop: 16 }}>
             <input
@@ -517,7 +517,7 @@ export default function LandingPageBuilderPage() {
             />
             <input
               type="password"
-              placeholder="Password"
+              placeholder={tr("Password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -528,10 +528,10 @@ export default function LandingPageBuilderPage() {
               disabled={loadingLogin}
               style={{ border: 0, borderRadius: 10, padding: "11px 12px", background: "#8B5E3C", color: "#fff", fontWeight: 900, cursor: "pointer" }}
             >
-              {loadingLogin ? "Masuk..." : "Masuk"}
+              {loadingLogin ? tr("Masuk...") : tr("Masuk")}
             </button>
           </form>
-          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{loginError}</div>}
+          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{tr(loginError)}</div>}
         </div>
       </main>
     );
@@ -542,8 +542,8 @@ export default function LandingPageBuilderPage() {
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Pengeditan Halaman</h1>
-          <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Pengeditan Halaman")}</h1>
+          <p style={{ margin: 0, color: "#6b7280" }}>{tr("Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.")}</p>
         </div>
 
         {businesses.length > 1 && (
@@ -558,14 +558,14 @@ export default function LandingPageBuilderPage() {
 
         {(businessLoading || businessError) && (
           <div style={{ marginBottom: 14, color: businessError ? "#991b1b" : "#6b7280" }}>
-            {businessError || "Memuat bisnis..."}
+            {tr(businessError) || tr("Memuat bisnis...")}
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 18, alignItems: "start" }}>
           <form onSubmit={saveSettings} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 20, display: "grid", gap: 18 }}>
             <section>
-              <h2 style={{ marginTop: 0, fontSize: 18 }}>Pilih Tema</h2>
+              <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Pilih Tema")}</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
                 {(Object.keys(themes) as ThemeKey[]).map((key) => {
                   const item = themes[key];
@@ -583,9 +583,9 @@ export default function LandingPageBuilderPage() {
                         marginBottom: 9,
                         boxShadow: key === "soft_smoothie" ? "inset 0 1px 0 rgba(255,255,255,.8), 0 6px 14px rgba(155,106,67,.10)" : "none"
                       }} />
-                      <strong>{item.label}</strong>
+                      <strong>{tr(item.label)}</strong>
                       {key === "soft_smoothie" && (
-                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>Creamy · rounded · premium</div>
+                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>{tr("Creamy · rounded · premium")}</div>
                       )}
                     </button>
                   );
@@ -594,39 +594,39 @@ export default function LandingPageBuilderPage() {
             </section>
 
             <section style={{ display: "grid", gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Konten Utama</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Konten Utama")}</h2>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Nama Bisnis Publik</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Nama Bisnis Publik")}</label>
                 <input
                   style={inputStyle}
-                  placeholder=tr("Nama yang tampil ke pelanggan", "Name shown to customers")
+                  placeholder={tr("Nama yang tampil ke pelanggan", "Name shown to customers")}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={160}
                   required
                 />
                 <div style={{ color: "#6b7280", fontSize: 11, lineHeight: 1.5 }}>
-                  Nama ini tampil di halaman publik pelanggan. Perubahan nama tidak memengaruhi kartu atau link Google Review.
+                  {tr("Nama ini tampil di halaman publik pelanggan. Perubahan nama tidak memengaruhi kartu atau link Google Review.")}
                 </div>
               </div>
-              <input style={inputStyle} placeholder="Judul utama" value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder="Deskripsi singkat" value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder="Tentang bisnis" value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
-              <input style={inputStyle} placeholder="Promo singkat" value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
+              <input style={inputStyle} placeholder={tr("Judul utama")} value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder={tr("Deskripsi singkat")} value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder={tr("Tentang bisnis")} value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
+              <input style={inputStyle} placeholder={tr("Promo singkat")} value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
             </section>
 
             <section style={{ display: "grid", gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18 }}>Logo & Cover</h2>
+                <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Logo & Cover")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12, lineHeight: 1.5 }}>
-                  Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.
+                  {tr("Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.")}
                 </div>
               </div>
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Logo Bisnis</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Logo Bisnis")}</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingLogo ? "Mengupload logo..." : settings.logo_url ? "Ganti Logo" : "Upload Logo"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PNG / JPG / WebP · maks. 5 MB</span>
+                  {uploadingLogo ? tr("Mengupload logo...") : settings.logo_url ? tr("Ganti Logo") : tr("Upload Logo")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("PNG / JPG / WebP · maks. 5 MB")}</span>
                   <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -640,17 +640,17 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder=tr("Atau tempel URL logo (HTTPS)", "Or paste logo URL (HTTPS)")
+                  placeholder={tr("Atau tempel URL logo (HTTPS)", "Or paste logo URL (HTTPS)")}
                   value={settings.logo_url}
                   onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))}
                 />
               </div>
 
               <div style={{ display: "grid", gap: 8, marginTop: 2, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Halaman</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Cover Halaman")}</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingCover ? "Mengupload cover..." : settings.cover_url ? "Ganti Cover" : "Upload Cover"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>Rekomendasi rasio 16:7 · maks. 5 MB</span>
+                  {uploadingCover ? tr("Mengupload cover...") : settings.cover_url ? tr("Ganti Cover") : tr("Upload Cover")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("Rekomendasi rasio 16:7 · maks. 5 MB")}</span>
                   <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -664,14 +664,14 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder=tr("Atau tempel URL cover (HTTPS)", "Or paste cover URL (HTTPS)")
+                  placeholder={tr("Atau tempel URL cover (HTTPS)", "Or paste cover URL (HTTPS)")}
                   value={settings.cover_url}
                   onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
                 />
 
                 <div style={{ marginTop: 4 }}>
                   <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 8, color: "#6b5849" }}>
-                    Posisi Cover
+                    {tr("Posisi Cover")}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
                     {[
@@ -684,7 +684,7 @@ export default function LandingPageBuilderPage() {
                         <button
                           key={value}
                           type="button"
-                          aria-label={"Posisi cover " + value}
+                          aria-label={tr("Posisi cover ") + value}
                           title={value}
                           onClick={() =>
                             setSettings((s) => ({
@@ -708,7 +708,7 @@ export default function LandingPageBuilderPage() {
                     })}
                   </div>
                   <div style={{ marginTop: 7, fontSize: 11, color: "#8b7a6d" }}>
-                    Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.
+                    {tr("Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.")}
                   </div>
                 </div>
               </div>
@@ -716,9 +716,9 @@ export default function LandingPageBuilderPage() {
 
             <section style={{ display: "grid", gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
+                <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Quick Menu")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
-                  Atur Google Review, WhatsApp, Instagram, serta file PDF dari satu halaman.
+                  {tr("Atur Google Review, WhatsApp, Instagram, serta file PDF dari satu halaman.")}
                 </div>
               </div>
 
@@ -733,22 +733,22 @@ export default function LandingPageBuilderPage() {
                   disabled={loadingGoogleReview}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Tempel link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.
+                  {tr("Tempel link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.")}
                 </div>
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>WhatsApp Bisnis</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("WhatsApp Bisnis")}</label>
                 <input
                   style={inputStyle}
                   inputMode="tel"
-                  placeholder="Contoh: 081234567890"
+                  placeholder={tr("Contoh: 081234567890")}
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   disabled={loadingWhatsapp}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.
+                  {tr("Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.")}
                 </div>
               </div>
 
@@ -763,17 +763,17 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>File PDF</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("File PDF")}</label>
                 <input
                   style={inputStyle}
-                  placeholder="Judul PDF, contoh: Menu, Daftar Layanan, Paket Travel, Brosur"
+                  placeholder={tr("Judul PDF, contoh: Menu, Daftar Layanan, Paket Travel, Brosur")}
                   value={settings.pdf_title}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_title: e.target.value }))}
                   maxLength={80}
                 />
                 <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
                   {uploadingPdf ? tr("Mengunggah PDF...", "Uploading PDF...") : settings.pdf_url ? tr("Ganti PDF", "Replace PDF") : tr("Unggah PDF", "Upload PDF")}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("PDF · maksimal 10 MB")}</span>
                   <input
                     type="file"
                     accept="application/pdf"
@@ -787,7 +787,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder=tr("Atau tempel URL PDF (HTTPS)", "Or paste PDF URL (HTTPS)")
+                  placeholder={tr("Atau tempel URL PDF (HTTPS)", "Or paste PDF URL (HTTPS)")}
                   value={settings.pdf_url}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
                 />
@@ -795,7 +795,7 @@ export default function LandingPageBuilderPage() {
             </section>
 
             <section style={{ display: "grid", gap: 8 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Tampilkan Section</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Tampilkan Section")}</h2>
               {toggles.map(([key, label]) => (
                 <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "9px 0" }}>
                   <input
@@ -808,21 +808,21 @@ export default function LandingPageBuilderPage() {
               ))}
             </section>
 
-            {error && <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b" }}>{error}</div>}
-            {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{message}</div>}
+            {error && <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b" }}>{tr(error)}</div>}
+            {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{tr(message)}</div>}
 
             <button type="submit" disabled={saving || loading || !businessId}
               style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "#111827", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
               {saving
                 ? loadingGoogleReview
-                  ? "Memproses Google Review..."
-                  : "Menyimpan..."
+                  ? tr("Memproses Google Review...")
+                  : tr("Menyimpan...")
                 : tr("Simpan Perubahan", "Save Changes")}
             </button>
           </form>
 
           <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>LIVE PREVIEW</div>
+            <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>{tr("LIVE PREVIEW")}</div>
             <div style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
               <div
                 style={{
@@ -853,7 +853,7 @@ export default function LandingPageBuilderPage() {
                 )}
 
                 <h2 style={{ margin: "14px 0 6px", fontSize: isSmoothie ? 29 : 26, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{settings.hero_title || businessName}</h2>
-                <p style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || "Bagikan pengalaman Anda dan bantu bisnis ini berkembang."}</p>
+                <p style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}</p>
 
                 {settings.show_promo && settings.promo_text && (
                   <div style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
@@ -861,8 +861,8 @@ export default function LandingPageBuilderPage() {
 
                 {isSmoothie && settings.show_google_review && (
                   <div style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
-                    <div style={{ fontWeight: 900, marginBottom: 4 }}>Beri kami ulasan Google</div>
-                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>Hanya 10 detik, sangat berarti bagi kami</div>
+                    <div style={{ fontWeight: 900, marginBottom: 4 }}>{tr("Beri kami ulasan Google")}</div>
+                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>{tr("Hanya 10 detik, sangat berarti bagi kami")}</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
                       {[1,2,3,4,5].map((n) => <span key={n} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,.78)", display: "grid", placeItems: "center", color: "#e5a323" }}>☆</span>)}
                     </div>
@@ -870,7 +870,7 @@ export default function LandingPageBuilderPage() {
                 )}
 
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
-                  {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
+                  {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>{tr("★ Beri Ulasan")}</div>}
                   {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || tr("Informasi", "Information")} {isSmoothie ? "›" : ""}</div>}
                   {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
                     <div>◉ WhatsApp</div>
@@ -883,7 +883,7 @@ export default function LandingPageBuilderPage() {
 
                 {settings.show_about && settings.about_text && (
                   <div style={{ marginTop: 18 }}>
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
+                    <div style={{ fontWeight: 900, marginBottom: 6 }}>{tr("Tentang Kami")}</div>
                     <div style={{ color: theme.muted, lineHeight: 1.55, fontSize: 14 }}>{settings.about_text}</div>
                   </div>
                 )}

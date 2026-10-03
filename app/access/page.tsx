@@ -81,7 +81,7 @@ export default function AccessHubPage() {
   if (checking) {
     return (
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "Inter, ui-sans-serif, system-ui" }}>
-        Memeriksa akses...
+        {tr("Memeriksa akses...")}
       </main>
     );
   }
@@ -91,11 +91,11 @@ export default function AccessHubPage() {
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f5f7fb", padding: 20, fontFamily: "Inter, ui-sans-serif, system-ui" }}>
         <section style={{ ...cardStyle, maxWidth: 480, width: "100%", textAlign: "center" }}>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
-          <h1 style={{ marginBottom: 8 }}>Menu Akses</h1>
+          <h1 style={{ marginBottom: 8 }}>{tr("Menu Akses")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Halaman ini khusus tim Provider. Masuk melalui Provider Portal terlebih dahulu.
+            {tr("Halaman ini khusus tim Provider. Masuk melalui Provider Portal terlebih dahulu.")}
           </p>
-          <Link href="/provider/cards" style={buttonStyle}>Buka Provider Portal</Link>
+          <Link href="/provider/cards" style={buttonStyle}>{tr("Buka Provider Portal")}</Link>
         </section>
       </main>
     );
@@ -106,11 +106,11 @@ export default function AccessHubPage() {
       <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f5f7fb", padding: 20, fontFamily: "Inter, ui-sans-serif, system-ui" }}>
         <section style={{ ...cardStyle, maxWidth: 480, width: "100%", textAlign: "center" }}>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .7, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
-          <h1 style={{ marginBottom: 8 }}>Akses Terbatas</h1>
+          <h1 style={{ marginBottom: 8 }}>{tr("Akses Terbatas")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Akun ini tidak memiliki izin untuk membuka Menu Akses Provider.
+            {tr("Akun ini tidak memiliki izin untuk membuka Menu Akses Provider.")}
           </p>
-          <Link href="/dashboard" style={buttonStyle}>Kembali ke Dashboard</Link>
+          <Link href="/dashboard" style={buttonStyle}>{tr("Kembali ke Dashboard")}</Link>
         </section>
       </main>
     );
@@ -124,21 +124,21 @@ export default function AccessHubPage() {
             <LanguageSwitcher />
           </div>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .8, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 32 }}>Menu Akses Sistem</h1>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 32 }}>{tr("Menu Akses Sistem")}</h1>
           <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.6 }}>
-            Akses cepat untuk pengecekan alur Provider → Pemilik Bisnis → Pengunjung.
+            {tr("Akses cepat untuk pengecekan alur Provider → Pemilik Bisnis → Pengunjung.")}
           </p>
         </header>
 
         <section style={{ ...cardStyle, marginBottom: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>Kode Kartu untuk pengujian</div>
+          <div style={{ fontWeight: 900, marginBottom: 8 }}>{tr("Kode Kartu untuk pengujian")}</div>
           <p style={{ margin: "0 0 12px", color: "#6b7280", fontSize: 14 }}>
-            Masukkan Kode Kartu yang ingin diuji. Menu Pengunjung dan Aktivasi akan menggunakan kode ini.
+            {tr("Masukkan Kode Kartu yang ingin diuji. Menu Pengunjung dan Aktivasi akan menggunakan kode ini.")}
           </p>
           <input
             value={cardCode}
             onChange={(event) => setCardCode(event.target.value.toUpperCase())}
-            placeholder="Contoh: ULAS-00136"
+            placeholder={tr("Contoh: ULAS-00136")}
             style={{
               width: "100%",
               maxWidth: 360,
@@ -157,62 +157,62 @@ export default function AccessHubPage() {
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 1</div>
             <h2 style={{ margin: "6px 0 8px" }}>Provider</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Produksi kartu, Kode Kartu, PIN aktivasi, inventori, reset PIN, dan status aktivasi.
+              {tr("Produksi kartu, Kode Kartu, PIN aktivasi, inventori, reset PIN, dan status aktivasi.")}
             </p>
-            <Link href="/provider/cards" style={buttonStyle}>Buka Provider Portal</Link>
+            <Link href="/provider/cards" style={buttonStyle}>{tr("Buka Provider Portal")}</Link>
           </section>
 
           <section style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 2</div>
-            <h2 style={{ margin: "6px 0 8px" }}>Pemilik Bisnis</h2>
+            <h2 style={{ margin: "6px 0 8px" }}>{tr("Pemilik Bisnis")}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Dashboard bisnis untuk kartu, halaman publik, Google Review, masukan, dan analitik.
+              {tr("Dashboard bisnis untuk kartu, halaman publik, Google Review, masukan, dan analitik.")}
             </p>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-              <Link href="/dashboard" style={buttonStyle}>Dashboard</Link>
-              <Link href="/dashboard/landing-page" style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Pengeditan Halaman</Link>
+              <Link href="/dashboard" style={buttonStyle}>{tr("Dashboard")}</Link>
+              <Link href="/dashboard/landing-page" style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>{tr("Pengeditan Halaman")}</Link>
             </div>
           </section>
 
           <section style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 3</div>
-            <h2 style={{ margin: "6px 0 8px" }}>Aktivasi Pemilik</h2>
+            <h2 style={{ margin: "6px 0 8px" }}>{tr("Aktivasi Pemilik")}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Simulasi pemilik bisnis yang baru membeli kartu dan akan menghubungkannya ke bisnis.
+              {tr("Simulasi pemilik bisnis yang baru membeli kartu dan akan menghubungkannya ke bisnis.")}
             </p>
             {cardReady ? (
-              <Link href={"/activate/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Buka Aktivasi</Link>
+              <Link href={"/activate/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>{tr("Buka Aktivasi")}</Link>
             ) : (
-              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Kode Kartu terlebih dahulu.</div>
+              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>{tr("Masukkan Kode Kartu terlebih dahulu.")}</div>
             )}
           </section>
 
           <section style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 4</div>
-            <h2 style={{ margin: "6px 0 8px" }}>Pengunjung</h2>
+            <h2 style={{ margin: "6px 0 8px" }}>{tr("Pengunjung")}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
-              Tampilan yang dibuka pengunjung setelah scan QR atau tap NFC pada kartu aktif.
+              {tr("Tampilan yang dibuka pengunjung setelah scan QR atau tap NFC pada kartu aktif.")}
             </p>
             {cardReady ? (
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                <Link href={"/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>Halaman Publik</Link>
-                <Link href={"/" + encodeURIComponent(normalizedCardCode) + "/menu"} style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>Informasi / PDF</Link>
+                <Link href={"/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>{tr("Halaman Publik")}</Link>
+                <Link href={"/" + encodeURIComponent(normalizedCardCode) + "/menu"} style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>{tr("Informasi / PDF")}</Link>
               </div>
             ) : (
-              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>Masukkan Kode Kartu terlebih dahulu.</div>
+              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>{tr("Masukkan Kode Kartu terlebih dahulu.")}</div>
             )}
           </section>
         </div>
 
         <section style={{ ...cardStyle, marginTop: 14 }}>
-          <h2 style={{ marginTop: 0 }}>Urutan Uji End-to-End</h2>
+          <h2 style={{ marginTop: 0 }}>{tr("Urutan Uji End-to-End")}</h2>
           <div style={{ color: "#4b5563", lineHeight: 1.8, fontSize: 14 }}>
-            <strong>1.</strong> Provider membuat kartu → <strong>2.</strong> pemilik bisnis membuka aktivasi dan memasukkan PIN → <strong>3.</strong> pemilik bisnis mengatur halaman → <strong>4.</strong> pengunjung scan QR/NFC → <strong>5.</strong> rating 4–5 ke Google Review, rating 1–3 masuk Masukan.
+            <strong>1.</strong> {tr("Provider membuat kartu →")} <strong>2.</strong> {tr("pemilik bisnis membuka aktivasi dan memasukkan PIN →")} <strong>3.</strong> {tr("pemilik bisnis mengatur halaman →")} <strong>4.</strong> {tr("pengunjung scan QR/NFC →")} <strong>5.</strong> {tr("rating 4–5 ke Google Review, rating 1–3 masuk Masukan.")}
           </div>
         </section>
 
         <div style={{ marginTop: 18, fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
-          Menu internal Provider · tidak ditampilkan pada navigasi pemilik bisnis atau halaman publik.
+          {tr("Menu internal Provider · tidak ditampilkan pada navigasi pemilik bisnis atau halaman publik.")}
         </div>
       </div>
     </main>
