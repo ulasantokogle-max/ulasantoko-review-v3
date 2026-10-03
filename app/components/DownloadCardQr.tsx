@@ -3,6 +3,12 @@
 import { useState } from "react";
 import { useLanguage } from "../../lib/i18n";
 
+const palettes = {
+  mocha: { dark: "#5b3d2eff", light: "#fff8f0ff" },
+  matcha: { dark: "#244e42ff", light: "#f5faf3ff" },
+  classic: { dark: "#000000ff", light: "#ffffffff" },
+};
+
 export default function DownloadCardQr({ cardCode, url, enabled = true }: {
   cardCode: string;
   url: string;
@@ -11,6 +17,7 @@ export default function DownloadCardQr({ cardCode, url, enabled = true }: {
   const { tr } = useLanguage();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(false);
+  const [palette, setPalette] = useState<keyof typeof palettes>("mocha");
 
   async function download() {
     setBusy(true);
@@ -25,7 +32,7 @@ export default function DownloadCardQr({ cardCode, url, enabled = true }: {
         errorCorrectionLevel: "M",
         margin: 4,
         scale: 32,
-        color: { dark: "#000000ff", light: "#ffffffff" },
+        color: palettes[palette],
       });
       const link = document.createElement("a");
       link.href = image;
@@ -42,6 +49,17 @@ export default function DownloadCardQr({ cardCode, url, enabled = true }: {
 
   return (
     <span style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
+      <select
+        aria-label={tr("Warna QR", "QR color")}
+        value={palette}
+        disabled={busy || !enabled}
+        onChange={event => setPalette(event.target.value as keyof typeof palettes)}
+        style={{ padding: "8px 10px", borderRadius: 10, border: "1px solid #e4d6c8", background: palettes[palette].light.slice(0, 7), color: palettes[palette].dark.slice(0, 7), fontWeight: 700 }}
+      >
+        <option value="mocha">{tr("Mocha · krem hangat", "Mocha · warm cream")}</option>
+        <option value="matcha">{tr("Matcha · hijau lembut", "Matcha · soft green")}</option>
+        <option value="classic">{tr("Klasik · hitam putih", "Classic · black and white")}</option>
+      </select>
       <button
         type="button"
         disabled={busy || !enabled}

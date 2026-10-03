@@ -28,14 +28,19 @@ Module._load = function(id, parent, main) {
 };
 const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
 (async () => {
-  for (const url of ['https://reputasipro.ulasantoko.space/ULAS-01007', 'https://ulasantoko-review-v3.vercel.app/ULAS-01006']) {
+  for (const palette of ['mocha','matcha','classic']) for (const url of ['https://reputasipro.ulasantoko.space/ULAS-01007', 'https://ulasantoko-review-v3.vercel.app/ULAS-01006']) {
     let ui;
     await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'ULAS-01007', url })); });
     assert.equal(ui.root.findByType('button').children.join(''), 'Unduh QR (PNG)');
+    await act(async () => ui.root.findByType('select').props.onChange({ target: { value: palette } }));
     await act(async () => { await ui.root.findByType('button').props.onClick(); });
     assert.equal(downloaded.name, 'ULAS-01007-QR.png');
     const png = PNG.sync.read(Buffer.from(downloaded.href.split(',')[1], 'base64'));
     assert(png.width >= 1000);
+    const expectedLight={mocha:[255,248,240,255],matcha:[245,250,243,255],classic:[255,255,255,255]}[palette];
+    const expectedDark={mocha:[91,61,46,255],matcha:[36,78,66,255],classic:[0,0,0,255]}[palette];
+    assert.deepEqual(Array.from(png.data.subarray(0,4)),expectedLight);
+    assert.deepEqual(Array.from(png.data.subarray((128*png.width+128)*4,(128*png.width+128)*4+4)),expectedDark);
     const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
     assert(decoded, 'Downloaded PNG must be decodable');
     assert.equal(decoded.data, url, 'QR must encode the exact stored destination');
@@ -47,8 +52,8 @@ const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
   await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'CARD', url: 'javascript:alert(1)' })); });
   assert.equal(ui.root.findByType('button').children.join(''), 'Download QR (PNG)');
   await act(async () => { await ui.root.findByType('button').props.onClick(); });
-  assert.equal(clicks, 2);
-  assert.equal(removals, 2);
+  assert.equal(clicks, 6);
+  assert.equal(removals, 6);
   assert(ui.root.findByProps({ role: 'alert' }).children.join('').includes('Could not download'));
   await act(async () => ui.unmount());
   await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'CARD', url: 'https://example.com', enabled: false })); });
