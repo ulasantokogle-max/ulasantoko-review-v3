@@ -5,6 +5,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
+import DownloadCardQr from "../../components/DownloadCardQr";
 
 type ProviderCard = {
   id: string;
@@ -553,6 +554,9 @@ export default function ProviderCardsPage() {
                     >
                       {tr("Salin URL")}
                     </button>
+                    {created.card_code && created.qr_url && (
+                      <DownloadCardQr cardCode={created.card_code} url={created.qr_url} />
+                    )}
                   </div>
                 </div>
               )}
@@ -850,6 +854,7 @@ export default function ProviderCardsPage() {
                             >
                               {tr("Salin URL")}
                             </button>
+                            <DownloadCardQr cardCode={card.card_code} url={card.qr_url} enabled={card.qr_enabled} />
                             <a
                               href={card.qr_url}
                               target="_blank"

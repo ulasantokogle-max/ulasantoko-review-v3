@@ -8,19 +8,23 @@
     "start": "next start",
     "test:language": "node tests/language.cjs",
     "test:public": "node tests/public-flow.cjs",
-    "test:security": "node tests/security-db.cjs && node tests/security-api.cjs"
+    "test:security": "node tests/security-db.cjs && node tests/security-api.cjs",
+    "test:qr": "node tests/card-qr.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
     "next": "15.5.27",
+    "qrcode": "1.5.4",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.8",
     "@types/node": "^22",
+    "@types/qrcode": "1.5.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "jsqr": "1.4.0",
     "react-test-renderer": "19.1.1",
     "typescript": "^5"
   },
