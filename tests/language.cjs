@@ -2,6 +2,7 @@
 const cwd = process.cwd(), ts = require(cwd + '/node_modules/typescript'), fs = require('fs'), assert = require('assert'), Module = require('module');
 for (const ext of ['.ts', '.tsx'])
     require.extensions[ext] = (m, f) => m._compile(ts.transpileModule(fs.readFileSync(f, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.ReactJSX, target: ts.ScriptTarget.ES2020, esModuleInterop: true } }).outputText, f);
+require.extensions['.css'] = () => {};
 const React = require(cwd + '/node_modules/react');
 const { act, create } = require(cwd + '/node_modules/react-test-renderer');
 global.IS_REACT_ACT_ENVIRONMENT = true;

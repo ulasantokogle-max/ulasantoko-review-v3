@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import "./access.css";
 import ProviderMfaGate from "../components/ProviderMfaGate";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
@@ -122,10 +123,12 @@ function AccessHubPageContent() {
   }
 
   return (
-    <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "30px 16px 48px", fontFamily: "Inter, ui-sans-serif, system-ui", color: "#111827" }}>
+    <main className="access-page" style={{ minHeight: "100vh", background: "#f5f7fb", padding: "30px 16px 48px", fontFamily: "Inter, ui-sans-serif, system-ui", color: "#111827" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto" }}>
-        <header style={{ marginBottom: 22 }}>
-          <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+        <header className="access-header" style={{ marginBottom: 22 }}>
+          <div className="access-toolbar" style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+            <Link href="/provider/cards">{tr("Pusat Kartu", "Card Center")}</Link>
+            <Link href="/provider/security">{tr("Keamanan 2FA", "2FA Security")}</Link>
             <LanguageSwitcher />
           </div>
           <div style={{ fontSize: 12, fontWeight: 900, letterSpacing: .8, color: "#6b7280" }}>REPUTASIPRO INTERNAL</div>
@@ -135,12 +138,14 @@ function AccessHubPageContent() {
           </p>
         </header>
 
-        <section style={{ ...cardStyle, marginBottom: 16 }}>
-          <div style={{ fontWeight: 900, marginBottom: 8 }}>{tr("Kode Kartu untuk pengujian")}</div>
+        <section className="access-card-input" style={{ ...cardStyle, marginBottom: 16 }}>
+          <label htmlFor="access-card-code" style={{ display: "block", fontWeight: 900, marginBottom: 8 }}>{tr("Kode Kartu untuk pengujian")}</label>
           <p style={{ margin: "0 0 12px", color: "#6b7280", fontSize: 14 }}>
             {tr("Masukkan Kode Kartu yang ingin diuji. Menu Pengunjung dan Aktivasi akan menggunakan kode ini.")}
           </p>
           <input
+            id="access-card-code"
+            maxLength={80}
             value={cardCode}
             onChange={(event) => setCardCode(event.target.value.toUpperCase())}
             placeholder={tr("Contoh: ULAS-00136")}
@@ -157,8 +162,8 @@ function AccessHubPageContent() {
           />
         </section>
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", gap: 14 }}>
-          <section style={cardStyle}>
+        <div className="access-menu-grid">
+          <section className="access-tile" style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 1</div>
             <h2 style={{ margin: "6px 0 8px" }}>Provider</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
@@ -167,19 +172,19 @@ function AccessHubPageContent() {
             <Link href="/provider/cards" style={buttonStyle}>{tr("Buka Provider Portal")}</Link>
           </section>
 
-          <section style={cardStyle}>
+          <section className="access-tile" style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 2</div>
             <h2 style={{ margin: "6px 0 8px" }}>{tr("Pemilik Bisnis")}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
               {tr("Dashboard bisnis untuk kartu, halaman publik, Google Review, masukan, dan analitik.")}
             </p>
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+            <div className="access-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               <Link href="/dashboard" style={buttonStyle}>{tr("Dashboard")}</Link>
               <Link href="/dashboard/landing-page" style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>{tr("Pengeditan Halaman")}</Link>
             </div>
           </section>
 
-          <section style={cardStyle}>
+          <section className="access-tile" style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 3</div>
             <h2 style={{ margin: "6px 0 8px" }}>{tr("Aktivasi Pemilik")}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
@@ -188,32 +193,36 @@ function AccessHubPageContent() {
             {cardReady ? (
               <Link href={"/activate/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>{tr("Buka Aktivasi")}</Link>
             ) : (
-              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>{tr("Masukkan Kode Kartu terlebih dahulu.")}</div>
+              <div className="access-empty" style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>{tr("Masukkan Kode Kartu terlebih dahulu.")}</div>
             )}
           </section>
 
-          <section style={cardStyle}>
+          <section className="access-tile" style={cardStyle}>
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>LEVEL 4</div>
             <h2 style={{ margin: "6px 0 8px" }}>{tr("Pengunjung")}</h2>
             <p style={{ color: "#6b7280", lineHeight: 1.55, minHeight: 66 }}>
               {tr("Tampilan yang dibuka pengunjung setelah scan QR atau tap NFC pada kartu aktif.")}
             </p>
             {cardReady ? (
-              <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <div className="access-actions" style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
                 <Link href={"/" + encodeURIComponent(normalizedCardCode)} style={buttonStyle}>{tr("Halaman Publik")}</Link>
                 <Link href={"/" + encodeURIComponent(normalizedCardCode) + "/menu"} style={{ ...buttonStyle, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>{tr("Informasi / PDF")}</Link>
               </div>
             ) : (
-              <div style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>{tr("Masukkan Kode Kartu terlebih dahulu.")}</div>
+              <div className="access-empty" style={{ color: "#9ca3af", fontSize: 14, fontWeight: 700 }}>{tr("Masukkan Kode Kartu terlebih dahulu.")}</div>
             )}
           </section>
         </div>
 
-        <section style={{ ...cardStyle, marginTop: 14 }}>
+        <section className="access-checklist" style={{ ...cardStyle, marginTop: 20 }}>
           <h2 style={{ marginTop: 0 }}>{tr("Urutan Uji End-to-End")}</h2>
-          <div style={{ color: "#4b5563", lineHeight: 1.8, fontSize: 14 }}>
-            <strong>1.</strong> {tr("Provider membuat kartu →")} <strong>2.</strong> {tr("pemilik bisnis membuka aktivasi dan memasukkan PIN →")} <strong>3.</strong> {tr("pemilik bisnis mengatur halaman →")} <strong>4.</strong> {tr("pengunjung scan QR/NFC →")} <strong>5.</strong> {tr("rating 4–5 ke Google Review, rating 1–3 masuk Masukan.")}
-          </div>
+          <ol>
+            <li>{tr("Buat kartu di Provider Portal.", "Create a card in the Provider Portal.")}</li>
+            <li>{tr("Aktifkan kartu dengan akun pemilik dan PIN aktivasi.", "Activate the card with the owner's account and activation PIN.")}</li>
+            <li>{tr("Atur halaman bisnis, Google Review, dan kontak.", "Set up the business page, Google Review, and contact details.")}</li>
+            <li>{tr("Coba scan QR atau tap NFC sebagai pengunjung.", "Try scanning the QR or tapping NFC as a visitor.")}</li>
+            <li>{tr("Periksa alur rating dan masukan pada dashboard bisnis.", "Check the rating and feedback flow in the business dashboard.")}</li>
+          </ol>
         </section>
 
         <div style={{ marginTop: 18, fontSize: 12, color: "#9ca3af", textAlign: "center" }}>
