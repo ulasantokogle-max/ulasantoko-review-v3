@@ -1,5 +1,9 @@
+import type { CSSProperties } from "react";
+import "../components/public-landing.css";
 import { createClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import BusinessTitle from "../components/BusinessTitle";
 import RatingFlow from "./RatingFlow";
 
 type AnyObject = Record<string, any>;
@@ -175,12 +179,55 @@ function getWhatsAppUrl(blocks: AnyObject[]) {
   return null;
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ cardCode: string }>;
+}) {
+  const { cardCode } = await params;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return {
+      title: "ReputasiPro",
+      description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
+    };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data } = await supabase.rpc("v3_get_public_business_name", {
+      p_card_code: cardCode,
+    });
+
+    const name =
+      firstString(data?.display_name, data?.business_name) ?? "ReputasiPro";
+
+    return {
+      title: name + " | ReputasiPro",
+      description: tr("Bagikan pengalaman dan masukan Anda untuk ", "Share your experience and feedback for ") + name + ".",
+    };
+  } catch {
+    return {
+      title: "ReputasiPro",
+      description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
+    };
+  }
+}
+
 export default async function PublicCardPage({
   params,
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
   const { cardCode } = await params;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -257,7 +304,7 @@ export default async function PublicCardPage({
       business.name,
       business.business_name,
       payload.business_name
-    ) ?? "UlasanToko";
+    ) ?? "ReputasiPro";
 
   const category = firstString(
     business.category,
@@ -296,7 +343,7 @@ export default async function PublicCardPage({
       landingPage.subtitle,
       payload.landing_description
     ) ??
-    "Bagikan pengalaman Anda dan bantu bisnis ini berkembang.";
+    tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.", "Share your experience and help this business grow.");
 
   const themeKey = firstString(landingSettingsData?.theme_key) ?? "warm_brown";
   const theme = themeMap[themeKey] ?? themeMap.warm_brown;
@@ -313,7 +360,7 @@ export default async function PublicCardPage({
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
   const instagramUrl = firstString(landingSettingsData?.instagram_url);
-  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? "Menu & Daftar Harga";
+  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? tr("Informasi", "Information");
   const pdfUrl = firstString(landingSettingsData?.pdf_url);
   const showGoogleReview = landingSettingsData?.show_google_review !== false;
   const showWhatsapp = landingSettingsData?.show_whatsapp !== false;
@@ -321,15 +368,16 @@ export default async function PublicCardPage({
   const showPromo = landingSettingsData?.show_promo !== false;
   const showInstagram = landingSettingsData?.show_instagram !== false;
   const showPdf = landingSettingsData?.show_pdf !== false;
-  const whatsappAvailable = Boolean(showWhatsapp);
-  const whatsappLinked = Boolean(showWhatsapp && whatsappUrl);
+  const whatsappAvailable = Boolean(showWhatsapp && whatsappUrl);
   const instagramAvailable = Boolean(showInstagram && instagramUrl);
   const singleSocial = Number(whatsappAvailable) + Number(instagramAvailable) === 1;
 
   return (
     <main
-      className={isSmoothie ? "smoothie-page" : undefined}
+      className={"modern-landing " + (isSmoothie ? "smoothie-page" : "")}
+      data-theme={themeKey}
       style={{
+        ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties),
         minHeight: "100vh",
         background: isSmoothie
           ? "radial-gradient(circle at 50% 0%, #fffaf4 0%, #fbf5ec 38%, #f5eadc 100%)"
@@ -367,10 +415,6 @@ export default async function PublicCardPage({
             padding-left: 10px !important;
             padding-right: 10px !important;
           }
-          .smoothie-title {
-            font-size: 29px !important;
-            line-height: 1.08 !important;
-          }
           .smoothie-promo {
             font-size: 13px !important;
             padding: 12px 14px !important;
@@ -399,7 +443,7 @@ export default async function PublicCardPage({
       `}</style>
 
       <section
-        className={isSmoothie ? "smoothie-shell" : undefined}
+        className={"public-shell " + (isSmoothie ? "smoothie-shell" : "")}
         style={{
           maxWidth: 560,
           margin: "0 auto",
@@ -414,7 +458,7 @@ export default async function PublicCardPage({
         }}
       >
         <div
-          className={isSmoothie ? "smoothie-hero" : undefined}
+          className={"public-hero " + (isSmoothie ? "smoothie-hero" : "")}
           style={{
             aspectRatio: isSmoothie ? "16 / 7" : "16 / 7",
             minHeight: 150,
@@ -431,7 +475,7 @@ export default async function PublicCardPage({
           }}
         />
 
-        <div style={{
+        <div className="public-profile" style={{
           marginTop: isSmoothie ? -52 : -48,
           position: "relative",
           paddingLeft: isSmoothie ? 0 : 14,
@@ -474,6 +518,7 @@ export default async function PublicCardPage({
         </div>
 
         <div
+          className="public-brand"
           style={{
             fontSize: 11,
             fontWeight: 900,
@@ -485,12 +530,11 @@ export default async function PublicCardPage({
             textAlign: isSmoothie ? "center" : "left",
           }}
         >
-          UlasanToko Review
+          ReputasiPro
         </div>
 
-        <div className={isSmoothie ? "smoothie-content" : undefined} style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
-        <h1
-          className={isSmoothie ? "smoothie-title" : undefined}
+        <div className={"public-content " + (isSmoothie ? "smoothie-content" : "")} style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
+        <BusinessTitle
           style={{
             fontSize: isSmoothie ? 34 : 31,
             lineHeight: 1.12,
@@ -501,7 +545,7 @@ export default async function PublicCardPage({
           }}
         >
           {pageTitle}
-        </h1>
+        </BusinessTitle>
 
         {category && (
           <div
@@ -522,6 +566,7 @@ export default async function PublicCardPage({
         )}
 
         <p
+          className="public-description"
           style={{
             color: theme.muted,
             lineHeight: 1.65,
@@ -535,7 +580,7 @@ export default async function PublicCardPage({
 
         {showPromo && promoText && (
           <div
-            className={isSmoothie ? "smoothie-promo" : undefined}
+            className={"public-promo " + (isSmoothie ? "smoothie-promo" : "")}
             style={{
               margin: "4px 0 18px",
               padding: "14px 15px",
@@ -567,7 +612,7 @@ export default async function PublicCardPage({
         )}
 
         <div
-          className={isSmoothie ? "smoothie-links" : undefined}
+          className={"public-links " + (isSmoothie ? "smoothie-links" : "")}
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
@@ -592,83 +637,49 @@ export default async function PublicCardPage({
                 boxShadow: "0 8px 20px rgba(0,0,0,.09)",
               }}
             >
-              ★&nbsp; Beri Ulasan
+              ★&nbsp; {tr("Beri Ulasan", "Leave a Review")}
             </a>
           )}
 
           {whatsappAvailable && (
-            whatsappLinked ? (
-              <a
-                className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-                href={whatsappUrl ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  textDecoration: "none",
-                  textAlign: "center",
-                  borderRadius: isSmoothie ? 24 : 14,
-                  background: isSmoothie
-                    ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                    : theme.soft,
-                  color: theme.text,
-                  fontWeight: 900,
-                  border: "1px solid rgba(0,0,0,.06)",
-                  minHeight: isSmoothie ? 116 : "auto",
-                  display: isSmoothie ? "grid" : "block",
-                  placeItems: isSmoothie ? "center" : "initial",
-                  fontSize: isSmoothie ? 17 : 14,
-                  boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                  order: isSmoothie ? 2 : "initial",
-                  gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-                }}
-              >
-                {isSmoothie ? (
-                  <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                    <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
-                    <span>WhatsApp</span>
-                  </span>
-                ) : (
-                  <>◉&nbsp; WhatsApp</>
-                )}
-              </a>
-            ) : (
-              <div
-                className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-                style={{
-                  textAlign: "center",
-                  borderRadius: isSmoothie ? 24 : 14,
-                  background: isSmoothie
-                    ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                    : theme.soft,
-                  color: theme.text,
-                  fontWeight: 900,
-                  border: "1px solid rgba(0,0,0,.06)",
-                  minHeight: isSmoothie ? 116 : "auto",
-                  display: isSmoothie ? "grid" : "block",
-                  placeItems: isSmoothie ? "center" : "initial",
-                  fontSize: isSmoothie ? 17 : 14,
-                  boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                  order: isSmoothie ? 2 : "initial",
-                  gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-                  opacity: .92,
-                }}
-              >
-                {isSmoothie ? (
-                  <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                    <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
-                    <span>WhatsApp</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: theme.muted }}>62 812-XXXX-XXXX</span>
-                  </span>
-                ) : (
-                  <>◉&nbsp; WhatsApp · 62 812-XXXX-XXXX</>
-                )}
-              </div>
-            )
+            <a
+              className={"public-link " + (isSmoothie ? "smoothie-link-card smoothie-social-card" : "")}
+              href={whatsappUrl ?? "#"}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                textDecoration: "none",
+                textAlign: "center",
+                borderRadius: isSmoothie ? 24 : 14,
+                background: isSmoothie
+                  ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
+                  : theme.soft,
+                color: theme.text,
+                fontWeight: 900,
+                border: "1px solid rgba(0,0,0,.06)",
+                minHeight: isSmoothie ? 116 : "auto",
+                display: isSmoothie ? "grid" : "block",
+                placeItems: isSmoothie ? "center" : "initial",
+                fontSize: isSmoothie ? 17 : 14,
+                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
+                order: isSmoothie ? 2 : "initial",
+                gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
+              }}
+            >
+              {isSmoothie ? (
+                <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
+                  <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
+                  <span>WhatsApp</span>
+                </span>
+              ) : (
+                <>◉&nbsp; WhatsApp</>
+              )}
+            </a>
           )}
 
           {instagramAvailable && (
             <a
-              className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
+              className={"public-link " + (isSmoothie ? "smoothie-link-card smoothie-social-card" : "")}
               href={instagramUrl ?? "#"}
               target="_blank"
               rel="noreferrer"
@@ -705,7 +716,7 @@ export default async function PublicCardPage({
 
           {showPdf && pdfUrl && (
             <a
-              className={isSmoothie ? "smoothie-link-card" : undefined}
+              className={"public-link " + (isSmoothie ? "smoothie-link-card" : "")}
               href={"/" + cardCode + "/menu"}
               style={{
                 textDecoration: "none",
@@ -745,7 +756,7 @@ export default async function PublicCardPage({
 
         {showAbout && aboutText && (
           <div
-            className={isSmoothie ? "smoothie-about" : undefined}
+            className={"public-about " + (isSmoothie ? "smoothie-about" : "")}
             style={{
               marginTop: isSmoothie ? 22 : 20,
               padding: isSmoothie ? 20 : 18,
@@ -755,7 +766,7 @@ export default async function PublicCardPage({
               boxShadow: isSmoothie ? "0 12px 30px rgba(103,73,48,.07), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
             }}
           >
-            <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
+            <div style={{ fontWeight: 900, marginBottom: 6 }}>{tr("Tentang Kami", "About Us")}</div>
             <div style={{ color: theme.muted, lineHeight: 1.6, fontSize: 14 }}>
               {aboutText}
             </div>
@@ -794,7 +805,7 @@ export default async function PublicCardPage({
               border: "1px solid rgba(0,0,0,.12)",
             }}
           >
-            Lihat di Google Maps
+            {tr("Lihat di Google Maps", "View on Google Maps")}
           </a>
         )}
 
@@ -880,11 +891,12 @@ export default async function PublicCardPage({
             }}
           >
             <div style={{ marginBottom: 6, color: theme.primary, fontSize: 18 }}>⌁</div>
-            Terima kasih sudah mendukung {businessName}.
+            {tr("Terima kasih sudah mendukung", "Thank you for supporting")} {businessName}.
           </div>
         )}
 
         <div
+          className="public-footer"
           style={{
             marginTop: isSmoothie ? 16 : 18,
             paddingTop: 18,
@@ -896,8 +908,8 @@ export default async function PublicCardPage({
             fontSize: 12,
           }}
         >
-          <span>Card: {card.card_code ?? cardCode}</span>
-          <span>Powered by UlasanToko</span>
+          <span>{tr("Kartu", "Card")}: {card.card_code ?? cardCode}</span>
+          <span>Powered by ReputasiPro</span>
         </div>
       </section>
     </main>

@@ -1,3 +1,4 @@
+import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
@@ -8,20 +9,20 @@ export async function POST(request: Request) {
 
     if (!authorization?.startsWith("Bearer ")) {
       return NextResponse.json(
-        { success: false, message: "Authentication required" },
+        { success: false, message: "Sesi login diperlukan." },
         { status: 401 }
       );
     }
 
-    const body = await request.json();
+    const body = await readApiJson(request);
     const businessId = body?.business_id;
     const mapsUrl = body?.maps_url;
 
-    if (!businessId || !mapsUrl) {
+    if (typeof businessId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessId) || typeof mapsUrl !== "string" || !mapsUrl.trim() || mapsUrl.length > 2048) {
       return NextResponse.json(
         {
           success: false,
-          message: "business_id and maps_url are required",
+          message: "Data Google Review belum lengkap.",
         },
         { status: 400 }
       );
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { success: false, message: "Supabase environment variables are missing" },
+        { success: false, message: "Layanan sedang mengalami kendala." },
         { status: 500 }
       );
     }
@@ -43,7 +44,7 @@ export async function POST(request: Request) {
 
     if (userError || !userData.user) {
       return NextResponse.json(
-        { success: false, message: "Invalid or expired session" },
+        { success: false, message: "Sesi login sudah berakhir." },
         { status: 401 }
       );
     }
@@ -58,13 +59,16 @@ export async function POST(request: Request) {
 
     if (limitError) {
       return NextResponse.json(
-        { success: false, message: "Unable to verify request limit" },
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi." },
         { status: 400 }
       );
     }
 
-    if (limitData?.success === false) {
-      return NextResponse.json(limitData, { status: 429 });
+    if (limitData?.success !== true) {
+      return NextResponse.json(
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi nanti." },
+        { status: limitData?.success === false ? 429 : 503 }
+      );
     }
 
     let resolved;
@@ -77,8 +81,7 @@ export async function POST(request: Request) {
         {
           success: false,
           step: "resolve",
-          message: typed.message || "Gagal memproses Google Maps URL.",
-          details: typed.details,
+          message: "Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.",
         },
         { status: typed.status ?? 400 }
       );
@@ -93,12 +96,12 @@ export async function POST(request: Request) {
       }
     );
 
-    if (saveError) {
+    if (saveError || !profile || profile.success === false) {
       return NextResponse.json(
         {
           success: false,
           step: "save",
-          message: saveError.message,
+          message: "Google Review belum dapat disimpan. Silakan coba lagi.",
         },
         { status: 400 }
       );
@@ -118,10 +121,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Google Review setup failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Google Review belum dapat diproses. Silakan coba lagi.",
       },
-      { status: 500 }
+      { status: error instanceof ApiInputError ? error.status : 500 }
     );
   }
 }

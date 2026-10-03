@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type FeedbackRow = {
   id: string;
@@ -17,6 +18,7 @@ type FeedbackRow = {
 };
 
 export default function FeedbackInboxPage() {
+  const { tr, language } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -71,7 +73,8 @@ export default function FeedbackInboxPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Feedback dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -92,7 +95,8 @@ export default function FeedbackInboxPage() {
     setLoadingFeedback(false);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Feedback inbox load failed", error);
+      setLoadError("Masukan belum dapat dimuat. Silakan coba lagi.");
       setFeedback([]);
       return;
     }
@@ -112,12 +116,14 @@ export default function FeedbackInboxPage() {
     setUpdatingId(null);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Feedback status update failed", error);
+      setLoadError("Status masukan belum dapat diperbarui. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
-      setLoadError(data?.message ?? "Gagal mengubah status feedback.");
+      console.error("Feedback status update returned unsuccessful result", data);
+      setLoadError("Status masukan belum dapat diperbarui. Silakan coba lagi.");
       return;
     }
 
@@ -186,7 +192,7 @@ export default function FeedbackInboxPage() {
     fontSize: 14,
     fontWeight: 700,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 
@@ -204,13 +210,13 @@ export default function FeedbackInboxPage() {
               marginBottom: 8,
             }}
           >
-            UlasanToko Review V3
+            ReputasiPro
           </div>
 
-            <h1 style={{ margin: 0, fontSize: 30 }}>Feedback Inbox</h1>
+            <h1 style={{ margin: 0, fontSize: 30 }}>{tr("Masukan Pelanggan")}</h1>
 
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Feedback privat dari pelanggan yang memberikan rating 1–3 bintang.
+            {tr("Masukan privat dari pelanggan yang memberikan rating 1–3 bintang.")}
           </p>
 
           {!userEmail ? (
@@ -228,7 +234,7 @@ export default function FeedbackInboxPage() {
                 <input
                   style={inputStyle}
                   type="password"
-                  placeholder="Password"
+                  placeholder={tr("Password")}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   required
@@ -239,12 +245,12 @@ export default function FeedbackInboxPage() {
                   style={buttonStyle}
                   disabled={loadingLogin}
                 >
-                  {loadingLogin ? "Login..." : "Login"}
+                  {loadingLogin ? tr("Masuk...") : tr("Masuk")}
                 </button>
               </div>
 
               {loginError && (
-                <p style={{ color: "#b91c1c", marginTop: 12 }}>{loginError}</p>
+                <p style={{ color: "#b91c1c", marginTop: 12 }}>{tr(loginError)}</p>
               )}
             </form>
           ) : (
@@ -262,7 +268,7 @@ export default function FeedbackInboxPage() {
                 }}
               >
                 <span style={{ fontSize: 14 }}>
-                  Login sebagai <strong>{userEmail}</strong>
+                  {tr("Akun:")} <strong>{userEmail}</strong>
                 </span>
 
                 <div style={{ display: "flex", gap: 8 }}>
@@ -277,7 +283,7 @@ export default function FeedbackInboxPage() {
                       padding: "9px 12px",
                     }}
                   >
-                    Refresh
+                    {tr("Muat Ulang")}
                   </button>
                 </div>
               </div>
@@ -291,9 +297,9 @@ export default function FeedbackInboxPage() {
                 }}
               >
                 {[
-                  ["Total Feedback", String(stats.total)],
-                  ["Status New", String(stats.newCount)],
-                  ["Rata-rata Rating", stats.avg],
+                  [tr("Total Masukan", "Total Feedback"), String(stats.total)],
+                  [tr("Status Baru", "New Status"), String(stats.newCount)],
+                  [tr("Rata-rata Rating"), stats.avg],
                 ].map(([label, value]) => (
                   <div
                     key={label}
@@ -345,7 +351,17 @@ export default function FeedbackInboxPage() {
                         textTransform: "capitalize",
                       }}
                     >
-                      {status === "all" ? "Semua" : status}
+                      {status === "all"
+                        ? tr("Semua", "All")
+                        : status === "new"
+                          ? tr("Baru", "New")
+                          : status === "viewed"
+                            ? tr("Dilihat", "Viewed")
+                            : status === "contacted"
+                              ? tr("Dihubungi", "Contacted")
+                              : status === "resolved"
+                                ? tr("Selesai", "Resolved")
+                                : tr("Ditutup", "Closed")}
                     </button>
                   )
                 )}
@@ -361,12 +377,12 @@ export default function FeedbackInboxPage() {
                     marginBottom: 16,
                   }}
                 >
-                  {loadError}
+                  {tr(loadError)}
                 </div>
               )}
 
               {loadingFeedback ? (
-                <p>Memuat feedback...</p>
+                <p>{tr("Memuat masukan...")}</p>
               ) : filteredFeedback.length === 0 ? (
                 <div
                   style={{
@@ -377,7 +393,7 @@ export default function FeedbackInboxPage() {
                     textAlign: "center",
                   }}
                 >
-                  Belum ada feedback.
+                  {tr("Belum ada masukan.")}
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 14 }}>
@@ -414,7 +430,7 @@ export default function FeedbackInboxPage() {
                           </div>
 
                           <div style={{ fontWeight: 700 }}>
-                            {item.customer_name || "Pelanggan anonim"}
+                            {item.customer_name || tr("Pelanggan anonim", "Anonymous customer")}
                           </div>
                         </div>
 
@@ -431,7 +447,7 @@ export default function FeedbackInboxPage() {
                             textTransform: "uppercase",
                           }}
                         >
-                          {item.status}
+                          {tr(item.status)}
                         </span>
                       </div>
 
@@ -461,12 +477,12 @@ export default function FeedbackInboxPage() {
                           WhatsApp: {item.customer_phone || "-"}
                         </div>
                         <div>
-                          Boleh dihubungi:{" "}
-                          {item.contact_consent ? "Ya" : "Tidak"}
+                          {tr("Boleh dihubungi:")}{" "}
+                          {item.contact_consent ? tr("Ya") : tr("Tidak")}
                         </div>
                         <div>
-                          Waktu:{" "}
-                          {new Date(item.created_at).toLocaleString("id-ID")}
+                          {tr("Waktu:")}{" "}
+                          {new Date(item.created_at).toLocaleString(language === "en" ? "en-US" : "id-ID", { timeZone: "Asia/Jakarta" })}
                         </div>
                       </div>
 
@@ -499,7 +515,7 @@ export default function FeedbackInboxPage() {
                             fontSize: 13,
                           }}
                         >
-                          Hubungi via WhatsApp
+                          {tr("Hubungi via WhatsApp")}
                         </a>
                         )}
 
@@ -518,11 +534,11 @@ export default function FeedbackInboxPage() {
                             fontWeight: 700,
                           }}
                         >
-                          <option value="new">New</option>
-                          <option value="viewed">Viewed</option>
-                          <option value="contacted">Contacted</option>
-                          <option value="resolved">Resolved</option>
-                          <option value="closed">Closed</option>
+                          <option value="new">{tr("Baru")}</option>
+                          <option value="viewed">{tr("Dilihat")}</option>
+                          <option value="contacted">{tr("Dihubungi")}</option>
+                          <option value="resolved">{tr("Selesai")}</option>
+                          <option value="closed">{tr("Ditutup")}</option>
                         </select>
 
                         {item.status === "new" && (
@@ -538,7 +554,7 @@ export default function FeedbackInboxPage() {
                               border: "1px solid #d1d5db",
                             }}
                           >
-                            Tandai Dilihat
+                            {tr("Tandai Dilihat")}
                           </button>
                         )}
 
@@ -553,7 +569,7 @@ export default function FeedbackInboxPage() {
                                 padding: "9px 11px",
                               }}
                             >
-                              Selesai
+                              {tr("Selesai")}
                             </button>
                           )}
                       </div>

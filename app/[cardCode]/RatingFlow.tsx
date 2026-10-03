@@ -1,6 +1,8 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import { getFeedbackError } from "../../lib/feedbackErrors";
+import { useLanguage } from "../../lib/i18n";
 
 type Props = {
   cardCode: string;
@@ -49,6 +51,7 @@ export default function RatingFlow({
   mutedColor = "#7A6659",
   smoothMode = false,
 }: Props) {
+  const { tr } = useLanguage();
   const [rating, setRating] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -64,7 +67,7 @@ export default function RatingFlow({
 
     if (value >= 4) {
       if (!reviewUrl) {
-        setError("Link Google Review belum tersedia. Silakan hubungi pemilik bisnis.");
+        setError(tr("Link Google Review belum tersedia. Silakan hubungi pemilik bisnis.", "Google Review link is not available yet. Please contact the business owner."));
         return;
       }
 
@@ -118,13 +121,19 @@ export default function RatingFlow({
       const data = await response.json();
 
       if (!response.ok || !data?.success) {
-        setError(data?.message ?? "Feedback gagal dikirim.");
+        console.error("Private feedback submission failed", {
+          status: response.status,
+          data
+        });
+        const failure = getFeedbackError(data?.code);
+        setError(failure ? tr(failure.id, failure.en) : tr("Masukan belum dapat dikirim. Silakan coba lagi.", "Feedback could not be sent. Please try again."));
         return;
       }
 
       setSent(true);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Feedback gagal dikirim.");
+      console.error("Private feedback request failed", err);
+      setError(tr("Masukan belum dapat dikirim. Periksa koneksi lalu coba lagi.", "Feedback could not be sent. Check your connection and try again."));
     } finally {
       setSending(false);
     }
@@ -153,10 +162,10 @@ export default function RatingFlow({
           </div>
         )}
         <div style={{ fontWeight: 900, fontSize: smoothMode ? 20 : 18, marginBottom: 8, color: textColor }}>
-          Terima kasih atas masukannya
+          {tr("Terima kasih atas masukannya", "Thank you for your feedback")}
         </div>
         <div style={{ color: mutedColor, lineHeight: 1.6 }}>
-          Feedback Anda sudah diterima oleh {businessName}.
+          {tr("Masukan Anda sudah diterima oleh", "Your feedback has been received by")} {businessName}.
         </div>
 
         {whatsappUrl && (
@@ -176,7 +185,7 @@ export default function RatingFlow({
               fontWeight: 800,
             }}
           >
-            Hubungi Bisnis via WhatsApp
+            {tr("Hubungi Bisnis via WhatsApp", "Contact Business via WhatsApp")}
           </a>
         )}
       </div>
@@ -185,7 +194,7 @@ export default function RatingFlow({
 
   return (
     <section
-      className={smoothMode ? "smoothie-rating-card" : undefined}
+      className={"public-rating " + (smoothMode ? "smoothie-rating-card" : "")}
       style={{
         marginTop: smoothMode ? 18 : 24,
         padding: smoothMode ? "22px 18px 20px" : 0,
@@ -206,7 +215,7 @@ export default function RatingFlow({
         </div>
       )}
       <div style={{ fontWeight: 900, fontSize: smoothMode ? 21 : 19, textAlign: "center", color: textColor }}>
-        {smoothMode ? "Beri kami ulasan Google" : "Bagaimana pengalaman Anda?"}
+        {smoothMode ? tr("Beri kami ulasan Google", "Leave us a Google review") : tr("Bagaimana pengalaman Anda?", "How was your experience?")}
       </div>
       <div
         style={{
@@ -216,7 +225,7 @@ export default function RatingFlow({
           marginTop: 6,
         }}
       >
-        {smoothMode ? "Hanya 10 detik, sangat berarti bagi kami" : "Pilih rating 1 sampai 5 bintang"}
+        {smoothMode ? tr("Hanya 10 detik, sangat berarti bagi kami", "It only takes 10 seconds and means a lot to us") : tr("Pilih rating 1 sampai 5 bintang", "Choose a rating from 1 to 5 stars")}
       </div>
 
       <div
@@ -234,7 +243,7 @@ export default function RatingFlow({
           <button
             key={value}
             type="button"
-            aria-label={`${value} bintang`}
+            aria-label={`${value} ${tr("bintang", "stars")}`}
             onClick={() => chooseRating(value)}
             style={{
               border: smoothMode ? "1px solid rgba(255,255,255,.8)" : 0,
@@ -268,7 +277,7 @@ export default function RatingFlow({
             lineHeight: 1.55,
           }}
         >
-          Mengarahkan ke Google Review...
+          {tr("Mengarahkan ke halaman ulasan Google...", "Redirecting to Google Reviews...")}
         </div>
       )}
 
@@ -284,7 +293,7 @@ export default function RatingFlow({
             fontSize: 13,
           }}
         >
-          {error}
+          {tr(error)}
         </div>
       )}
 
@@ -300,7 +309,7 @@ export default function RatingFlow({
           }}
         >
           <div style={{ fontWeight: 800, marginBottom: 6 }}>
-            Kami ingin memperbaiki pengalaman Anda
+            {tr("Kami ingin memperbaiki pengalaman Anda")}
           </div>
           <div
             style={{
@@ -310,15 +319,14 @@ export default function RatingFlow({
               marginBottom: 14,
             }}
           >
-            Masukan ini dikirim secara privat ke bisnis dan tidak diposting ke
-            Google.
+            {tr("Masukan ini dikirim secara privat ke bisnis dan tidak diposting ke Google.")}
           </div>
 
           <div style={{ display: "grid", gap: 10 }}>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Nama (opsional)"
+              placeholder={tr("Nama (opsional)")}
               maxLength={120}
               style={{
                 width: "100%",
@@ -335,7 +343,7 @@ export default function RatingFlow({
             <input
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              placeholder="No. WhatsApp (opsional)"
+              placeholder={tr("No. WhatsApp (opsional)")}
               maxLength={32}
               inputMode="tel"
               style={{
@@ -353,7 +361,7 @@ export default function RatingFlow({
             <textarea
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              placeholder="Ceritakan apa yang bisa kami perbaiki..."
+              placeholder={tr("Ceritakan apa yang bisa kami perbaiki...")}
               required
               maxLength={2000}
               rows={4}
@@ -385,7 +393,7 @@ export default function RatingFlow({
                 onChange={(event) => setConsent(event.target.checked)}
                 style={{ marginTop: 2 }}
               />
-              Saya bersedia dihubungi oleh bisnis terkait masukan ini.
+              {tr("Saya bersedia dihubungi oleh bisnis terkait masukan ini.")}
             </label>
 
             <button
@@ -401,7 +409,7 @@ export default function RatingFlow({
                 color: "#ffffff",
               }}
             >
-              {sending ? "Mengirim..." : "Kirim Feedback Privat"}
+              {sending ? tr("Mengirim...", "Sending...") : tr("Kirim Masukan Privat", "Send Private Feedback")}
             </button>
           </div>
 
@@ -416,7 +424,7 @@ export default function RatingFlow({
                 fontSize: 13,
               }}
             >
-              {error}
+              {tr(error)}
             </div>
           )}
         </form>

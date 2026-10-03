@@ -4,6 +4,7 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useBusinessContext } from "../../lib/useBusinessContext";
+import { useLanguage } from "../../lib/i18n";
 
 type AnalyticsData = {
   feedback?: {
@@ -27,6 +28,7 @@ type SetupState = {
 };
 
 export default function DashboardHomePage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,7 +87,8 @@ export default function DashboardHomePage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -114,7 +117,8 @@ export default function DashboardHomePage() {
     const firstError = analyticsResult.error || setupResult.error;
 
     if (firstError) {
-      setLoadError(firstError.message);
+      console.error("Dashboard summary load failed", firstError);
+      setLoadError("Ringkasan dashboard belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
@@ -133,7 +137,7 @@ export default function DashboardHomePage() {
   const checklist = useMemo(
     () => [
       {
-        label: "Nama bisnis publik",
+        label: tr("Nama bisnis publik"),
         done: Boolean(setup.displayName),
         href: "/dashboard/landing-page",
       },
@@ -143,32 +147,32 @@ export default function DashboardHomePage() {
         href: "/dashboard/landing-page",
       },
       {
-        label: "WhatsApp bisnis",
+        label: tr("WhatsApp bisnis"),
         done: Boolean(setup.whatsapp),
         href: "/dashboard/landing-page",
       },
       {
-        label: "Kartu sudah aktif",
+        label: tr("Kartu sudah aktif"),
         done: Number(analytics?.cards?.activated ?? 0) > 0,
         href: "/dashboard/cards",
       },
     ],
-    [setup, analytics]
+    [setup, analytics, tr]
   );
 
   const completed = checklist.filter((item) => item.done).length;
   const progress = Math.round((completed / checklist.length) * 100);
 
   const metrics = [
-    ["Kartu Aktif", analytics?.cards?.activated ?? 0],
-    ["Total Feedback", analytics?.feedback?.total ?? 0],
+    [tr("Kartu Aktif", "Active Cards"), analytics?.cards?.activated ?? 0],
+    [tr("Total Masukan", "Total Feedback"), analytics?.feedback?.total ?? 0],
     [
-      "Rata-rata Rating",
+      tr("Rata-rata Rating", "Average Rating"),
       Number(analytics?.feedback?.average_rating ?? 0).toFixed(1),
     ],
-    ["Feedback Baru", analytics?.feedback?.new ?? 0],
-    ["7 Hari Terakhir", analytics?.feedback?.last_7_days ?? 0],
-    ["Bisa Dihubungi", analytics?.feedback?.contactable ?? 0],
+    [tr("Masukan Baru", "New Feedback"), analytics?.feedback?.new ?? 0],
+    [tr("7 Hari Terakhir", "Last 7 Days"), analytics?.feedback?.last_7_days ?? 0],
+    [tr("Bisa Dihubungi", "Contactable"), analytics?.feedback?.contactable ?? 0],
   ];
 
   const buttonStyle = {
@@ -178,7 +182,7 @@ export default function DashboardHomePage() {
     fontSize: 14,
     fontWeight: 800,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 
@@ -214,11 +218,11 @@ export default function DashboardHomePage() {
         }}
       >
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          ULASANTOKO REVIEW V3
+          REPUTASIPRO
         </div>
-        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Dashboard Overview</h1>
+        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Ringkasan Dashboard")}</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-          Ringkasan bisnis, status setup, feedback, dan kartu dalam satu halaman.
+          {tr("Ringkasan bisnis, status pengaturan, masukan, dan kartu dalam satu halaman.")}
         </p>
 
         {!userEmail ? (
@@ -237,15 +241,15 @@ export default function DashboardHomePage() {
             <input
               style={inputStyle}
               type="password"
-              placeholder="Password"
+              placeholder={tr("Password")}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
             />
             <button style={buttonStyle} type="submit" disabled={loadingLogin}>
-              {loadingLogin ? "Login..." : "Login"}
+              {loadingLogin ? tr("Masuk...") : tr("Masuk")}
             </button>
-            {loginError && <div style={{ color: "#991b1b" }}>{loginError}</div>}
+            {loginError && <div style={{ color: "#991b1b" }}>{tr(loginError)}</div>}
           </form>
         ) : (
           <>
@@ -264,12 +268,12 @@ export default function DashboardHomePage() {
             >
               <div>
                 <div style={{ fontSize: 13, color: "#6b7280" }}>
-                  Login sebagai <strong>{userEmail}</strong>
+                  {tr("Akun:")} <strong>{userEmail}</strong>
                 </div>
                 <div style={{ marginTop: 3, fontWeight: 900 }}>
                   {selectedBusiness?.display_name ||
                     selectedBusiness?.business_name ||
-                    "Bisnis"}
+                    tr("Bisnis")}
                 </div>
               </div>
               <div style={{ display: "flex", gap: 8 }}>
@@ -283,7 +287,7 @@ export default function DashboardHomePage() {
                   }}
                   onClick={loadSummary}
                 >
-                  Refresh
+                  {tr("Muat Ulang")}
                 </button>
               </div>
             </div>
@@ -312,7 +316,7 @@ export default function DashboardHomePage() {
                   color: businessError ? "#991b1b" : "#6b7280",
                 }}
               >
-                {businessError || "Memuat bisnis..."}
+                {tr(businessError) || tr("Memuat bisnis...")}
               </div>
             )}
 
@@ -326,12 +330,12 @@ export default function DashboardHomePage() {
                   marginBottom: 16,
                 }}
               >
-                {loadError}
+                {tr(loadError)}
               </div>
             )}
 
             {loading ? (
-              <p>Memuat dashboard...</p>
+              <p>{tr("Memuat dashboard...")}</p>
             ) : (
               <>
                 <div
@@ -373,7 +377,7 @@ export default function DashboardHomePage() {
                   style={{
                     display: "grid",
                     gridTemplateColumns:
-                      "repeat(auto-fit, minmax(280px, 1fr))",
+                      "repeat(auto-fit, minmax(min(100%, 280px), 1fr))",
                     gap: 14,
                   }}
                 >
@@ -393,7 +397,7 @@ export default function DashboardHomePage() {
                       }}
                     >
                       <h2 style={{ margin: 0, fontSize: 18 }}>
-                        Setup Bisnis
+                        {tr("Setup Bisnis")}
                       </h2>
                       <strong>{progress}%</strong>
                     </div>
@@ -411,7 +415,7 @@ export default function DashboardHomePage() {
                         style={{
                           height: "100%",
                           width: progress + "%",
-                          background: "#111827",
+                          background: "var(--dashboard-accent, #111827)",
                         }}
                       />
                     </div>
@@ -433,7 +437,7 @@ export default function DashboardHomePage() {
                         >
                           <span>{item.label}</span>
                           <strong style={{ color: item.done ? "#166534" : "#92400e" }}>
-                            {item.done ? "Selesai" : "Lengkapi"}
+                            {item.done ? tr("Selesai") : tr("Lengkapi")}
                           </strong>
                         </Link>
                       ))}
@@ -448,14 +452,14 @@ export default function DashboardHomePage() {
                     }}
                   >
                     <h2 style={{ marginTop: 0, fontSize: 18 }}>
-                      Akses Cepat
+                      {tr("Akses Cepat")}
                     </h2>
                     <div style={{ display: "grid", gap: 10 }}>
                       {[
-                        ["/dashboard/feedback", "Buka Feedback Inbox"],
-                        ["/dashboard/analytics", "Lihat Analytics Lengkap"],
-                        ["/dashboard/cards", "Kelola Kartu"],
-                        ["/dashboard/landing-page", "Atur Landing Page"],
+                        ["/dashboard/feedback", tr("Buka Masukan", "Open Feedback")],
+                        ["/dashboard/analytics", tr("Lihat Analitik", "View Analytics")],
+                        ["/dashboard/cards", tr("Kelola Kartu")],
+                        ["/dashboard/landing-page", tr("Pengeditan Halaman", "Edit Public Page")],
                       ].map(([href, label]) => (
                         <Link
                           key={href}

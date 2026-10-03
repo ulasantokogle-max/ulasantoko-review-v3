@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type CardRow = {
   id: string;
@@ -21,6 +22,7 @@ type CardRow = {
 };
 
 export default function CardsDashboardPage() {
+  const { tr } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [userEmail, setUserEmail] = useState<string | null>(null);
@@ -81,7 +83,8 @@ export default function CardsDashboardPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Card dashboard login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -101,7 +104,8 @@ export default function CardsDashboardPage() {
     setLoadingCards(false);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Card list load failed", error);
+      setLoadError("Daftar kartu belum dapat dimuat. Silakan coba lagi.");
       setCards([]);
       return;
     }
@@ -118,12 +122,12 @@ export default function CardsDashboardPage() {
 
   async function resetCardSetup(card: CardRow) {
     const typed = window.prompt(
-      `Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, feedback, analytics, QR/NFC, dan status aktivasi tetap aman.\n\nKetik ${card.card_code} untuk konfirmasi.`
+      tr(`Reset setup untuk ${card.card_code}?\n\nGoogle Review dan WhatsApp bisnis akan dikosongkan. Kepemilikan kartu, masukan, analitik, QR/NFC, dan status aktivasi tetap dipertahankan.\n\nKetik ${card.card_code} untuk konfirmasi.`, `Reset setup for ${card.card_code}?\n\nGoogle Review and business WhatsApp will be cleared. Card ownership, feedback, analytics, QR/NFC, and activation status will be retained.\n\nType ${card.card_code} to confirm.`)
     );
 
     if (typed !== card.card_code) {
       if (typed !== null) {
-        setResetError("Reset dibatalkan karena Card Code tidak sesuai.");
+        setResetError("Reset dibatalkan karena Kode Kartu tidak sesuai.");
       }
       return;
     }
@@ -142,17 +146,19 @@ export default function CardsDashboardPage() {
     setResettingId(null);
 
     if (error) {
-      setResetError(error.message);
+      console.error("Card setup reset failed", error);
+      setResetError("Setup kartu belum dapat direset. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
-      setResetError(data?.message ?? "Gagal mereset setup kartu.");
+      console.error("Card setup reset returned unsuccessful result", data);
+      setResetError("Setup kartu belum dapat direset. Silakan coba lagi.");
       return;
     }
 
     setResetMessage(
-      `Setup ${card.card_code} berhasil direset. Kartu tetap menjadi milik bisnis Anda.`
+      tr(`Setup ${card.card_code} berhasil direset. Kartu tetap menjadi milik bisnis Anda.`, `Setup for ${card.card_code} has been reset. The card still belongs to your business.`)
     );
     await loadCards();
   }
@@ -171,12 +177,14 @@ export default function CardsDashboardPage() {
     setSavingId(null);
 
     if (error) {
-      setLoadError(error.message);
+      console.error("Card update failed", error);
+      setLoadError("Perubahan kartu belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
     if (data?.success === false) {
-      setLoadError(data?.message ?? "Gagal menyimpan kartu.");
+      console.error("Card update returned unsuccessful result", data);
+      setLoadError("Perubahan kartu belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
@@ -223,7 +231,7 @@ export default function CardsDashboardPage() {
     fontSize: 13,
     fontWeight: 800,
     cursor: "pointer",
-    background: "#111827",
+    background: "var(--dashboard-accent, #111827)",
     color: "#ffffff",
   } as const;
 
@@ -257,12 +265,12 @@ export default function CardsDashboardPage() {
             marginBottom: 8,
           }}
         >
-          UlasanToko Review V3
+          ReputasiPro
         </div>
 
-        <h1 style={{ margin: 0, fontSize: 30 }}>Card Management</h1>
+        <h1 style={{ margin: 0, fontSize: 30 }}>{tr("Manajemen Kartu")}</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-          Kelola kartu QR/NFC, status operasional, label, dan area penggunaan.
+          {tr("Kelola kartu QR/NFC, status operasional, label, dan area penggunaan.")}
         </p>
 
         {!userEmail ? (
@@ -279,7 +287,7 @@ export default function CardsDashboardPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="Password"
+                placeholder={tr("Password")}
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 required
@@ -289,11 +297,11 @@ export default function CardsDashboardPage() {
                 style={buttonStyle}
                 disabled={loadingLogin}
               >
-                {loadingLogin ? "Login..." : "Login"}
+                {loadingLogin ? tr("Masuk...") : tr("Masuk")}
               </button>
             </div>
             {loginError && (
-              <p style={{ color: "#b91c1c", marginTop: 12 }}>{loginError}</p>
+              <p style={{ color: "#b91c1c", marginTop: 12 }}>{tr(loginError)}</p>
             )}
           </form>
         ) : (
@@ -329,7 +337,7 @@ export default function CardsDashboardPage() {
                   color: businessError ? "#991b1b" : "#6b7280",
                 }}
               >
-                {businessError || "Memuat bisnis..."}
+                {tr(businessError) || tr("Memuat bisnis...")}
               </div>
             )}
 
@@ -347,7 +355,7 @@ export default function CardsDashboardPage() {
               }}
             >
               <span style={{ fontSize: 14 }}>
-                Login sebagai <strong>{userEmail}</strong>
+                {tr("Akun:")} <strong>{userEmail}</strong>
               </span>
 
               <div style={{ display: "flex", gap: 8 }}>
@@ -361,7 +369,7 @@ export default function CardsDashboardPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Refresh
+                  {tr("Muat Ulang")}
                 </button>
               </div>
             </div>
@@ -375,9 +383,9 @@ export default function CardsDashboardPage() {
               }}
             >
               {[
-                ["Total Card", stats.total],
-                ["Card Aktif", stats.active],
-                ["Sudah Aktivasi", stats.activated],
+                [tr("Total Kartu", "Total Cards"), stats.total],
+                [tr("Kartu Aktif", "Active Cards"), stats.active],
+                [tr("Sudah Diaktifkan", "Activated"), stats.activated],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -412,7 +420,7 @@ export default function CardsDashboardPage() {
                   marginBottom: 16,
                 }}
               >
-                <div style={{ fontWeight: 800 }}>{resetMessage}</div>
+                <div style={{ fontWeight: 800 }}>{tr(resetMessage)}</div>
                 <a
                   href="/dashboard/onboarding"
                   style={{
@@ -422,7 +430,7 @@ export default function CardsDashboardPage() {
                     fontWeight: 800,
                   }}
                 >
-                  Setup ulang bisnis
+                  {tr("Setup ulang bisnis")}
                 </a>
               </div>
             )}
@@ -437,7 +445,7 @@ export default function CardsDashboardPage() {
                   marginBottom: 16,
                 }}
               >
-                {resetError}
+                {tr(resetError)}
               </div>
             )}
 
@@ -451,12 +459,12 @@ export default function CardsDashboardPage() {
                   marginBottom: 16,
                 }}
               >
-                {loadError}
+                {tr(loadError)}
               </div>
             )}
 
             {loadingCards ? (
-              <p>Memuat kartu...</p>
+              <p>{tr("Memuat kartu...")}</p>
             ) : cards.length === 0 ? (
               <div
                 style={{
@@ -467,7 +475,7 @@ export default function CardsDashboardPage() {
                   textAlign: "center",
                 }}
               >
-                Belum ada kartu.
+                {tr("Belum ada kartu.")}
               </div>
             ) : (
               <div style={{ display: "grid", gap: 14 }}>
@@ -504,7 +512,7 @@ export default function CardsDashboardPage() {
                             {card.card_code}
                           </div>
                           <div style={{ color: "#6b7280", fontSize: 13 }}>
-                            {card.internal_code || "Tanpa internal code"}
+                            {card.internal_code || tr("Tanpa kode internal", "No internal code")}
                           </div>
                         </div>
 
@@ -528,7 +536,11 @@ export default function CardsDashboardPage() {
                               textTransform: "uppercase",
                             }}
                           >
-                            {card.status}
+                            {card.status === "active"
+                              ? tr("Aktif", "Active")
+                              : card.status === "suspended"
+                                ? tr("Ditangguhkan", "Suspended")
+                                : tr("Tidak Digunakan", "Retired")}
                           </span>
 
                           <span
@@ -542,7 +554,11 @@ export default function CardsDashboardPage() {
                               textTransform: "uppercase",
                             }}
                           >
-                            {card.activation_status}
+                            {card.activation_status === "activated"
+                              ? tr("Sudah Diaktifkan", "Activated")
+                              : card.activation_status === "assigned"
+                                ? tr("Sudah Ditugaskan", "Assigned")
+                                : tr("Belum Ditugaskan", "Unassigned")}
                           </span>
                         </div>
                       </div>
@@ -562,14 +578,14 @@ export default function CardsDashboardPage() {
                             style={inputStyle}
                             value={draftLabel}
                             onChange={(event) => setDraftLabel(event.target.value)}
-                            placeholder="Label kartu"
+                            placeholder={tr("Label kartu")}
                           />
 
                           <input
                             style={inputStyle}
                             value={draftArea}
                             onChange={(event) => setDraftArea(event.target.value)}
-                            placeholder="Area"
+                            placeholder={tr("Area")}
                           />
 
                           <select
@@ -581,9 +597,9 @@ export default function CardsDashboardPage() {
                               )
                             }
                           >
-                            <option value="active">Active</option>
-                            <option value="suspended">Suspended</option>
-                            <option value="retired">Retired</option>
+                            <option value="active">{tr("Aktif")}</option>
+                            <option value="suspended">{tr("Ditangguhkan")}</option>
+                            <option value="retired">{tr("Tidak Digunakan")}</option>
                           </select>
 
                           <div
@@ -600,8 +616,8 @@ export default function CardsDashboardPage() {
                               onClick={() => saveCard(card)}
                             >
                               {savingId === card.id
-                                ? "Menyimpan..."
-                                : "Simpan Perubahan"}
+                                ? tr("Menyimpan...")
+                                : tr("Simpan Perubahan")}
                             </button>
 
                             <button
@@ -614,7 +630,7 @@ export default function CardsDashboardPage() {
                                 border: "1px solid #d1d5db",
                               }}
                             >
-                              Batal
+                              {tr("Batal")}
                             </button>
                           </div>
                         </div>
@@ -630,18 +646,18 @@ export default function CardsDashboardPage() {
                             }}
                           >
                             <div>
-                              <strong>Label:</strong> {card.label || "-"}
+                              <strong>{tr("Label:")}</strong> {card.label || "-"}
                             </div>
                             <div>
-                              <strong>Area:</strong> {card.area || "-"}
+                              <strong>{tr("Area:")}</strong> {card.area || "-"}
                             </div>
                             <div>
                               <strong>QR:</strong>{" "}
-                              {card.qr_enabled ? "Aktif" : "Nonaktif"}
+                              {card.qr_enabled ? tr("Aktif", "Active") : tr("Nonaktif")}
                             </div>
                             <div>
                               <strong>NFC:</strong>{" "}
-                              {card.nfc_enabled ? "Aktif" : "Nonaktif"}
+                              {card.nfc_enabled ? tr("Aktif", "Active") : tr("Nonaktif")}
                               {card.nfc_identifier
                                 ? ` · ${card.nfc_identifier}`
                                 : ""}
@@ -656,9 +672,9 @@ export default function CardsDashboardPage() {
                               flexWrap: "wrap",
                             }}
                           >
-                            {card.qr_url && (
+                            {card.card_code && (
                               <a
-                                href={card.qr_url}
+                                href={`/${encodeURIComponent(card.card_code)}`}
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{
@@ -666,7 +682,7 @@ export default function CardsDashboardPage() {
                                   textDecoration: "none",
                                 }}
                               >
-                                Preview Halaman Publik
+                                {tr("Lihat Halaman Publik")}
                               </a>
                             )}
 
@@ -680,7 +696,7 @@ export default function CardsDashboardPage() {
                                 border: "1px solid #d1d5db",
                               }}
                             >
-                              Edit Card
+                              {tr("Edit Kartu")}
                             </button>
 
                             {card.activation_status === "activated" && (
@@ -696,8 +712,8 @@ export default function CardsDashboardPage() {
                                 }}
                               >
                                 {resettingId === card.id
-                                  ? "Mereset..."
-                                  : "Reset Setup"}
+                                  ? tr("Mereset...")
+                                  : tr("Reset Setup")}
                               </button>
                             )}
                           </div>

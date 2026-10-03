@@ -1,8 +1,12 @@
 "use client";
 
+import "../../components/public-landing.css";
+import BusinessTitle from "../../components/BusinessTitle";
+import type { CSSProperties } from "react";
 import { FormEvent, useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 const themes = {
   warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
@@ -36,6 +40,7 @@ type Settings = {
 };
 
 export default function LandingPageBuilderPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [email, setEmail] = useState("");
@@ -52,7 +57,7 @@ export default function LandingPageBuilderPage() {
     cover_url: "",
     cover_position: "center",
     instagram_url: "",
-    pdf_title: "Menu & Daftar Harga",
+    pdf_title: tr("Informasi", "Information"),
     pdf_url: "",
     show_google_review: true,
     show_whatsapp: true,
@@ -106,7 +111,8 @@ export default function LandingPageBuilderPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Page editor login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -133,22 +139,26 @@ export default function LandingPageBuilderPage() {
     setLoadingWhatsapp(false);
 
     if (error) {
-      setError(error.message);
+      console.error("Landing settings load failed", error);
+      setError("Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (contactError) {
-      setError(contactError.message);
+      console.error("Business contact load failed", contactError);
+      setError("Kontak bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (profileError) {
-      setError(profileError.message);
+      console.error("Business profile load failed", profileError);
+      setError("Profil bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (profileData?.success === false) {
-      setError(profileData?.message ?? "Gagal memuat profil bisnis.");
+      console.error("Business profile returned unsuccessful result", profileData);
+      setError("Profil bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
@@ -164,7 +174,7 @@ export default function LandingPageBuilderPage() {
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
       instagram_url: data?.instagram_url ?? "",
-      pdf_title: data?.pdf_title ?? "Menu & Daftar Harga",
+      pdf_title: data?.pdf_title ?? tr("Informasi", "Information"),
       pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
@@ -178,7 +188,7 @@ export default function LandingPageBuilderPage() {
   async function uploadMedia(file: File, kind: "logo" | "cover") {
     if (!userEmail) return;
 
-    const isImage = file.type.startsWith("image/");
+    const isImage = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
     if (!isImage) {
       setError("File harus berupa gambar.");
       return;
@@ -199,7 +209,7 @@ export default function LandingPageBuilderPage() {
 
     if (!uid) {
       setUploading(false);
-      setError("Sesi login tidak ditemukan.");
+      setError("Sesi tidak ditemukan. Silakan masuk kembali.");
       return;
     }
 
@@ -216,8 +226,9 @@ export default function LandingPageBuilderPage() {
       });
 
     if (uploadError) {
+      console.error("Landing image upload failed", uploadError);
       setUploading(false);
-      setError(uploadError.message);
+      setError("Upload gambar belum berhasil. Silakan coba lagi.");
       return;
     }
 
@@ -232,7 +243,7 @@ export default function LandingPageBuilderPage() {
     }
 
     setUploading(false);
-    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+    setMessage((kind === "logo" ? "Logo" : tr("Cover")) + tr(" berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan."));
   }
 
   async function uploadPdf(file: File) {
@@ -257,7 +268,7 @@ export default function LandingPageBuilderPage() {
 
     if (!uid) {
       setUploadingPdf(false);
-      setError("Sesi login tidak ditemukan.");
+      setError("Sesi tidak ditemukan. Silakan masuk kembali.");
       return;
     }
 
@@ -272,8 +283,9 @@ export default function LandingPageBuilderPage() {
       });
 
     if (uploadError) {
+      console.error("Landing PDF upload failed", uploadError);
       setUploadingPdf(false);
-      setError(uploadError.message);
+      setError("Unggah PDF belum berhasil. Silakan coba lagi.");
       return;
     }
 
@@ -288,7 +300,7 @@ export default function LandingPageBuilderPage() {
     }));
 
     setUploadingPdf(false);
-    setMessage("PDF berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+    setMessage("PDF berhasil diunggah. Klik Simpan Perubahan untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {
@@ -312,14 +324,16 @@ export default function LandingPageBuilderPage() {
     );
 
     if (nameError) {
+      console.error("Public business name update failed", nameError);
       setSaving(false);
-      setError(nameError.message);
+      setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
     if (nameData?.success === false) {
+      console.error("Public business name update returned unsuccessful result", nameData);
       setSaving(false);
-      setError(nameData?.message ?? "Gagal menyimpan Nama Bisnis Publik.");
+      setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
@@ -336,7 +350,7 @@ export default function LandingPageBuilderPage() {
       if (sessionError || !session?.access_token) {
         setLoadingGoogleReview(false);
         setSaving(false);
-        setError("Session login tidak ditemukan. Silakan login ulang.");
+        setError("Sesi tidak ditemukan. Silakan masuk kembali.");
         return;
       }
 
@@ -356,26 +370,31 @@ export default function LandingPageBuilderPage() {
         const googleData = await response.json();
 
         if (!response.ok || !googleData?.success) {
+          console.error("Google Review setup failed", {
+            status: response.status,
+            data: googleData
+          });
           setLoadingGoogleReview(false);
           setSaving(false);
-          setError(
-            googleData?.message ??
-              (googleData?.step
-                ? `Google Review gagal di tahap: ${googleData.step}`
-                : "Gagal menyimpan Google Maps URL.")
-          );
+
+          if (response.status === 401) {
+            setError("Sesi sudah berakhir. Silakan masuk kembali.");
+          } else if (response.status === 429) {
+            setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
+          } else if (googleData?.step === "resolve") {
+            setError("Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.");
+          } else {
+            setError("Google Review belum dapat disimpan. Silakan coba lagi.");
+          }
           return;
         }
 
         setMapsUrl(googleData?.maps_url ?? mapsUrl.trim());
       } catch (googleError) {
+        console.error("Google Review request failed", googleError);
         setLoadingGoogleReview(false);
         setSaving(false);
-        setError(
-          googleError instanceof Error
-            ? googleError.message
-            : "Gagal memproses Google Maps URL."
-        );
+        setError("Google Review belum dapat diproses. Periksa koneksi lalu coba lagi.");
         return;
       }
 
@@ -391,14 +410,16 @@ export default function LandingPageBuilderPage() {
     );
 
     if (contactError) {
+      console.error("Business contact update failed", contactError);
       setSaving(false);
-      setError(contactError.message);
+      setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
     if (contactData?.success === false) {
+      console.error("Business contact update returned unsuccessful result", contactData);
       setSaving(false);
-      setError(contactData?.message ?? "Gagal menyimpan nomor WhatsApp.");
+      setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
       return;
     }
 
@@ -427,11 +448,13 @@ export default function LandingPageBuilderPage() {
 
     setSaving(false);
     if (error) {
-      setError(error.message);
+      console.error("Landing page update failed", error);
+      setError("Landing page belum dapat disimpan. Silakan coba lagi.");
       return;
     }
     if (data?.success === false) {
-      setError(data?.message ?? "Gagal menyimpan landing page.");
+      console.error("Landing page update returned unsuccessful result", data);
+      setError("Landing page belum dapat disimpan. Silakan coba lagi.");
       return;
     }
     setMessage("Landing page berhasil disimpan.");
@@ -444,15 +467,15 @@ export default function LandingPageBuilderPage() {
     displayName ||
     selectedBusiness?.display_name ||
     selectedBusiness?.business_name ||
-    "Nama Bisnis";
+    tr("Nama Bisnis");
 
   const toggles: Array<[ToggleKey, string]> = [
-    ["show_google_review", "Tampilkan Google Review"],
-    ["show_whatsapp", "Tampilkan WhatsApp"],
-    ["show_about", "Tampilkan Tentang Bisnis"],
-    ["show_promo", "Tampilkan Promo"],
-    ["show_instagram", "Tampilkan Instagram"],
-    ["show_pdf", "Tampilkan Menu PDF"]
+    ["show_google_review", tr("Tampilkan Google Review", "Show Google Review")],
+    ["show_whatsapp", tr("Tampilkan WhatsApp")],
+    ["show_about", tr("Tampilkan Tentang Bisnis")],
+    ["show_promo", tr("Tampilkan Promo")],
+    ["show_instagram", tr("Tampilkan Instagram")],
+    ["show_pdf", tr("Tampilkan File PDF", "Show PDF File")]
   ];
 
   const inputStyle = {
@@ -469,9 +492,9 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ marginBottom: 8 }}>Landing Page Builder</h1>
-          <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
+          <h1 style={{ marginBottom: 8 }}>{tr("Pengeditan Halaman")}</h1>
+          <p style={{ color: "#6b7280" }}>{tr("Memeriksa sesi...")}</p>
         </div>
       </main>
     );
@@ -481,10 +504,10 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ margin: "6px 0 8px" }}>Landing Page Builder</h1>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
+          <h1 style={{ margin: "6px 0 8px" }}>{tr("Pengeditan Halaman")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Login customer untuk mengatur landing page bisnis.
+            {tr("Masuk untuk mengatur halaman bisnis Anda.")}
           </p>
           <form onSubmit={handleLogin} style={{ display: "grid", gap: 10, marginTop: 16 }}>
             <input
@@ -497,7 +520,7 @@ export default function LandingPageBuilderPage() {
             />
             <input
               type="password"
-              placeholder="Password"
+              placeholder={tr("Password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -508,10 +531,10 @@ export default function LandingPageBuilderPage() {
               disabled={loadingLogin}
               style={{ border: 0, borderRadius: 10, padding: "11px 12px", background: "#8B5E3C", color: "#fff", fontWeight: 900, cursor: "pointer" }}
             >
-              {loadingLogin ? "Login..." : "Login"}
+              {loadingLogin ? tr("Masuk...") : tr("Masuk")}
             </button>
           </form>
-          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{loginError}</div>}
+          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{tr(loginError)}</div>}
         </div>
       </main>
     );
@@ -521,9 +544,9 @@ export default function LandingPageBuilderPage() {
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Landing Page Builder</h1>
-          <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Pengeditan Halaman")}</h1>
+          <p style={{ margin: 0, color: "#6b7280" }}>{tr("Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.")}</p>
         </div>
 
         {businesses.length > 1 && (
@@ -538,14 +561,14 @@ export default function LandingPageBuilderPage() {
 
         {(businessLoading || businessError) && (
           <div style={{ marginBottom: 14, color: businessError ? "#991b1b" : "#6b7280" }}>
-            {businessError || "Memuat bisnis..."}
+            {tr(businessError) || tr("Memuat bisnis...")}
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18, alignItems: "start" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 18, alignItems: "start" }}>
           <form onSubmit={saveSettings} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 20, display: "grid", gap: 18 }}>
             <section>
-              <h2 style={{ marginTop: 0, fontSize: 18 }}>Pilih Tema</h2>
+              <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Pilih Tema")}</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
                 {(Object.keys(themes) as ThemeKey[]).map((key) => {
                   const item = themes[key];
@@ -563,9 +586,9 @@ export default function LandingPageBuilderPage() {
                         marginBottom: 9,
                         boxShadow: key === "soft_smoothie" ? "inset 0 1px 0 rgba(255,255,255,.8), 0 6px 14px rgba(155,106,67,.10)" : "none"
                       }} />
-                      <strong>{item.label}</strong>
+                      <strong>{tr(item.label)}</strong>
                       {key === "soft_smoothie" && (
-                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>Creamy · rounded · premium</div>
+                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>{tr("Modern · lembut · elegan", "Modern · soft · elegant")}</div>
                       )}
                     </button>
                   );
@@ -574,39 +597,39 @@ export default function LandingPageBuilderPage() {
             </section>
 
             <section style={{ display: "grid", gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Konten Utama</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Konten Utama")}</h2>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Nama Bisnis Publik</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Nama Bisnis Publik")}</label>
                 <input
                   style={inputStyle}
-                  placeholder="Nama yang tampil ke customer"
+                  placeholder={tr("Nama yang tampil ke pelanggan", "Name shown to customers")}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={160}
                   required
                 />
                 <div style={{ color: "#6b7280", fontSize: 11, lineHeight: 1.5 }}>
-                  Nama ini dipakai di halaman publik customer. Mengubahnya tidak mengubah Business ID, kartu, atau link Google Review.
+                  {tr("Nama ini tampil di halaman publik pelanggan. Perubahan nama tidak memengaruhi kartu atau link Google Review.")}
                 </div>
               </div>
-              <input style={inputStyle} placeholder="Judul utama" value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder="Deskripsi singkat" value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder="Tentang bisnis" value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
-              <input style={inputStyle} placeholder="Promo singkat" value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
+              <input style={inputStyle} placeholder={tr("Judul utama")} value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder={tr("Deskripsi singkat")} value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder={tr("Tentang bisnis")} value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
+              <input style={inputStyle} placeholder={tr("Promo singkat")} value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
             </section>
 
             <section style={{ display: "grid", gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18 }}>Logo & Cover</h2>
+                <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Logo & Cover")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12, lineHeight: 1.5 }}>
-                  Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.
+                  {tr("Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.")}
                 </div>
               </div>
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Logo Bisnis</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Logo Bisnis")}</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingLogo ? "Mengupload logo..." : settings.logo_url ? "Ganti Logo" : "Upload Logo"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PNG / JPG / WebP · maks. 5 MB</span>
+                  {uploadingLogo ? tr("Mengupload logo...") : settings.logo_url ? tr("Ganti Logo") : tr("Upload Logo")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("PNG / JPG / WebP · maks. 5 MB")}</span>
                   <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -620,17 +643,17 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste Logo URL (HTTPS)"
+                  placeholder={tr("Atau tempel URL logo (HTTPS)", "Or paste logo URL (HTTPS)")}
                   value={settings.logo_url}
                   onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))}
                 />
               </div>
 
               <div style={{ display: "grid", gap: 8, marginTop: 2, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Landing Page</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Cover Halaman")}</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingCover ? "Mengupload cover..." : settings.cover_url ? "Ganti Cover" : "Upload Cover"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>Rekomendasi rasio 16:7 · maks. 5 MB</span>
+                  {uploadingCover ? tr("Mengupload cover...") : settings.cover_url ? tr("Ganti Cover") : tr("Upload Cover")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("Rekomendasi rasio 16:7 · maks. 5 MB")}</span>
                   <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -644,14 +667,14 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste Cover URL (HTTPS)"
+                  placeholder={tr("Atau tempel URL cover (HTTPS)", "Or paste cover URL (HTTPS)")}
                   value={settings.cover_url}
                   onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
                 />
 
                 <div style={{ marginTop: 4 }}>
                   <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 8, color: "#6b5849" }}>
-                    Posisi Cover
+                    {tr("Posisi Cover")}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
                     {[
@@ -664,7 +687,7 @@ export default function LandingPageBuilderPage() {
                         <button
                           key={value}
                           type="button"
-                          aria-label={"Posisi cover " + value}
+                          aria-label={tr("Posisi cover ") + value}
                           title={value}
                           onClick={() =>
                             setSettings((s) => ({
@@ -688,7 +711,7 @@ export default function LandingPageBuilderPage() {
                     })}
                   </div>
                   <div style={{ marginTop: 7, fontSize: 11, color: "#8b7a6d" }}>
-                    Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.
+                    {tr("Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.")}
                   </div>
                 </div>
               </div>
@@ -696,9 +719,9 @@ export default function LandingPageBuilderPage() {
 
             <section style={{ display: "grid", gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
+                <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Quick Menu")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
-                  Atur Google Review, WhatsApp, Instagram, dan PDF menu/katalog langsung dari satu halaman.
+                  {tr("Atur Google Review, WhatsApp, Instagram, serta file PDF dari satu halaman.")}
                 </div>
               </div>
 
@@ -713,22 +736,22 @@ export default function LandingPageBuilderPage() {
                   disabled={loadingGoogleReview}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Paste link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.
+                  {tr("Tempel link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.")}
                 </div>
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>WhatsApp Bisnis</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("WhatsApp Bisnis")}</label>
                 <input
                   style={inputStyle}
                   inputMode="tel"
-                  placeholder="Contoh: 081234567890"
+                  placeholder={tr("Contoh: 081234567890")}
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   disabled={loadingWhatsapp}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.
+                  {tr("Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.")}
                 </div>
               </div>
 
@@ -743,17 +766,17 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Menu / Katalog PDF</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("File PDF")}</label>
                 <input
                   style={inputStyle}
-                  placeholder="Judul PDF, contoh: Menu & Daftar Harga"
+                  placeholder={tr("Judul PDF, contoh: Menu, Daftar Layanan, Paket Travel, Brosur")}
                   value={settings.pdf_title}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_title: e.target.value }))}
                   maxLength={80}
                 />
                 <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingPdf ? "Mengupload PDF..." : settings.pdf_url ? "Ganti PDF" : "Upload PDF"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
+                  {uploadingPdf ? tr("Mengunggah PDF...", "Uploading PDF...") : settings.pdf_url ? tr("Ganti PDF", "Replace PDF") : tr("Unggah PDF", "Upload PDF")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("PDF · maksimal 10 MB")}</span>
                   <input
                     type="file"
                     accept="application/pdf"
@@ -767,7 +790,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste PDF URL (HTTPS)"
+                  placeholder={tr("Atau tempel URL PDF (HTTPS)", "Or paste PDF URL (HTTPS)")}
                   value={settings.pdf_url}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
                 />
@@ -775,7 +798,7 @@ export default function LandingPageBuilderPage() {
             </section>
 
             <section style={{ display: "grid", gap: 8 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Tampilkan Section</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Tampilkan Section")}</h2>
               {toggles.map(([key, label]) => (
                 <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "9px 0" }}>
                   <input
@@ -788,23 +811,24 @@ export default function LandingPageBuilderPage() {
               ))}
             </section>
 
-            {error && <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b" }}>{error}</div>}
-            {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{message}</div>}
+            {error && <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b" }}>{tr(error)}</div>}
+            {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{tr(message)}</div>}
 
             <button type="submit" disabled={saving || loading || !businessId}
-              style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "#111827", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
+              style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "var(--dashboard-accent, #111827)", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
               {saving
                 ? loadingGoogleReview
-                  ? "Memproses Google Review..."
-                  : "Menyimpan..."
-                : "Simpan Landing Page"}
+                  ? tr("Memproses Google Review...")
+                  : tr("Menyimpan...")
+                : tr("Simpan Perubahan", "Save Changes")}
             </button>
           </form>
 
-          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>LIVE PREVIEW</div>
-            <div style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
+          <aside className="modern-landing landing-preview" data-theme={settings.theme_key} style={{ ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties), position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
+            <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>{tr("LIVE PREVIEW")}</div>
+            <div className="public-shell" style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
               <div
+                className="public-hero"
                 style={{
                   aspectRatio: "16 / 7",
                   minHeight: 120,
@@ -823,47 +847,47 @@ export default function LandingPageBuilderPage() {
                     settings.cover_position
                 }}
               />
-              <div style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
+              <div className="public-content" style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
                 {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, objectFit: "cover", borderRadius: isSmoothie ? 24 : 20, marginTop: isSmoothie ? -52 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
+                  <img className="preview-logo" src={settings.logo_url} alt="" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, objectFit: "cover", borderRadius: isSmoothie ? 24 : 20, marginTop: isSmoothie ? -52 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
                 ) : (
-                  <div style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, borderRadius: isSmoothie ? 24 : 20, margin: isSmoothie ? "-52px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
+                  <div className="preview-logo" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, borderRadius: isSmoothie ? 24 : 20, margin: isSmoothie ? "-52px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
                     {businessName.slice(0, 2).toUpperCase()}
                   </div>
                 )}
 
-                <h2 style={{ margin: "14px 0 6px", fontSize: isSmoothie ? 29 : 26, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{settings.hero_title || businessName}</h2>
-                <p style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || "Bagikan pengalaman Anda dan bantu bisnis ini berkembang."}</p>
+                <BusinessTitle style={{ margin: "20px 0 10px", fontSize: 32, fontWeight: 800 }}>{settings.hero_title || businessName}</BusinessTitle>
+                <p className="public-description" style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}</p>
 
                 {settings.show_promo && settings.promo_text && (
-                  <div style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
+                  <div className="public-promo" style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
                 )}
 
                 {isSmoothie && settings.show_google_review && (
-                  <div style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
-                    <div style={{ fontWeight: 900, marginBottom: 4 }}>Beri kami ulasan Google</div>
-                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>Hanya 10 detik, sangat berarti bagi kami</div>
+                  <div className="public-rating" style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
+                    <div style={{ fontWeight: 900, marginBottom: 4 }}>{tr("Beri kami ulasan Google")}</div>
+                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>{tr("Hanya 10 detik, sangat berarti bagi kami")}</div>
                     <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
                       {[1,2,3,4,5].map((n) => <span key={n} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,.78)", display: "grid", placeItems: "center", color: "#e5a323" }}>☆</span>)}
                     </div>
                   </div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
-                  {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
-                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Menu PDF"} {isSmoothie ? "›" : ""}</div>}
-                  {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
+                <div className="public-links" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
+                  {!isSmoothie && settings.show_google_review && <div className="public-link" style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>{tr("★ Beri Ulasan")}</div>}
+                  {settings.show_pdf && settings.pdf_url && <div className="public-link" style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || tr("Informasi", "Information")} {isSmoothie ? "›" : ""}</div>}
+                  {settings.show_whatsapp && <div className="public-link" style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
                     <div>◉ WhatsApp</div>
                     <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
                       {whatsapp || "62 812-XXXX-XXXX"}
                     </div>
                   </div>}
-                  {settings.show_instagram && settings.instagram_url && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
+                  {settings.show_instagram && settings.instagram_url && <div className="public-link" style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
                 </div>
 
                 {settings.show_about && settings.about_text && (
-                  <div style={{ marginTop: 18 }}>
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
+                  <div className="public-about" style={{ marginTop: 18 }}>
+                    <div style={{ fontWeight: 900, marginBottom: 6 }}>{tr("Tentang Kami")}</div>
                     <div style={{ color: theme.muted, lineHeight: 1.55, fontSize: 14 }}>{settings.about_text}</div>
                   </div>
                 )}

@@ -1,16 +1,22 @@
+import "./globals.css";
+import { cookies } from "next/headers";
+import { LanguageProvider } from "../lib/i18n";
+
 export const metadata = {
-  title: "UlasanToko Review V3",
-  description: "Google Review Card Platform",
+  title: "ReputasiPro",
+  description: "Platform kartu QR & NFC untuk ulasan dan feedback pelanggan.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const cookieStore = await cookies();
+  const initialLanguage = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
   return (
-    <html lang="id">
-      <body>{children}</body>
+    <html lang={initialLanguage}>
+      <body><LanguageProvider initialLanguage={initialLanguage}>{children}</LanguageProvider></body>
     </html>
   );
 }

@@ -1,0 +1,144 @@
+// Real PostgreSQL semantics in an isolated WASM database, never the live Supabase project.
+const { PGlite } = require('@electric-sql/pglite');
+const { pgcrypto } = require('@electric-sql/pglite/contrib/pgcrypto');
+const fs = require('node:fs');
+const assert = require('node:assert/strict');
+const uidA = '00000000-0000-0000-0000-000000000001';
+const uidB = '00000000-0000-0000-0000-000000000002';
+const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
+(async () => {
+ const db = new PGlite({ extensions: { pgcrypto } });
+ try {
+ await db.exec(`create role anon; create role authenticated;
+ create schema auth; create schema extensions; create extension pgcrypto with schema extensions;
+ create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
+ create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
+ grant usage on schema public,auth to anon,authenticated;
+ create schema storage;
+ create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
+ create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
+ alter table storage.objects enable row level security;
+ create function storage.foldername(text) returns text[] language sql as $$ select string_to_array($1,'/') $$;
+ grant usage on schema storage to anon,authenticated;
+ grant all on storage.objects to anon,authenticated;`);
+ const migrations = ['0001','0003','0006','0007','0009','0012','0013','0019','0020','0021','0022','0023','0027','0031','0037'];
+ for (const prefix of migrations) {
+  const file = fs.readdirSync('supabase/migrations').find(f=>f.startsWith(prefix+'_'));
+  if (prefix==='0037') await db.exec(fs.readFileSync('supabase/checkpoints/2026-10-03_pre_security_v2.sql','utf8'));
+  await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8'));
+  if (prefix==='0001') await db.exec(`insert into public.users(id) values ('${uidA}'),('${uidB}'),('${provider}'); grant all on all tables in schema public to anon,authenticated;`);
+ }
+ const orgA=(await db.query("insert into organizations(name,slug) values ('A','a') returning id")).rows[0].id;
+ const orgB=(await db.query("insert into organizations(name,slug) values ('B','b') returning id")).rows[0].id;
+ const businessA=(await db.query("insert into businesses(organization_id,name,slug) values ($1,'A','a') returning id",[orgA])).rows[0].id;
+ const businessB=(await db.query("insert into businesses(organization_id,name,slug) values ($1,'B','b') returning id",[orgB])).rows[0].id;
+ await db.query("insert into business_members(business_id,user_id,role) values ($1,$2,'manager'),($3,$4,'manager')",[businessA,uidA,businessB,uidB]);
+ const card=(await db.query("insert into cards(business_id,card_code,activation_status) values ($1,'TESTSEC','activated') returning id",[businessA])).rows[0].id;
+ await db.query("insert into card_activation(card_id,pin_hash) values ($1,extensions.crypt('123456',extensions.gen_salt('bf')))",[card]);
+ async function as(role,uid,sql,args=[]) {
+  await db.exec('set role '+role);
+  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[uid??'']);
+  try { return await db.query(sql,args); } finally { await db.exec('reset role'); }
+ }
+ const googleMigration = fs.readFileSync('supabase/migrations/0040_google_review_profile_rpc.sql','utf8');
+ await db.exec(googleMigration);
+ await db.exec(googleMigration);
+ const googleSave = 'select v3_set_google_review_profile($1,$2,$3) as value';
+ const googleArgs = [businessA,'https://maps.app.goo.gl/BusinessA','ChIJ_Test-123'];
+ await assert.rejects(as('anon',null,googleSave,googleArgs),/permission denied/);
+ await assert.rejects(as('authenticated',null,googleSave,googleArgs),/AUTH_REQUIRED/);
+ await assert.rejects(as('authenticated',uidB,googleSave,googleArgs),/FORBIDDEN/);
+ const savedGoogle = (await as('authenticated',uidA,googleSave,googleArgs)).rows[0].value;
+ assert.equal(savedGoogle.success,true);
+ assert.equal(savedGoogle.review_url,'https://search.google.com/local/writereview?placeid=ChIJ_Test-123');
+ await db.query("update google_review_profiles set business_name='Keep name' where business_id=$1",[businessA]);
+ await as('authenticated',uidA,googleSave,[businessA,'https://www.google.co.id/maps/place/Test','ChIJ_Updated']);
+ const googleRows = (await db.query('select * from google_review_profiles where business_id=$1',[businessA])).rows;
+ assert.equal(googleRows.length,1); assert.equal(googleRows[0].business_name,'Keep name');
+ assert.equal(googleRows[0].place_id,'ChIJ_Updated');
+ for (const url of ['https://google.com.evil.test/maps','http://google.com/maps','https://user@google.com/maps','https://google.com:8443/maps'])
+   await assert.rejects(as('authenticated',uidA,googleSave,[businessA,url,'ChIJ_Valid']),/INVALID_GOOGLE_REVIEW_PROFILE/);
+ await assert.rejects(as('authenticated',uidA,googleSave,[businessA,googleArgs[1],'Bad&redirect=evil']),/INVALID_GOOGLE_REVIEW_PROFILE/);
+ await db.query("update businesses set status='suspended' where id=$1",[businessA]);
+ await assert.rejects(as('authenticated',uidA,googleSave,googleArgs),/BUSINESS_INACTIVE/);
+ await db.query("update businesses set status='active' where id=$1",[businessA]);
+ console.log('PASS Google Review RPC: repeatable migration, member save/update, preserved name, cross-tenant/anonymous/inactive/invalid input denied');
+ assert.equal((await as('authenticated',uidA,'select id from businesses')).rows.length,1);
+ assert.equal((await as('authenticated',uidB,'select id from cards')).rows.length,0);
+ await assert.rejects(as('authenticated',uidB,'select * from v3_get_cards($1)',[businessA]),/FORBIDDEN/);
+ await assert.rejects(as('authenticated',uidA,'select * from card_activation'),/permission denied/);
+ await assert.rejects(as('authenticated',uidA,'select v3_provider_reset_activation_pin($1)',[card]),/FORBIDDEN/);
+ await assert.rejects(as('anon',null,'select v3_provider_create_card()'),/permission denied/);
+ assert.equal((await as('anon',null,'select * from feedback_submissions')).rows.length,0);
+ await assert.rejects(as('authenticated',uidA,`insert into storage.objects(bucket_id,name) values ('landing-media','${uidB}/evil.png')`),/row-level security/);
+ await as('authenticated',uidA,`insert into storage.objects(bucket_id,name) values ('landing-media','${uidA}/valid.png')`);
+ const bucket=(await db.query("select * from storage.buckets where id='landing-media'")).rows[0];
+ assert.equal(Number(bucket.file_size_limit),10485760);assert(!bucket.allowed_mime_types.includes('image/svg+xml'));
+ for(let i=0;i<30;i++) {
+  const result=await as('anon',null,"select v3_submit_feedback('TESTSEC',2::smallint,null,null,$1,null,false,$2) as value",['message '+i,'session '+i]);
+  assert.equal(result.rows[0].value.success,true);
+ }
+ const blocked=await as('anon',null,"select v3_submit_feedback('TESTSEC',2::smallint,null,null,'new message',null,false,'rotated') as value");
+ assert.equal(blocked.rows[0].value.code,'FEEDBACK_RATE_LIMITED');
+ for(let i=0;i<10;i++) assert.equal((await as('authenticated',uidA,'select v3_check_google_maps_resolver_rate_limit() as value')).rows[0].value.success,true);
+ assert.equal((await as('authenticated',uidA,'select v3_check_google_maps_resolver_rate_limit() as value')).rows[0].value.success,false);
+ // Provider can provision; invalid PIN locks at five failures, valid PIN claims a fresh card.
+ const provisioned=(await as('authenticated',provider,"select v3_provider_create_card('Test',null,null) as value")).rows[0].value;
+ assert.equal(provisioned.success,true);
+ for(let i=0;i<5;i++) {
+   const result=(await as('authenticated',uidB,"select v3_claim_card($1,'wrong',null,'Business',null) as value",[provisioned.card_code])).rows[0].value;
+   assert.equal(result.code,'INVALID_ACTIVATION_PIN');
+ }
+ assert.equal((await as('authenticated',uidB,"select v3_claim_card($1,'wrong',null,'Business',null) as value",[provisioned.card_code])).rows[0].value.code,'ACTIVATION_TEMPORARILY_LOCKED');
+ const fresh=(await as('authenticated',provider,"select v3_provider_create_card('Fresh',null,null) as value")).rows[0].value;
+ const claimed=(await as('authenticated',uidA,"select v3_claim_card($1,$2,null,'New Business',null) as value",[fresh.card_code,fresh.activation_pin])).rows[0].value;
+ assert.equal(claimed.success,true);
+ await db.exec(fs.readFileSync('supabase/checkpoints/2026-10-03_verify_security_v2.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/rollbacks/0037_security_release_hardening_v2_rollback.sql','utf8'));
+ assert.equal((await db.query("select file_size_limit from storage.buckets where id='landing-media'")).rows[0].file_size_limit,null);
+ await db.exec(fs.readFileSync('supabase/migrations/0037_security_release_hardening_v2.sql','utf8'));
+ assert.equal(Number((await db.query("select file_size_limit from storage.buckets where id='landing-media'")).rows[0].file_size_limit),10485760);
+ // Domain migration changes future destinations, keeps existing cards and authorization,
+ // and can restore the exact hardened provider definition.
+ const originalProvider=(await db.query("select pg_get_functiondef('public.v3_provider_create_card(text,text,text)'::regprocedure) as definition")).rows[0].definition;
+ const existingDestination=(await db.query('select qr_url from card_provisioning where card_id=$1',[fresh.card_id])).rows[0].qr_url;
+ const domainMigration=fs.readFileSync('supabase/migrations/0038_reputasipro_card_domain.sql','utf8');
+ await db.exec(domainMigration);
+ await db.exec(domainMigration);
+ await assert.rejects(as('authenticated',uidB,'select v3_provider_create_card()'),/FORBIDDEN/);
+ await assert.rejects(as('anon',null,'select * from backup_20261003_domain.function_definitions'),/permission denied/);
+ const domainCard=(await as('authenticated',provider,"select v3_provider_create_card('Domain test',null,null) as value")).rows[0].value;
+ assert.equal(domainCard.qr_url,'https://reputasipro.ulasantoko.space/'+domainCard.card_code);
+ assert.equal(domainCard.nfc_url,domainCard.qr_url);
+ assert.match(domainCard.activation_pin,/^[0-9]{6}$/);
+ assert.equal((await db.query('select qr_url from card_provisioning where card_id=$1',[fresh.card_id])).rows[0].qr_url,existingDestination);
+ await db.exec(fs.readFileSync('supabase/rollbacks/0038_reputasipro_card_domain_rollback.sql','utf8'));
+ assert.equal((await db.query("select pg_get_functiondef('public.v3_provider_create_card(text,text,text)'::regprocedure) as definition")).rows[0].definition,originalProvider);
+ // MFA is mandatory even for active providers without an enrolled factor.
+ await db.exec(fs.readFileSync('supabase/migrations/0039_provider_mfa.sql','utf8'));
+ await db.exec(fs.readFileSync('supabase/migrations/0039_provider_mfa.sql','utf8'));
+ for (const claims of [{}, {aal:'aal1'}, {aal:'unexpected'}]) {
+  await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify(claims)]);
+  assert.equal((await as('authenticated',provider,'select v3_is_provider_member() as allowed')).rows[0].allowed,true);
+  assert.equal((await as('authenticated',provider,'select v3_is_provider_admin() as allowed')).rows[0].allowed,false);
+  await assert.rejects(as('authenticated',provider,'select v3_provider_list_cards()'),/FORBIDDEN/);
+  await assert.rejects(as('authenticated',provider,'select v3_provider_create_card()'),/FORBIDDEN/);
+  await assert.rejects(as('authenticated',provider,'select v3_provider_reset_activation_pin($1)',[fresh.card_id]),/FORBIDDEN/);
+ }
+ await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({aal:'aal2'})]);
+ assert.equal((await as('authenticated',provider,'select v3_is_provider_admin() as allowed')).rows[0].allowed,true);
+ assert((await as('authenticated',provider,'select * from v3_provider_list_cards()')).rows.length>0);
+ const mfaCard=(await as('authenticated',provider,'select v3_provider_create_card() as value')).rows[0].value;
+ assert.equal(mfaCard.success,true);
+ assert.equal((await as('authenticated',provider,'select v3_provider_reset_activation_pin($1) as value',[mfaCard.card_id])).rows[0].value.success,true);
+ await assert.rejects(as('authenticated',uidB,'select v3_provider_create_card()'),/FORBIDDEN/);
+ await assert.rejects(as('anon',null,'select v3_is_provider_member()'),/permission denied/);
+ const verification=await db.query(fs.readFileSync('supabase/checkpoints/2026-10-03_verify_provider_mfa.sql','utf8'));
+ assert(Object.values(verification.rows[0]).every(value=>value===true));
+ await db.query("update provider_admins set status='suspended' where user_id=$1",[provider]);
+ assert.equal((await as('authenticated',provider,'select v3_is_provider_admin() as allowed')).rows[0].allowed,false);
+ await assert.rejects(as('authenticated',provider,'select v3_provider_list_cards()'),/FORBIDDEN/);
+ console.log('PASS provider MFA: missing/aal1/unknown denied, aal2 provider allowed, customers/anonymous/suspended denied');
+ console.log('PASS PostgreSQL tenant isolation, provider/anonymous denial, PIN secrecy, storage ownership, card-wide spam limit and resolver throttle');
+ } finally { await db.close(); }
+})().catch(e=>{console.error(e.message);process.exitCode=1});
