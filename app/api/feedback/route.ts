@@ -1,3 +1,4 @@
+import { ApiInputError, readApiJson } from "../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { getFeedbackError } from "../../../lib/feedbackErrors";
 import { createClient } from "@supabase/supabase-js";
@@ -6,13 +7,13 @@ export async function POST(request: Request) {
   try {
     let body: Record<string, unknown>;
     try {
-      const parsed = await request.json();
+      const parsed = await readApiJson(request);
       if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
         throw new Error("Invalid feedback payload");
       }
       body = parsed;
-    } catch {
-      return NextResponse.json({ success: false, message: "Data masukan tidak valid." }, { status: 400 });
+    } catch (error) {
+      return NextResponse.json({ success: false, message: "Data masukan tidak valid." }, { status: error instanceof ApiInputError ? error.status : 400 });
     }
 
     const cardCode = typeof body.card_code === "string" ? body.card_code.trim() : "";
@@ -32,7 +33,7 @@ export async function POST(request: Request) {
     });
     const invalidConsent = body.contact_consent != null && typeof body.contact_consent !== "boolean";
 
-    if (!cardCode || !Number.isInteger(rating) || rating < 1 || rating > 3 || invalidText || invalidConsent) {
+    if (!cardCode || cardCode.length > 160 || !Number.isInteger(rating) || rating < 1 || rating > 3 || invalidText || invalidConsent) {
       return NextResponse.json(
         {
           success: false,

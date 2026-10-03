@@ -1,3 +1,4 @@
+import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
@@ -56,14 +57,17 @@ export async function POST(request: Request) {
       );
     }
 
-    if (limitData?.success === false) {
-      return NextResponse.json(limitData, { status: 429 });
+    if (limitData?.success !== true) {
+      return NextResponse.json(
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi nanti." },
+        { status: limitData?.success === false ? 429 : 503 }
+      );
     }
 
-    const body = await request.json();
+    const body = await readApiJson(request);
     const mapsUrl = body?.maps_url;
 
-    if (!mapsUrl) {
+    if (typeof mapsUrl !== "string" || !mapsUrl.trim() || mapsUrl.length > 2048) {
       return NextResponse.json(
         { success: false, message: "Link Google Maps wajib diisi." },
         { status: 400 }
@@ -90,7 +94,7 @@ export async function POST(request: Request) {
         success: false,
         message: "Link Google Maps belum dapat diproses. Silakan coba lagi.",
       },
-      { status: 500 }
+      { status: error instanceof ApiInputError ? error.status : 500 }
     );
   }
 }

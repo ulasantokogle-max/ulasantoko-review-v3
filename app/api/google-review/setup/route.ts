@@ -1,3 +1,4 @@
+import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
@@ -13,11 +14,11 @@ export async function POST(request: Request) {
       );
     }
 
-    const body = await request.json();
+    const body = await readApiJson(request);
     const businessId = body?.business_id;
     const mapsUrl = body?.maps_url;
 
-    if (!businessId || !mapsUrl) {
+    if (typeof businessId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessId) || typeof mapsUrl !== "string" || !mapsUrl.trim() || mapsUrl.length > 2048) {
       return NextResponse.json(
         {
           success: false,
@@ -63,8 +64,11 @@ export async function POST(request: Request) {
       );
     }
 
-    if (limitData?.success === false) {
-      return NextResponse.json(limitData, { status: 429 });
+    if (limitData?.success !== true) {
+      return NextResponse.json(
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi nanti." },
+        { status: limitData?.success === false ? 429 : 503 }
+      );
     }
 
     let resolved;
@@ -92,7 +96,7 @@ export async function POST(request: Request) {
       }
     );
 
-    if (saveError) {
+    if (saveError || !profile || profile.success === false) {
       return NextResponse.json(
         {
           success: false,
@@ -119,7 +123,7 @@ export async function POST(request: Request) {
         success: false,
         message: "Google Review belum dapat diproses. Silakan coba lagi.",
       },
-      { status: 500 }
+      { status: error instanceof ApiInputError ? error.status : 500 }
     );
   }
 }

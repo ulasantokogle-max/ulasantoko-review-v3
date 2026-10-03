@@ -185,7 +185,7 @@ export default function LandingPageBuilderPage() {
   async function uploadMedia(file: File, kind: "logo" | "cover") {
     if (!userEmail) return;
 
-    const isImage = file.type.startsWith("image/");
+    const isImage = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
     if (!isImage) {
       setError("File harus berupa gambar.");
       return;
