@@ -75,6 +75,22 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
  assert.equal((await db.query("select file_size_limit from storage.buckets where id='landing-media'")).rows[0].file_size_limit,null);
  await db.exec(fs.readFileSync('supabase/migrations/0037_security_release_hardening_v2.sql','utf8'));
  assert.equal(Number((await db.query("select file_size_limit from storage.buckets where id='landing-media'")).rows[0].file_size_limit),10485760);
+ // Domain migration changes future destinations, keeps existing cards and authorization,
+ // and can restore the exact hardened provider definition.
+ const originalProvider=(await db.query("select pg_get_functiondef('public.v3_provider_create_card(text,text,text)'::regprocedure) as definition")).rows[0].definition;
+ const existingDestination=(await db.query('select qr_url from card_provisioning where card_id=$1',[fresh.card_id])).rows[0].qr_url;
+ const domainMigration=fs.readFileSync('supabase/migrations/0038_reputasipro_card_domain.sql','utf8');
+ await db.exec(domainMigration);
+ await db.exec(domainMigration);
+ await assert.rejects(as('authenticated',uidB,'select v3_provider_create_card()'),/FORBIDDEN/);
+ await assert.rejects(as('anon',null,'select * from backup_20261003_domain.function_definitions'),/permission denied/);
+ const domainCard=(await as('authenticated',provider,"select v3_provider_create_card('Domain test',null,null) as value")).rows[0].value;
+ assert.equal(domainCard.qr_url,'https://reputasipro.ulasantoko.space/'+domainCard.card_code);
+ assert.equal(domainCard.nfc_url,domainCard.qr_url);
+ assert.match(domainCard.activation_pin,/^[0-9]{6}$/);
+ assert.equal((await db.query('select qr_url from card_provisioning where card_id=$1',[fresh.card_id])).rows[0].qr_url,existingDestination);
+ await db.exec(fs.readFileSync('supabase/rollbacks/0038_reputasipro_card_domain_rollback.sql','utf8'));
+ assert.equal((await db.query("select pg_get_functiondef('public.v3_provider_create_card(text,text,text)'::regprocedure) as definition")).rows[0].definition,originalProvider);
  console.log('PASS PostgreSQL tenant isolation, provider/anonymous denial, PIN secrecy, storage ownership, card-wide spam limit and resolver throttle');
  } finally { await db.close(); }
 })().catch(e=>{console.error(e.message);process.exitCode=1});
