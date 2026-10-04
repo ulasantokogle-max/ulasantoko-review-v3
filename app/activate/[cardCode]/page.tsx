@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { resolveCardCode } from "../../../lib/cardPublicId";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
@@ -60,8 +61,10 @@ export default function ActivateCardPage() {
 
   async function checkCard() {
     setStateLoading(true);
+    const resolvedCode = await resolveCardCode(supabase, cardCode);
+    if (!resolvedCode) { setStateLoading(false); setActivationError("Kartu tidak ditemukan atau belum tersedia."); return; }
     const { data } = await supabase.rpc("v3_get_card_activation_state", {
-      p_card_code: cardCode,
+      p_card_code: resolvedCode,
     });
     setStateLoading(false);
 
@@ -180,8 +183,10 @@ export default function ActivateCardPage() {
     setActivationError("");
     setActivating(true);
 
+    const resolvedCode = await resolveCardCode(supabase, cardCode);
+    if (!resolvedCode) { setActivating(false); setActivationError("Kartu tidak ditemukan atau belum tersedia."); return; }
     const { data, error } = await supabase.rpc("v3_claim_card", {
-      p_card_code: cardCode,
+      p_card_code: resolvedCode,
       p_pin: pin,
       p_business_id:
         businessMode === "existing" ? selectedBusinessId || null : null,

@@ -1,3 +1,4 @@
+import { resolveCardCode } from "../../../lib/cardPublicId";
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
@@ -14,7 +15,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
-  const { cardCode } = await params;
+  let { cardCode } = await params;
+  const routeCode = cardCode;
   const cookieStore = await cookies();
   const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
   const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
@@ -30,6 +32,9 @@ export async function generateMetadata({
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
     const { data } = await supabase.rpc("v3_get_public_landing_page", {
       p_card_code: cardCode,
     });
@@ -54,7 +59,8 @@ export default async function PublicPdfMenuPage({
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
-  const { cardCode } = await params;
+  let { cardCode } = await params;
+  const routeCode = cardCode;
   const cookieStore = await cookies();
   const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
   const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
@@ -67,6 +73,9 @@ export default async function PublicPdfMenuPage({
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
   const { data } = await supabase.rpc("v3_get_public_landing_page", {
     p_card_code: cardCode,
   });
@@ -132,7 +141,7 @@ export default async function PublicPdfMenuPage({
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <a
-              href={"/" + cardCode}
+              href={"/" + routeCode}
               style={{
                 textDecoration: "none",
                 padding: "10px 12px",

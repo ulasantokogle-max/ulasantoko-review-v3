@@ -15,9 +15,12 @@ let calls = [];
 let language = 'en';
 let activation = { success: true, needs_activation: false };
 let card = { business: { name: 'Nama Bisnis Asli' }, card: { card_code: 'TEST001' }, blocks: [] };
+let pageCalls = [];
 const originalLoad = Module._load;
 Module._load = function (id, parent, main) {
   if (id === '@supabase/supabase-js') return { createClient: () => ({ rpc: async (name, args) => {
+    pageCalls.push({ name, args });
+    if (name === 'v3_resolve_card_code') return { data: args.p_public_id === 'a7c93e10b842' ? 'TEST001' : null, error: null };
     if (name === 'v3_submit_feedback') { calls.push(args); return outcome; }
     if (name === 'v3_get_card_activation_state') return { data: activation };
     if (name === 'v3_get_public_card') return { data: card, error: null };
@@ -75,7 +78,15 @@ const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli'
     assert(html.includes('Nama Bisnis Asli'));
     assert(html.includes(language === 'en' ? 'Leave us a Google review' : 'Beri kami ulasan Google'));
   }
+  pageCalls = [];
+  const shortPage = await PublicPage({ params: Promise.resolve({ cardCode: 'a7c93e10b842' }) });
+  assert(renderToStaticMarkup(React.createElement(LanguageProvider, { initialLanguage: language }, shortPage)).includes('Nama Bisnis Asli'));
+  assert(pageCalls.filter(call => call.args?.p_card_code).every(call => call.args.p_card_code === 'TEST001'));
+  const MenuPage = require('../app/[cardCode]/menu/page.tsx').default;
+  assert(renderToStaticMarkup(await MenuPage({ params: Promise.resolve({ cardCode: 'a7c93e10b842' }) })).includes('Dokumen Bisnis Asli'));
+  await assert.rejects(PublicPage({ params: Promise.resolve({ cardCode: 'ffffffffffff' }) }), /NOT_FOUND/);
   activation = { success: true, needs_activation: true };
+  await assert.rejects(PublicPage({ params: Promise.resolve({ cardCode: 'a7c93e10b842' }) }), /REDIRECT:\/activate\/a7c93e10b842/);
   await assert.rejects(PublicPage({ params: Promise.resolve({ cardCode: 'TEST001' }) }), /REDIRECT:\/activate\/TEST001/);
   activation = { success: false };
   await assert.rejects(PublicPage({ params: Promise.resolve({ cardCode: 'TEST001' }) }), /NOT_FOUND/);

@@ -1,3 +1,4 @@
+import { resolveCardCode } from "../../lib/cardPublicId";
 import type { CSSProperties } from "react";
 import "../components/public-landing.css";
 import { createClient } from "@supabase/supabase-js";
@@ -184,7 +185,8 @@ export async function generateMetadata({
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
-  const { cardCode } = await params;
+  let { cardCode } = await params;
+  const routeCode = cardCode;
   const cookieStore = await cookies();
   const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
   const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
@@ -200,6 +202,9 @@ export async function generateMetadata({
 
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
     const { data } = await supabase.rpc("v3_get_public_business_name", {
       p_card_code: cardCode,
     });
@@ -224,7 +229,8 @@ export default async function PublicCardPage({
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
-  const { cardCode } = await params;
+  let { cardCode } = await params;
+  const routeCode = cardCode;
   const cookieStore = await cookies();
   const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
   const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
@@ -237,6 +243,9 @@ export default async function PublicCardPage({
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
 
   const { data: activationState } = await supabase.rpc(
     "v3_get_card_activation_state",
@@ -244,7 +253,7 @@ export default async function PublicCardPage({
   );
 
   if (activationState?.success && activationState?.needs_activation) {
-    redirect(`/activate/${cardCode}`);
+    redirect(`/activate/${routeCode}`);
   }
 
   if (activationState?.success === false) {
@@ -717,7 +726,7 @@ export default async function PublicCardPage({
           {showPdf && pdfUrl && (
             <a
               className={"public-link " + (isSmoothie ? "smoothie-link-card" : "")}
-              href={"/" + cardCode + "/menu"}
+              href={"/" + routeCode + "/menu"}
               style={{
                 textDecoration: "none",
                 textAlign: "center",
