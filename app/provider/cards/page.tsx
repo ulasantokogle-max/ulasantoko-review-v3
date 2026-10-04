@@ -8,6 +8,7 @@ import { useLanguage } from "../../../lib/i18n";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 import DownloadCardQr from "../../components/DownloadCardQr";
 import WriteCardNfc from "../../components/WriteCardNfc";
+import GoogleQuotaPanel from "../../components/GoogleQuotaPanel";
 
 type ProviderCard = {
   id: string;
@@ -368,6 +369,7 @@ function ProviderCardsPageContent() {
             </div>
           )}
         </header>
+        {providerAllowed && <GoogleQuotaPanel />}
 
         {!userEmail ? (
           <section

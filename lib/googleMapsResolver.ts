@@ -100,7 +100,7 @@ function getMapsData(url: string) {
   }
 }
 
-export async function resolveGoogleMapsUrl(mapsUrl: string) {
+export async function resolveGoogleMapsUrl(mapsUrl: string, beforePlacesRequest?: () => Promise<void>) {
   const validatedMapsUrl = parseAndValidateMapsUrl(mapsUrl);
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -130,6 +130,8 @@ export async function resolveGoogleMapsUrl(mapsUrl: string) {
     };
   }
 
+  // Reserve before dispatch; failures/timeouts keep the slot to avoid undercounting.
+  if (beforePlacesRequest) await beforePlacesRequest();
   const googleResponse = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
     {

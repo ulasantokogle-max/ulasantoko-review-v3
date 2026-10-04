@@ -1,5 +1,6 @@
 // System interface text only; customer-authored content is never translated.
 export const englishText: Record<string, string> = {
+  "Pengaturan Google Maps sementara belum tersedia. Silakan coba lagi nanti.": "Google Maps setup is temporarily unavailable. Please try again later.",
   "Dashboard": "Dashboard", "Ringkasan Dashboard": "Dashboard Overview",
   "Ringkasan bisnis, status pengaturan, masukan, dan kartu dalam satu halaman.": "Business summary, setup status, feedback, and cards in one place.",
   "Setup Bisnis": "Business Setup", "Akses Cepat": "Quick Access", "Akun:": "Account:", "Akun": "Account",

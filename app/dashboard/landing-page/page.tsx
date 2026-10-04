@@ -381,6 +381,8 @@ export default function LandingPageBuilderPage() {
             setError("Sesi sudah berakhir. Silakan masuk kembali.");
           } else if (response.status === 429) {
             setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
+          } else if (googleData?.code === "GOOGLE_TEMPORARILY_UNAVAILABLE") {
+            setError("Pengaturan Google Maps sementara belum tersedia. Silakan coba lagi nanti.");
           } else if (googleData?.step === "resolve") {
             setError("Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.");
           } else {

@@ -2,6 +2,7 @@ import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
+import { reserveGoogleRequest, GOOGLE_TEMPORARY_MESSAGE } from "../../../../lib/googleQuota";
 
 export async function GET() {
   return NextResponse.json({
@@ -75,15 +76,16 @@ export async function POST(request: Request) {
     }
 
     try {
-      const data = await resolveGoogleMapsUrl(mapsUrl);
+      const data = await resolveGoogleMapsUrl(mapsUrl, () => reserveGoogleRequest(scopedClient));
       return NextResponse.json({ success: true, ...data });
     } catch (error) {
-      const typed = error as Error & { status?: number; details?: unknown };
+      const typed = error as Error & { status?: number; code?: string; details?: unknown };
 
       return NextResponse.json(
         {
           success: false,
-          message: "Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.",
+          code: typed.code,
+          message: typed.code === "GOOGLE_TEMPORARILY_UNAVAILABLE" ? GOOGLE_TEMPORARY_MESSAGE : "Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.",
         },
         { status: typed.status ?? 400 }
       );

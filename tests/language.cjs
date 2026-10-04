@@ -7,7 +7,7 @@ const React = require(cwd + '/node_modules/react');
 const { act, create } = require(cwd + '/node_modules/react-test-renderer');
 global.IS_REACT_ACT_ENVIRONMENT = true;
 const storage = new Map();
-global.window = { localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v) }, setTimeout, clearTimeout };
+global.window = { localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v) }, setTimeout, clearTimeout, setInterval, clearInterval };
 global.document = { documentElement: { lang: 'id' }, cookie: '' };
 const user = { email: 'test@example.com' };
 const business = { business_id: 'b1', business_name: 'Nama Bisnis Tetap', display_name: 'Nama Bisnis Tetap' };
