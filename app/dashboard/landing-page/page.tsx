@@ -80,7 +80,7 @@ export default function LandingPageBuilderPage() {
   const [displayName, setDisplayName] = useState("");
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
-    useBusinessContext(userEmail);
+    useBusinessContext(userEmail, true);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {

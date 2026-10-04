@@ -208,7 +208,13 @@ export default function ActivateCardPage() {
       return;
     }
 
-    router.push("/dashboard/onboarding");
+    const activatedBusinessId = data.business_id || (businessMode === "existing" ? selectedBusinessId : null);
+    router.replace(
+      "/dashboard/landing-page" +
+      (typeof activatedBusinessId === "string" && activatedBusinessId
+        ? "?business_id=" + encodeURIComponent(activatedBusinessId)
+        : "")
+    );
   }
 
   const inputStyle = {

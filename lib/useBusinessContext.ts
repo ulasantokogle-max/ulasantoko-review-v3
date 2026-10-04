@@ -11,7 +11,7 @@ export type BusinessContextItem = {
   organization_id: string;
 };
 
-export function useBusinessContext(userEmail: string | null) {
+export function useBusinessContext(userEmail: string | null, preferBusinessFromUrl = false) {
   const [businesses, setBusinesses] = useState<BusinessContextItem[]>([]);
   const [businessId, setBusinessId] = useState<string | null>(null);
   const [businessLoading, setBusinessLoading] = useState(false);
@@ -26,7 +26,7 @@ export function useBusinessContext(userEmail: string | null) {
     }
 
     loadBusinesses();
-  }, [userEmail]);
+  }, [userEmail, preferBusinessFromUrl]);
 
   async function loadBusinesses() {
     setBusinessLoading(true);
@@ -44,8 +44,15 @@ export function useBusinessContext(userEmail: string | null) {
     }
 
     const rows = (data ?? []) as BusinessContextItem[];
+    const requestedId = preferBusinessFromUrl && typeof window !== "undefined" && window.location?.href
+      ? new URL(window.location.href).searchParams.get("business_id")
+      : null;
     setBusinesses(rows);
     setBusinessId((current) => {
+      // URL selection only applies to businesses returned for the signed-in user.
+      if (requestedId && rows.some((item) => item.business_id === requestedId)) {
+        return requestedId;
+      }
       if (current && rows.some((item) => item.business_id === current)) {
         return current;
       }
