@@ -3,10 +3,11 @@
 import "../../components/public-landing.css";
 import BusinessTitle from "../../components/BusinessTitle";
 import type { CSSProperties } from "react";
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
 import { useLanguage } from "../../../lib/i18n";
+import { landingDraftKey, readLandingDraft, writeLandingDraft, clearLandingDraft } from "../../../lib/landingDraft";
 
 const themes = {
   warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
@@ -38,6 +39,19 @@ type Settings = {
   show_instagram: boolean;
   show_pdf: boolean;
 };
+
+type EditorDraft = { settings: Settings; displayName: string; whatsapp: string; mapsUrl: string };
+function validDraft(value: unknown): value is EditorDraft {
+  if (!value || typeof value !== "object") return false;
+  const draft = value as EditorDraft;
+  if (![draft.displayName, draft.whatsapp, draft.mapsUrl].every(field => typeof field === "string" && field.length <= 10000)) return false;
+  if (!draft.settings || !Object.hasOwn(themes, draft.settings.theme_key)) return false;
+  const strings = ["hero_title", "hero_description", "about_text", "promo_text", "logo_url", "cover_url", "instagram_url", "pdf_title", "pdf_url"] as const;
+  const toggles = ["show_google_review", "show_whatsapp", "show_about", "show_promo", "show_instagram", "show_pdf"] as const;
+  return strings.every(key => typeof draft.settings[key] === "string" && draft.settings[key].length <= 10000)
+    && toggles.every(key => typeof draft.settings[key] === "boolean")
+    && ["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right"].includes(draft.settings.cover_position);
+}
 
 export default function LandingPageBuilderPage() {
   const { tr } = useLanguage();
@@ -81,6 +95,13 @@ export default function LandingPageBuilderPage() {
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
     useBusinessContext(userEmail, true);
+  const draftKey = userEmail && businessId ? landingDraftKey(userEmail, businessId) : "";
+  const activeDraftKey = useRef(draftKey);
+  const loadSequence = useRef(0);
+  activeDraftKey.current = draftKey;
+  const [loadedDraftKey, setLoadedDraftKey] = useState("");
+  const [baseline, setBaseline] = useState("");
+  const [draftNotice, setDraftNotice] = useState<"" | "restored" | "saved" | "unavailable">("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -95,8 +116,23 @@ export default function LandingPageBuilderPage() {
   }, []);
 
   useEffect(() => {
-    if (businessId) loadSettings();
-  }, [businessId]);
+    const sequence = ++loadSequence.current;
+    setLoadedDraftKey("");
+    setDraftNotice("");
+    if (businessId && draftKey) loadSettings(draftKey, sequence);
+    return () => { if (loadSequence.current === sequence) loadSequence.current++; };
+  }, [businessId, draftKey]);
+
+  useEffect(() => {
+    if (!draftKey || loadedDraftKey !== draftKey) return;
+    const value = { settings, displayName, whatsapp, mapsUrl };
+    if (JSON.stringify(value) === baseline) {
+      clearLandingDraft(draftKey);
+      setDraftNotice("");
+    } else {
+      setDraftNotice(writeLandingDraft(draftKey, value) ? "saved" : "unavailable");
+    }
+  }, [settings, displayName, whatsapp, mapsUrl, draftKey, loadedDraftKey, baseline]);
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
@@ -120,10 +156,12 @@ export default function LandingPageBuilderPage() {
     setPassword("");
   }
 
-  async function loadSettings() {
+  async function loadSettings(key: string, sequence: number) {
     setLoading(true);
     setLoadingWhatsapp(true);
     setError("");
+
+    try {
 
     const [
       { data, error },
@@ -134,6 +172,8 @@ export default function LandingPageBuilderPage() {
       supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId }),
       supabase.rpc("v3_get_business_profile", { p_business_id: businessId })
     ]);
+
+    if (activeDraftKey.current !== key || loadSequence.current !== sequence) return;
 
     setLoading(false);
     setLoadingWhatsapp(false);
@@ -162,9 +202,7 @@ export default function LandingPageBuilderPage() {
       return;
     }
 
-    setDisplayName(profileData?.display_name ?? profileData?.internal_name ?? "");
-    setWhatsapp(contactData?.whatsapp_number ?? "");
-    setSettings({
+    const serverSettings: Settings = {
       theme_key: (data?.theme_key ?? "warm_brown") as ThemeKey,
       hero_title: data?.hero_title ?? "",
       hero_description: data?.hero_description ?? "",
@@ -182,7 +220,29 @@ export default function LandingPageBuilderPage() {
       show_promo: data?.show_promo ?? true,
       show_instagram: data?.show_instagram ?? true,
       show_pdf: data?.show_pdf ?? true
-    });
+    };
+    const serverDraft: EditorDraft = {
+      settings: serverSettings,
+      displayName: profileData?.display_name ?? profileData?.internal_name ?? "",
+      whatsapp: contactData?.whatsapp_number ?? "",
+      mapsUrl: "",
+    };
+    const restored = readLandingDraft(key, validDraft);
+    const value = restored ?? serverDraft;
+    setBaseline(JSON.stringify(serverDraft));
+    setSettings(value.settings);
+    setDisplayName(value.displayName);
+    setWhatsapp(value.whatsapp);
+    setMapsUrl(value.mapsUrl);
+    setLoadedDraftKey(key);
+    if (restored) setDraftNotice("restored");
+    } catch {
+      if (activeDraftKey.current === key && loadSequence.current === sequence) {
+        setLoading(false);
+        setLoadingWhatsapp(false);
+        setError("Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi.");
+      }
+    }
   }
 
   async function uploadMedia(file: File, kind: "logo" | "cover") {
@@ -305,6 +365,8 @@ export default function LandingPageBuilderPage() {
 
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
+    if (saving || !businessId || loadedDraftKey !== draftKey) return;
+    let savedMapsUrl = mapsUrl;
     setSaving(true);
     setError("");
     setMessage("");
@@ -391,7 +453,8 @@ export default function LandingPageBuilderPage() {
           return;
         }
 
-        setMapsUrl(googleData?.maps_url ?? mapsUrl.trim());
+        savedMapsUrl = googleData?.maps_url ?? mapsUrl.trim();
+        setMapsUrl(savedMapsUrl);
       } catch (googleError) {
         console.error("Google Review request failed", googleError);
         setLoadingGoogleReview(false);
@@ -460,6 +523,7 @@ export default function LandingPageBuilderPage() {
       return;
     }
     setMessage("Landing page berhasil disimpan.");
+    setBaseline(JSON.stringify({ settings, displayName: nameData?.display_name ?? displayName.trim(), whatsapp: contactData?.whatsapp_number ?? whatsapp, mapsUrl: savedMapsUrl }));
   }
 
   const theme = themes[settings.theme_key] ?? themes.warm_brown;
@@ -552,7 +616,7 @@ export default function LandingPageBuilderPage() {
         </div>
 
         {businesses.length > 1 && (
-          <select value={businessId ?? ""} onChange={(e) => setBusinessId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
+          <select value={businessId ?? ""} disabled={saving || uploadingLogo || uploadingCover || uploadingPdf} onChange={(e) => setBusinessId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
             {businesses.map((business) => (
               <option key={business.business_id} value={business.business_id}>
                 {business.display_name || business.business_name}
@@ -567,8 +631,15 @@ export default function LandingPageBuilderPage() {
           </div>
         )}
 
+        {draftNotice && <p role="status" style={{ color: draftNotice === "unavailable" ? "#9a3412" : "#166534", fontSize: 14 }}>
+          {draftNotice === "unavailable"
+            ? tr("Browser tidak dapat menyimpan draft. Simpan perubahan sebelum menutup halaman.", "Your browser cannot store drafts. Save your changes before closing this page.")
+            : tr("Draft tersimpan otomatis di tab ini dan dipulihkan setelah refresh. Klik Simpan Perubahan untuk menerapkannya ke halaman publik.", "Your draft is saved automatically in this tab and restored after refresh. Click Save Changes to apply it to your public page.")}
+        </p>}
+
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 18, alignItems: "start" }}>
           <form onSubmit={saveSettings} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 20, display: "grid", gap: 18 }}>
+            <fieldset disabled={loading || saving || loadedDraftKey !== draftKey} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
             <section>
               <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Pilih Tema")}</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
@@ -824,6 +895,7 @@ export default function LandingPageBuilderPage() {
                   : tr("Menyimpan...")
                 : tr("Simpan Perubahan", "Save Changes")}
             </button>
+            </fieldset>
           </form>
 
           <aside className="modern-landing landing-preview" data-theme={settings.theme_key} style={{ ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties), position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>

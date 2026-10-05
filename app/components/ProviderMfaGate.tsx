@@ -1,9 +1,18 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { supabase } from "../../lib/supabase";
 import { useLanguage } from "../../lib/i18n";
 import LanguageSwitcher from "./LanguageSwitcher";
+
+function sessionStamp(session: { user: { id?: string; email?: string }; access_token?: string } | null) {
+  if (!session?.access_token) return null;
+  try {
+    const payload = JSON.parse(atob(session.access_token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
+    const identity = session.user.id || session.user.email;
+    return identity && (payload.aal === "aal1" || payload.aal === "aal2") ? `${identity}:${payload.aal}` : null;
+  } catch { return null; }
+}
 
 export default function ProviderMfaGate({ children, allowCustomers = false }: { children: ReactNode; allowCustomers?: boolean }) {
   const { tr } = useLanguage();
@@ -16,10 +25,17 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const authorizedSession = useRef<string | null>(null);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
-      setState("checking");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      // Supabase emits SIGNED_IN again on tab focus, and refreshes tokens routinely.
+      // Keep the editor mounted only for the same previously authorized identity/AAL.
+      const stamp = sessionStamp(session);
+      if (!(stamp && stamp === authorizedSession.current && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED" || event === "USER_UPDATED"))) {
+        authorizedSession.current = null;
+        setState("checking");
+      }
       setQr(""); setSecret(""); setCode("");
       setRevision(value => value + 1);
     });
@@ -37,11 +53,12 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
         const member = await supabase.rpc("v3_is_provider_member");
         if (member.error) throw member.error;
         if (!active) return;
-        if (member.data !== true) { setState(allowCustomers ? "ready" : "denied"); return; }
+        if (member.data !== true) { authorizedSession.current = allowCustomers ? sessionStamp(session.data.session) : null; setState(allowCustomers ? "ready" : "denied"); return; }
         const level = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
         if (level.error) throw level.error;
         if (!active) return;
-        if (level.data.currentLevel === "aal2") { setState("ready"); return; }
+        if (level.data.currentLevel === "aal2") { authorizedSession.current = sessionStamp(session.data.session); setState("ready"); return; }
+        authorizedSession.current = null;
         const listed = await supabase.auth.mfa.listFactors();
         if (listed.error) throw listed.error;
         if (!active) return;
@@ -50,7 +67,7 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
         setFactorId(verified[0]?.id ?? "");
         setState("mfa");
       } catch {
-        if (active) setState("error");
+        if (active) { authorizedSession.current = null; setState("error"); }
       }
     }
     check();
