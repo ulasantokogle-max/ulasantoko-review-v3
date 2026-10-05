@@ -30,6 +30,7 @@ export default function ActivateCardPage() {
   const [authMessage, setAuthMessage] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
+  const [switchingAccount, setSwitchingAccount] = useState(false);
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [businessMode, setBusinessMode] = useState<"existing" | "new">("new");
   const [selectedBusinessId, setSelectedBusinessId] = useState("");
@@ -56,7 +57,22 @@ export default function ActivateCardPage() {
   }, [cardCode]);
 
   useEffect(() => {
-    if (userEmail) loadBusinesses();
+    let cancelled = false;
+    setBusinesses([]);
+    setSelectedBusinessId("");
+    setBusinessMode("new");
+    if (userEmail) {
+      supabase.rpc("v3_get_my_businesses").then(({ data }) => {
+        if (cancelled) return;
+        const rows = (data ?? []) as Business[];
+        setBusinesses(rows);
+        if (rows.length > 0) {
+          setBusinessMode("existing");
+          setSelectedBusinessId(rows[0].business_id);
+        }
+      });
+    }
+    return () => { cancelled = true; };
   }, [userEmail]);
 
   async function checkCard() {
@@ -76,19 +92,6 @@ export default function ActivateCardPage() {
 
     if (!data?.needs_activation) {
       setNeedsActivation(false);
-    }
-  }
-
-  async function loadBusinesses() {
-    const { data } = await supabase.rpc("v3_get_my_businesses");
-    const rows = (data ?? []) as Business[];
-    setBusinesses(rows);
-
-    if (rows.length > 0) {
-      setBusinessMode("existing");
-      setSelectedBusinessId(rows[0].business_id);
-    } else {
-      setBusinessMode("new");
     }
   }
 
@@ -145,6 +148,33 @@ export default function ActivateCardPage() {
     setAuthMessage(tr("Akun berhasil dibuat dan Anda sudah masuk.", "Account created and you are signed in."));
   }
 
+  async function registerDashboardAccount() {
+    if (switchingAccount || activating) return;
+    setSwitchingAccount(true);
+    setAuthError("");
+    if (userEmail) {
+      const { error } = await supabase.auth.signOut({ scope: "local" });
+      if (error) {
+        setAuthError(tr("Belum dapat mengganti akun. Silakan coba lagi.", "Unable to switch accounts. Please try again."));
+        setSwitchingAccount(false);
+        return;
+      }
+    }
+    setUserEmail(null);
+    setBusinesses([]);
+    setSelectedBusinessId("");
+    setBusinessMode("new");
+    setBusinessName("");
+    setCategory("restaurant");
+    setPin("");
+    setActivationError("");
+    setEmail("");
+    setPassword("");
+    setAuthMessage("");
+    setMode("signup");
+    setSwitchingAccount(false);
+  }
+
   async function resendConfirmation() {
     if (!email || resendLoading) return;
 
@@ -180,6 +210,7 @@ export default function ActivateCardPage() {
 
   async function activateCard(event: FormEvent) {
     event.preventDefault();
+    if (activating || switchingAccount) return;
     setActivationError("");
     setActivating(true);
 
@@ -275,6 +306,9 @@ export default function ActivateCardPage() {
           <a href={`/${cardCode}`} style={{ ...buttonStyle, display: "block", textDecoration: "none", boxSizing: "border-box" }}>
             {tr("Buka Halaman Publik")}
           </a>
+          <a href="/dashboard" style={{ display: "block", marginTop: 16, color: "#111827", fontWeight: 800 }}>
+            {tr("Kelola Dashboard", "Manage Dashboard")}
+          </a>
         </section>
       </main>
     );
@@ -313,6 +347,29 @@ export default function ActivateCardPage() {
           {tr("Kartu", "Card")} <strong>{cardCode}</strong> {tr("belum diaktifkan. Aktivasi sekali, lalu QR dan NFC ini akan otomatis menjadi halaman publik bisnis Anda.", "has not been activated yet. Activate it once and this QR/NFC will automatically become your business public page.")}
         </p>
 
+        <aside style={{ padding: 16, borderRadius: 16, background: "#f5f3ff", border: "1px solid #ede9fe", marginTop: 20 }}>
+          <h2 style={{ fontSize: 17, margin: "0 0 8px" }}>{tr("Akun Dashboard", "Dashboard Account")}</h2>
+          <p style={{ fontSize: 14, lineHeight: 1.6, color: "#6b7280", margin: "0 0 12px" }}>
+            {userEmail
+              ? tr("Kelola bisnis dengan akun yang sedang masuk. Untuk mendaftarkan email lain, Anda akan keluar dari akun ini terlebih dahulu.", "Manage your business with the signed-in account. Registering another email will sign you out of this account first.")
+              : tr("Daftar akun untuk mengaktifkan kartu dan mengelola halaman bisnis, kartu, serta feedback pelanggan dari satu dashboard.", "Create an account to activate your card and manage your business page, cards, and customer feedback from one dashboard.")}
+          </p>
+          <div style={{ display: "grid", gap: 10 }}>
+            {userEmail && (
+              <a href="/dashboard" style={{ ...buttonStyle, display: "block", textAlign: "center", textDecoration: "none", boxSizing: "border-box" }}>
+                {tr("Kelola Dashboard", "Manage Dashboard")}
+              </a>
+            )}
+            <button type="button" onClick={registerDashboardAccount} disabled={switchingAccount || activating || authLoading || resendLoading}
+              style={{ ...buttonStyle, background: "#fff", color: "#111827", border: "1px solid #d1d5db" }}>
+              {switchingAccount ? tr("Memproses...") : userEmail
+                ? tr("Daftar dengan Email Lain", "Register with Another Email")
+                : tr("Daftar Akun Dashboard", "Register Dashboard Account")}
+            </button>
+          </div>
+          {userEmail && authError && <p role="alert" style={{ color: "#b91c1c", fontSize: 14 }}>{tr(authError)}</p>}
+        </aside>
+
         {!userEmail ? (
           <>
             <div style={{ display: "flex", gap: 8, margin: "20px 0 14px" }}>
@@ -346,6 +403,7 @@ export default function ActivateCardPage() {
               <input
                 style={inputStyle}
                 type="email"
+                autoComplete="email"
                 placeholder="Email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -354,6 +412,7 @@ export default function ActivateCardPage() {
               <input
                 style={inputStyle}
                 type="password"
+                autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 placeholder={tr("Password minimal 6 karakter")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -481,7 +540,7 @@ export default function ActivateCardPage() {
               required
             />
 
-            <button style={buttonStyle} type="submit" disabled={activating}>
+            <button style={buttonStyle} type="submit" disabled={activating || switchingAccount}>
               {activating ? tr("Mengaktifkan...") : tr("Aktifkan Kartu")}
             </button>
 
