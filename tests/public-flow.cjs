@@ -16,6 +16,7 @@ let language = 'en';
 let activation = { success: true, needs_activation: false };
 let card = { business: { name: 'Nama Bisnis Asli' }, card: { card_code: 'TEST001' }, blocks: [] };
 let pageCalls = [];
+let pageSettings = { success: true, theme_key: 'soft_smoothie', pdf_url: 'https://example.com/menu.pdf', pdf_title: 'Dokumen Bisnis Asli' };
 const originalLoad = Module._load;
 Module._load = function (id, parent, main) {
   if (id === '@supabase/supabase-js') return { createClient: () => ({ rpc: async (name, args) => {
@@ -25,7 +26,7 @@ Module._load = function (id, parent, main) {
     if (name === 'v3_get_card_activation_state') return { data: activation };
     if (name === 'v3_get_public_card') return { data: card, error: null };
     if (name === 'v3_get_public_business_name') return { data: { display_name: 'Nama Bisnis Asli' } };
-    if (name === 'v3_get_public_landing_page') return { data: { success: true, theme_key: 'soft_smoothie', pdf_url: 'https://example.com/menu.pdf', pdf_title: 'Dokumen Bisnis Asli' } };
+    if (name === 'v3_get_public_landing_page') return { data: pageSettings };
     return { data: null, error: null };
   } }) };
   if (id === 'next/headers') return { cookies: async () => ({ get: () => ({ value: language }) }) };
@@ -78,6 +79,20 @@ const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli'
     assert(html.includes('Nama Bisnis Asli'));
     assert(html.includes(language === 'en' ? 'Leave us a Google review' : 'Beri kami ulasan Google'));
   }
+  const originalSettings = pageSettings;
+  for (const theme of ['warm_brown', 'soft_smoothie', 'soft_tosca', 'elegant_cream', 'minimal_dark']) {
+    pageSettings = { ...originalSettings, theme_key: theme, hero_title: 'Judul dari form', hero_description: 'Deskripsi dari form', promo_text: 'Promo dari form', about_text: 'Tentang dari form', cover_position: 'bottom-right', instagram_url: 'https://instagram.com/business' };
+    let html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLanguage: language }, await PublicPage({ params: Promise.resolve({ cardCode: 'a7c93e10b842' }) })));
+    for (const content of ['Judul dari form', 'Deskripsi dari form', 'Promo dari form', 'Tentang dari form']) assert(html.includes(content));
+    assert(html.includes('data-theme="' + theme + '"'));
+    assert(html.includes('background-position:right bottom'));
+    pageSettings = { ...pageSettings, show_google_review: false, show_whatsapp: false, show_instagram: false, show_pdf: false, show_about: false, show_promo: false };
+    html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLanguage: language }, await PublicPage({ params: Promise.resolve({ cardCode: 'a7c93e10b842' }) })));
+    assert(!html.includes('class="public-rating'));
+    assert(!html.includes('class="public-links'));
+    assert(!html.includes('Promo dari form')); assert(!html.includes('Tentang dari form'));
+  }
+  pageSettings = originalSettings;
   pageCalls = [];
   const shortPage = await PublicPage({ params: Promise.resolve({ cardCode: 'a7c93e10b842' }) });
   assert(renderToStaticMarkup(React.createElement(LanguageProvider, { initialLanguage: language }, shortPage)).includes('Nama Bisnis Asli'));

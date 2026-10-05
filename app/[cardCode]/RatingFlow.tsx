@@ -14,6 +14,7 @@ type Props = {
   textColor?: string;
   mutedColor?: string;
   smoothMode?: boolean;
+  previewOnly?: boolean;
 };
 
 function GoogleMark() {
@@ -50,6 +51,7 @@ export default function RatingFlow({
   textColor = "#4B3428",
   mutedColor = "#7A6659",
   smoothMode = false,
+  previewOnly = false,
 }: Props) {
   const { tr } = useLanguage();
   const [rating, setRating] = useState<number | null>(null);
@@ -62,6 +64,7 @@ export default function RatingFlow({
   const [error, setError] = useState("");
 
   function chooseRating(value: number) {
+    if (previewOnly) return;
     setRating(value);
     setError("");
 
@@ -94,6 +97,7 @@ export default function RatingFlow({
 
   async function submitFeedback(event: FormEvent) {
     event.preventDefault();
+    if (previewOnly) return;
 
     if (!rating || rating > 3) return;
 
@@ -244,6 +248,7 @@ export default function RatingFlow({
             key={value}
             type="button"
             aria-label={`${value} ${tr("bintang", "stars")}`}
+            disabled={previewOnly}
             onClick={() => chooseRating(value)}
             style={{
               border: smoothMode ? "1px solid rgba(255,255,255,.8)" : 0,

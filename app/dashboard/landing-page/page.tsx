@@ -1,7 +1,9 @@
 "use client";
 
 import "../../components/public-landing.css";
-import BusinessTitle from "../../components/BusinessTitle";
+import LandingCardContent from "../../components/LandingCardContent";
+import RatingFlow from "../../[cardCode]/RatingFlow";
+import { landingThemes as themes } from "../../../lib/landingThemes";
 import type { CSSProperties } from "react";
 import { FormEvent, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -9,13 +11,6 @@ import { useBusinessContext } from "../../../lib/useBusinessContext";
 import { useLanguage } from "../../../lib/i18n";
 import { landingDraftKey, readLandingDraft, writeLandingDraft, clearLandingDraft } from "../../../lib/landingDraft";
 
-const themes = {
-  warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
-  soft_smoothie: { label: "Soft Smoothie", bg: "#FBF5EC", card: "#FFFDFC", primary: "#9B6A43", secondary: "#D7B08A", soft: "#F4E7D7", text: "#4A3023", muted: "#8A7567" },
-  soft_tosca: { label: "Soft Tosca", bg: "#F0FBF9", card: "#FFFFFF", primary: "#2A9D8F", secondary: "#67C9BD", soft: "#DDF4F0", text: "#173E39", muted: "#5F7C78" },
-  elegant_cream: { label: "Elegant Cream", bg: "#FBF7EF", card: "#FFFDF8", primary: "#9A7B4F", secondary: "#C9B184", soft: "#EFE5D2", text: "#4D4337", muted: "#7D7366" },
-  minimal_dark: { label: "Minimal Dark", bg: "#161616", card: "#202020", primary: "#E6C59A", secondary: "#BFA17B", soft: "#2B2B2B", text: "#FAF7F2", muted: "#C9C1B8" }
-} as const;
 
 type ThemeKey = keyof typeof themes;
 type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_pdf";
@@ -91,6 +86,7 @@ export default function LandingPageBuilderPage() {
   const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
   const [mapsUrl, setMapsUrl] = useState("");
   const [loadingGoogleReview, setLoadingGoogleReview] = useState(false);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
   const [displayName, setDisplayName] = useState("");
 
   const { businesses, businessId, setBusinessId, businessLoading, businessError } =
@@ -166,11 +162,13 @@ export default function LandingPageBuilderPage() {
     const [
       { data, error },
       { data: contactData, error: contactError },
-      { data: profileData, error: profileError }
+      { data: profileData, error: profileError },
+      { data: setupData }
     ] = await Promise.all([
       supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId }),
       supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId }),
-      supabase.rpc("v3_get_business_profile", { p_business_id: businessId })
+      supabase.rpc("v3_get_business_profile", { p_business_id: businessId }),
+      supabase.rpc("v3_get_business_setup_status", { p_business_id: businessId })
     ]);
 
     if (activeDraftKey.current !== key || loadSequence.current !== sequence) return;
@@ -234,6 +232,7 @@ export default function LandingPageBuilderPage() {
     setDisplayName(value.displayName);
     setWhatsapp(value.whatsapp);
     setMapsUrl(value.mapsUrl);
+    setGoogleConfigured(setupData?.google_review_configured === true);
     setLoadedDraftKey(key);
     if (restored) setDraftNotice("restored");
     } catch {
@@ -455,6 +454,7 @@ export default function LandingPageBuilderPage() {
 
         savedMapsUrl = googleData?.maps_url ?? mapsUrl.trim();
         setMapsUrl(savedMapsUrl);
+        setGoogleConfigured(true);
       } catch (googleError) {
         console.error("Google Review request failed", googleError);
         setLoadingGoogleReview(false);
@@ -898,75 +898,29 @@ export default function LandingPageBuilderPage() {
             </fieldset>
           </form>
 
-          <aside className="modern-landing landing-preview" data-theme={settings.theme_key} style={{ ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties), position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
+          <aside className="modern-landing landing-preview" data-theme={settings.theme_key} style={{ ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-secondary": theme.secondary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties), position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid " + theme.soft, boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
             <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>{tr("LIVE PREVIEW")}</div>
-            <div className="public-shell" style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
-              <div
-                className="public-hero"
-                style={{
-                  aspectRatio: "16 / 7",
-                  minHeight: 120,
-                  maxHeight: isSmoothie ? 230 : 230,
-                  borderRadius: isSmoothie ? 24 : 24,
-                  backgroundImage: settings.cover_url
-                    ? "url(" + settings.cover_url + ")"
-                    : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
-                  backgroundSize: "cover",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition:
-                    settings.cover_position === "top-left" ? "left top" :
-                    settings.cover_position === "top-right" ? "right top" :
-                    settings.cover_position === "bottom-left" ? "left bottom" :
-                    settings.cover_position === "bottom-right" ? "right bottom" :
-                    settings.cover_position
-                }}
+            <section className="public-shell" style={{ overflow: "hidden", color: theme.text }}>
+              <LandingCardContent
+                preview theme={theme} themeKey={settings.theme_key} businessName={businessName}
+                title={settings.hero_title || businessName}
+                description={settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}
+                category={selectedBusiness?.category} logoUrl={settings.logo_url} coverUrl={settings.cover_url} coverPosition={settings.cover_position}
+                promoText={settings.promo_text} aboutText={settings.about_text}
+                reviewUrl={mapsUrl.trim() || googleConfigured ? "#review-preview" : null}
+                whatsappUrl={whatsapp.trim() ? "#whatsapp-preview" : null} instagramUrl={settings.instagram_url} pdfUrl={settings.pdf_url} pdfTitle={settings.pdf_title || tr("Informasi", "Information")}
+                showGoogleReview={settings.show_google_review} showWhatsapp={settings.show_whatsapp} showInstagram={settings.show_instagram}
+                showPdf={settings.show_pdf} showAbout={settings.show_about} showPromo={settings.show_promo}
+                labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us") }}
+                rating={<RatingFlow previewOnly cardCode="preview" businessName={businessName}
+                  reviewUrl={mapsUrl.trim() || googleConfigured ? "#review-preview" : null}
+                  primaryColor={theme.primary} softColor={theme.soft} textColor={theme.text} mutedColor={theme.muted}
+                  smoothMode={isSmoothie} />}
               />
-              <div className="public-content" style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
-                {settings.logo_url ? (
-                  <img className="preview-logo" src={settings.logo_url} alt="" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, objectFit: "cover", borderRadius: isSmoothie ? 24 : 20, marginTop: isSmoothie ? -52 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
-                ) : (
-                  <div className="preview-logo" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, borderRadius: isSmoothie ? 24 : 20, margin: isSmoothie ? "-52px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
-                    {businessName.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-
-                <BusinessTitle style={{ margin: "20px 0 10px", fontSize: 32, fontWeight: 800 }}>{settings.hero_title || businessName}</BusinessTitle>
-                <p className="public-description" style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}</p>
-
-                {settings.show_promo && settings.promo_text && (
-                  <div className="public-promo" style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
-                )}
-
-                {isSmoothie && settings.show_google_review && (
-                  <div className="public-rating" style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
-                    <div style={{ fontWeight: 900, marginBottom: 4 }}>{tr("Beri kami ulasan Google")}</div>
-                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>{tr("Hanya 10 detik, sangat berarti bagi kami")}</div>
-                    <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
-                      {[1,2,3,4,5].map((n) => <span key={n} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,.78)", display: "grid", placeItems: "center", color: "#e5a323" }}>☆</span>)}
-                    </div>
-                  </div>
-                )}
-
-                <div className="public-links" style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
-                  {!isSmoothie && settings.show_google_review && <div className="public-link" style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>{tr("★ Beri Ulasan")}</div>}
-                  {settings.show_pdf && settings.pdf_url && <div className="public-link" style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || tr("Informasi", "Information")} {isSmoothie ? "›" : ""}</div>}
-                  {settings.show_whatsapp && <div className="public-link" style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
-                    <div>◉ WhatsApp</div>
-                    <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
-                      {whatsapp || "62 812-XXXX-XXXX"}
-                    </div>
-                  </div>}
-                  {settings.show_instagram && settings.instagram_url && <div className="public-link" style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
-                </div>
-
-                {settings.show_about && settings.about_text && (
-                  <div className="public-about" style={{ marginTop: 18 }}>
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>{tr("Tentang Kami")}</div>
-                    <div style={{ color: theme.muted, lineHeight: 1.55, fontSize: 14 }}>{settings.about_text}</div>
-                  </div>
-                )}
+              <div className="public-footer" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <span>{tr("Preview")}</span><span>Powered by ReputasiPro</span>
               </div>
-            </div>
+            </section>
           </aside>
         </div>
       </div>

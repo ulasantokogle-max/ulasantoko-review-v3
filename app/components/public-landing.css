@@ -11,6 +11,7 @@ main.modern-landing {
   padding: 12px !important; box-sizing: border-box;
 }
 .modern-landing .public-hero { border-radius: 22px !important; position: relative; }
+.modern-landing .public-category { display: inline-block; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; background: var(--landing-soft); color: var(--landing-text); }
 .modern-landing .public-profile { display: flex !important; justify-content: center !important; padding-left: 0 !important; margin-top: -46px !important; }
 .modern-landing .public-profile > img, .modern-landing .public-profile > div {
   width: 92px !important; height: 92px !important; border-radius: 26px !important;
@@ -38,11 +39,13 @@ main.modern-landing {
   transition: transform .18s ease, box-shadow .18s ease;
 }
 .modern-landing a.public-link:hover { transform: translateY(-2px); box-shadow: 0 8px 22px #0000000d !important; }
+.modern-landing .public-review-link { background: linear-gradient(135deg, var(--landing-primary), var(--landing-secondary)) !important; color: #fff !important; }
+.modern-landing[data-theme="minimal_dark"] .public-review-link { color: #202020 !important; }
+.modern-landing .public-rating button:disabled { cursor: default; opacity: 1; }
 .modern-landing a:focus-visible, .modern-landing button:focus-visible, .modern-landing input:focus-visible, .modern-landing textarea:focus-visible { outline: 3px solid var(--landing-primary); outline-offset: 3px; }
 .modern-landing .public-about { text-align: left !important; background: var(--landing-soft) !important; padding: 20px !important; border-radius: 20px !important; box-shadow: none !important; border: none !important; }
 .modern-landing .public-footer { color: var(--landing-muted) !important; padding: 18px 8px 6px; font-size: 11px !important; }
 .modern-landing .preview-logo { position: relative; display: grid; margin: -46px auto 0 !important; width: 92px !important; height: 92px !important; border-radius: 26px !important; border: 5px solid var(--landing-card) !important; box-sizing: content-box; }
-.landing-preview .public-shell { padding: 10px !important; }
 .landing-preview .public-hero { min-height: 0 !important; }
 @media (max-width: 520px) {
   main.modern-landing { padding: 12px 10px 30px !important; }
