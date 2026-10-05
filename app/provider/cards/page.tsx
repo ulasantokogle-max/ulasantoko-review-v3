@@ -9,6 +9,7 @@ import LanguageSwitcher from "../../components/LanguageSwitcher";
 import DownloadCardQr from "../../components/DownloadCardQr";
 import WriteCardNfc from "../../components/WriteCardNfc";
 import GoogleQuotaPanel from "../../components/GoogleQuotaPanel";
+import DeleteProviderCard from "../../components/DeleteProviderCard";
 
 type ProviderCard = {
   id: string;
@@ -76,6 +77,7 @@ function ProviderCardsPageContent() {
   const [resettingCardId, setResettingCardId] = useState<string | null>(null);
   const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
   const [resetPinError, setResetPinError] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -241,6 +243,13 @@ function ProviderCardsPageContent() {
 
     setResetPinResult(data as ResetPinResult);
     await loadCards();
+  }
+
+  function cardDeleted(id: string) {
+    setCards(current => current.filter(card => card.id !== id));
+    setCreated(current => current?.card_id === id ? null : current);
+    setResetPinResult(current => current?.card_id === id ? null : current);
+    setDeleteMessage(tr("Kartu berhasil dihapus dari inventori.", "Card removed from inventory."));
   }
 
   const stats = useMemo(() => {
@@ -681,6 +690,8 @@ function ProviderCardsPageContent() {
                 </div>
               )}
 
+              {deleteMessage && <p role="status" style={{ color: "#166534" }}>{deleteMessage}</p>}
+
               {copied && (
                 <div
                   style={{
@@ -880,6 +891,7 @@ function ProviderCardsPageContent() {
                             </a>
                           </>
                         )}
+                        <DeleteProviderCard cardId={card.id} cardCode={card.card_code} onDeleted={cardDeleted} />
                       </div>
                     </article>
                   ))}
