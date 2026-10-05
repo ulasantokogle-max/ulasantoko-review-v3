@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
 import { useLanguage } from "../../../lib/i18n";
+import { getCardPublicPath } from "../../../lib/cardPublicId";
 
 type CardRow = {
   id: string;
@@ -662,6 +663,10 @@ export default function CardsDashboardPage() {
                                 ? ` · ${card.nfc_identifier}`
                                 : ""}
                             </div>
+                            <div style={{ overflowWrap: "anywhere" }}>
+                              <strong>URL:</strong>{" "}
+                              {"https://reputasipro.ulasantoko.space" + getCardPublicPath(card.qr_url, card.card_code)}
+                            </div>
                           </div>
 
                           <div
@@ -674,7 +679,7 @@ export default function CardsDashboardPage() {
                           >
                             {card.card_code && (
                               <a
-                                href={`/${encodeURIComponent(card.card_code)}`}
+                                href={getCardPublicPath(card.qr_url, card.card_code)}
                                 target="_blank"
                                 rel="noreferrer"
                                 style={{
