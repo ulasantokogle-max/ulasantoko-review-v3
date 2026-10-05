@@ -355,10 +355,10 @@ export default async function PublicCardPage({
           instagramUrl={instagramUrl} pdfUrl={pdfUrl} pdfHref={`/${routeCode}/menu`} pdfTitle={pdfTitle}
           showGoogleReview={showGoogleReview} showWhatsapp={showWhatsapp} showInstagram={showInstagram}
           showPdf={showPdf} showAbout={showAbout} showPromo={showPromo}
-          labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us") }}
+          labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
           rating={<RatingFlow cardCode={cardCode} businessName={businessName} reviewUrl={showGoogleReview ? reviewUrl : null}
             whatsappUrl={showWhatsapp ? whatsappUrl : null} primaryColor={theme.primary} softColor={theme.soft}
-            textColor={theme.text} mutedColor={theme.muted} smoothMode={isSmoothie} />}
+            textColor={theme.text} mutedColor={theme.muted} smoothMode />}
         />
         <div style={{ padding: "0 16px 16px" }}>
         {mapsUrl && (
@@ -454,20 +454,6 @@ export default async function PublicCardPage({
 
         </div>
 
-        {isSmoothie && (
-          <div
-            style={{
-              textAlign: "center",
-              color: theme.muted,
-              fontSize: 13,
-              lineHeight: 1.6,
-              padding: "18px 14px 4px",
-            }}
-          >
-            <div style={{ marginBottom: 6, color: theme.primary, fontSize: 18 }}>⌁</div>
-            {tr("Terima kasih sudah mendukung", "Thank you for supporting")} {businessName}.
-          </div>
-        )}
 
         <div
           className="public-footer"

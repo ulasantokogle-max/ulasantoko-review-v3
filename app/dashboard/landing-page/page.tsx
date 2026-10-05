@@ -911,11 +911,11 @@ export default function LandingPageBuilderPage() {
                 whatsappUrl={whatsapp.trim() ? "#whatsapp-preview" : null} instagramUrl={settings.instagram_url} pdfUrl={settings.pdf_url} pdfTitle={settings.pdf_title || tr("Informasi", "Information")}
                 showGoogleReview={settings.show_google_review} showWhatsapp={settings.show_whatsapp} showInstagram={settings.show_instagram}
                 showPdf={settings.show_pdf} showAbout={settings.show_about} showPromo={settings.show_promo}
-                labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us") }}
+                labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
                 rating={<RatingFlow previewOnly cardCode="preview" businessName={businessName}
                   reviewUrl={mapsUrl.trim() || googleConfigured ? "#review-preview" : null}
                   primaryColor={theme.primary} softColor={theme.soft} textColor={theme.text} mutedColor={theme.muted}
-                  smoothMode={isSmoothie} />}
+                  smoothMode />}
               />
               <div className="public-footer" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                 <span>{tr("Preview")}</span><span>Powered by ReputasiPro</span>

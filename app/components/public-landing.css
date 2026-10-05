@@ -56,3 +56,12 @@ main.modern-landing {
   .modern-landing .public-rating { padding: 22px 12px !important; }
 }
 @media (prefers-reduced-motion: reduce) { .modern-landing .public-link { transition: none; } .modern-landing a.public-link:hover { transform: none; } }
+
+.modern-landing .public-link { text-decoration: none; font-weight: 800; text-align: center; }
+.modern-landing .public-pdf-wide { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 16px; position: relative; min-height: 78px; padding-left: 42px !important; padding-right: 42px !important; }
+.modern-landing .public-link-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modern-landing .public-link-arrow { position: absolute; right: 20px; font-size: 28px; line-height: 1; }
+.modern-landing .public-social-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 112px; }
+.modern-landing .public-social-link .public-link-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--landing-card); }
+.modern-landing .public-thanks { margin-top: 32px; padding: 18px 0 4px; font-size: 13px; line-height: 1.6; color: var(--landing-muted); }
+.modern-landing .public-thanks > div { margin-bottom: 6px; color: var(--landing-primary); font-size: 18px; }
