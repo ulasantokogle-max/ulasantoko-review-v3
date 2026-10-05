@@ -2,6 +2,8 @@
 
 Jalankan `supabase/migrations/0043_provider_delete_card.sql` di SQL Editor **project Supabase V3**, setelah migrasi 0039 dan 0041. Migrasi aman dijalankan ulang dan tidak menghapus kartu yang ada saat instalasi.
 
+Gunakan versi terbaru dari file ini. Versi awal mengasumsikan enum `card_operational_status` dan `card_activation_status`; versi terbaru mempertahankan tipe hasil dan hak akses RPC daftar kartu yang sudah terpasang, termasuk skema yang memakai `text`. Jika percobaan sebelumnya gagal, buka query baru dan jalankan seluruh file terbaru. Tidak perlu membuat enum tambahan atau menjalankan ulang migrasi dasar.
+
 Di `/provider/cards`, pilih **Hapus Kartu**, ketik kode kartu yang ditampilkan, lalu **Konfirmasi Hapus**. Bisa digunakan untuk kartu belum diaktivasi maupun kartu aktif. Tombol **Batal** tidak mengubah data.
 
 Penghapusan memerlukan akun provider aktif dan sesi 2FA (`aal2`), diperiksa ulang oleh RPC database. Akun pelanggan, sesi tanpa login, provider nonaktif, dan provider tanpa 2FA ditolak. Kode konfirmasi juga divalidasi oleh database. Jika RPC belum terpasang atau gagal, kartu tetap ditampilkan.

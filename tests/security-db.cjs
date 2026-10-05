@@ -188,7 +188,19 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
  await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({aal:'aal2'})]);
  console.log('PASS Google quota: global cap 140, independent of account, rollover, month filter, provider MFA and private counters');
  const deleteMigration=fs.readFileSync('supabase/migrations/0043_provider_delete_card.sql','utf8');
+ // First check the foundation enum contract, then reproduce a live text-returning
+ // contract with no enums under the original names. Installation must preserve both.
  await db.exec(deleteMigration); await db.exec(deleteMigration);
+ let textCards=fs.readFileSync('supabase/migrations/0009_card_management.sql','utf8');
+ textCards=textCards.slice(textCards.indexOf('create or replace function public.v3_get_cards('),textCards.indexOf('create or replace function public.v3_update_card('));
+ textCards=textCards.replace('status public.card_operational_status,','status text,').replace('activation_status public.card_activation_status,','activation_status text,')
+   .replace('    c.status,','    c.status::text,').replace('    c.activation_status,','    c.activation_status::text,');
+ await db.exec('drop function public.v3_get_cards(uuid);');
+ await db.exec(textCards);
+ await db.exec('alter type public.card_operational_status rename to test_operational_status; alter type public.card_activation_status rename to test_activation_status;');
+ const contractBefore=(await db.query("select pg_get_function_result(oid) as result,proacl::text as acl from pg_proc where oid='public.v3_get_cards(uuid)'::regprocedure")).rows[0];
+ await db.exec(deleteMigration); await db.exec(deleteMigration);
+ assert.deepEqual((await db.query("select pg_get_function_result(oid) as result,proacl::text as acl from pg_proc where oid='public.v3_get_cards(uuid)'::regprocedure")).rows[0],contractBefore);
  const remove='select v3_provider_delete_card($1,$2) as value';
  const removeArgs=[card,'TESTSEC'];
  await assert.rejects(as('anon',null,remove,removeArgs),/permission denied/);

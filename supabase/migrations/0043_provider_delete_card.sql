@@ -114,62 +114,29 @@ grant execute on function public.v3_provider_list_cards(integer) to authenticate
 
 
 
-create or replace function public.v3_get_cards(
-  p_business_id uuid
-)
-returns table (
-  id uuid,
-  card_code text,
-  label text,
-  area text,
-  internal_code text,
-  status public.card_operational_status,
-  activation_status public.card_activation_status,
-  qr_enabled boolean,
-  qr_url text,
-  nfc_enabled boolean,
-  nfc_identifier text,
-  created_at timestamptz,
-  activated_at timestamptz
-)
-language plpgsql
-security definer
-set search_path = public
-as $$
+-- Keep the deployed RPC return types (some live schemas use text rather than enums).
+-- Change only its card filter; never drop/recreate the function or change its contract.
+do $$
+declare
+  v_definition text;
+  v_updated text;
 begin
-  if auth.uid() is null then
-    raise exception 'AUTH_REQUIRED';
+  if to_regprocedure('public.v3_get_cards(uuid)') is null then
+    raise exception 'V3_GET_CARDS_REQUIRED';
   end if;
-
-  if not public.is_business_member(p_business_id) then
-    raise exception 'FORBIDDEN';
+  select pg_get_functiondef('public.v3_get_cards(uuid)'::regprocedure) into v_definition;
+  if v_definition ~* 'c[.]deleted_at[[:space:]]+is[[:space:]]+null' then
+    return;
   end if;
-
-  return query
-  select
-    c.id,
-    c.card_code,
-    c.label,
-    c.area,
-    c.internal_code,
-    c.status,
-    c.activation_status,
-    cp.qr_enabled,
-    cp.qr_url,
-    cp.nfc_enabled,
-    cp.nfc_identifier,
-    c.created_at,
-    c.activated_at
-  from public.cards c
-  left join public.card_provisioning cp on cp.card_id = c.id
-  where c.business_id = p_business_id and c.deleted_at is null
-  order by c.created_at desc;
+  v_updated := regexp_replace(v_definition,
+    '(where[[:space:]]+c[.]business_id[[:space:]]*=[[:space:]]*p_business_id)',
+    '\1 and c.deleted_at is null', 'i');
+  if v_updated = v_definition then
+    raise exception 'V3_GET_CARDS_FILTER_NOT_RECOGNIZED';
+  end if;
+  execute v_updated;
 end;
 $$;
-
-revoke all on function public.v3_get_cards(uuid) from public;
-grant execute on function public.v3_get_cards(uuid) to authenticated;
-
 
 -- UlasanToko Review V3
 -- Analytics Dashboard V1
