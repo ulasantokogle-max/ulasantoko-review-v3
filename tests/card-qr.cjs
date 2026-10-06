@@ -32,7 +32,7 @@ Module._load = function(id, parent, main) {
 };
 const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
 (async () => {
-  for (const palette of ['rainbow','classic']) for (const url of ['https://reputasipro.ulasantoko.space/ULAS-01007', 'https://ulasantoko-review-v3.vercel.app/ULAS-01006']) {
+  for (const palette of ['rainbow','classic']) for (const url of ['https://yukreview.id/a7c93e10b842', 'https://reputasipro.ulasantoko.space/ULAS-01007', 'https://ulasantoko-review-v3.vercel.app/ULAS-01006']) {
     let ui;
     await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'ULAS-01007', url })); });
     assert.equal(ui.root.findByType('button').children.join(''), 'Unduh QR (PNG)');
@@ -61,8 +61,8 @@ const DownloadCardQr = require('../app/components/DownloadCardQr.tsx').default;
   await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'CARD', url: 'javascript:alert(1)' })); });
   assert.equal(ui.root.findByType('button').children.join(''), 'Download QR (PNG)');
   await act(async () => { await ui.root.findByType('button').props.onClick(); });
-  assert.equal(clicks, 4);
-  assert.equal(removals, 4);
+  assert.equal(clicks, 6);
+  assert.equal(removals, 6);
   assert(ui.root.findByProps({ role: 'alert' }).children.join('').includes('Could not download'));
   await act(async () => ui.unmount());
   await act(async () => { ui = create(React.createElement(DownloadCardQr, { cardCode: 'CARD', url: 'https://example.com', enabled: false })); });

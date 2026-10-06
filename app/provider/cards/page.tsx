@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { getCardPublicUrl } from "../../../lib/cardPublicId";
 import ProviderMfaGate from "../../components/ProviderMfaGate";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -166,7 +167,9 @@ function ProviderCardsPageContent() {
       return;
     }
 
-    setCards((data ?? []) as ProviderCard[]);
+    setCards(((data ?? []) as ProviderCard[]).map(card => ({
+      ...card, qr_url: card.qr_url ? getCardPublicUrl(card.qr_url, card.card_code) : null,
+    })));
   }
 
   async function createCard(event: FormEvent) {
@@ -195,7 +198,12 @@ function ProviderCardsPageContent() {
       return;
     }
 
-    setCreated(data as CreateResult);
+    const result = data as CreateResult;
+    if (result.card_code && result.qr_url) {
+      result.qr_url = getCardPublicUrl(result.qr_url, result.card_code);
+      result.nfc_url = result.qr_url;
+    }
+    setCreated(result);
     setLabel("");
     setArea("");
     setInternalCode("");

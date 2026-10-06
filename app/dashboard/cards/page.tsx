@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
 import { useLanguage } from "../../../lib/i18n";
-import { getCardPublicPath } from "../../../lib/cardPublicId";
+import { getCardPublicPath, getCardPublicUrl } from "../../../lib/cardPublicId";
 
 type CardRow = {
   id: string;
@@ -665,7 +665,7 @@ export default function CardsDashboardPage() {
                             </div>
                             <div style={{ overflowWrap: "anywhere" }}>
                               <strong>URL:</strong>{" "}
-                              {"https://reputasipro.ulasantoko.space" + getCardPublicPath(card.qr_url, card.card_code)}
+                              {getCardPublicUrl(card.qr_url, card.card_code)}
                             </div>
                           </div>
 

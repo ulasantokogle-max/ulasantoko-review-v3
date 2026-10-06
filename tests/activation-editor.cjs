@@ -10,7 +10,7 @@ let result = {data:{success:true,business_id:'business-b'},error:null};
 let calls=[], destinations=[], routeCode='a7c93e10b842';
 let signOutError=null, signOutOptions, signupArgs, authCallback;
 const rows=[{business_id:'business-a',business_name:'A'},{business_id:'business-b',business_name:'B'}];
-global.window={location:{origin:'https://reputasipro.ulasantoko.space',href:'https://reputasipro.ulasantoko.space/dashboard/landing-page?business_id=business-b'}};
+global.window={location:{origin:'https://yukreview.id',href:'https://yukreview.id/dashboard/landing-page?business_id=business-b'}};
 const supabase={
   auth:{getSession:async()=>({data:{session:{user:{email:'customer@example.com'}}}}),
     onAuthStateChange:callback=>{authCallback=callback;return {data:{subscription:{unsubscribe(){}}}};},
@@ -67,15 +67,20 @@ function Probe(){context=useBusinessContext('customer@example.com',true);return 
   });
   await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
   assert.equal(signupArgs.email,'new@example.com');
-  assert.equal(signupArgs.options.emailRedirectTo,'https://reputasipro.ulasantoko.space/activate/a7c93e10b842');
+  assert.equal(signupArgs.options.emailRedirectTo,'https://yukreview.id/activate/a7c93e10b842');
   assert(JSON.stringify(tree.toJSON()).includes('Cek email untuk konfirmasi'));
+  window.location.origin='https://reputasipro.ulasantoko.space';
+  await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+  assert.equal(signupArgs.options.emailRedirectTo,'https://reputasipro.ulasantoko.space/activate/a7c93e10b842','Legacy-card signups retain their own origin');
+  window.location.origin='https://yukreview.id';
+
   await act(async()=>authCallback('SIGNED_IN',{user:{email:'new@example.com'}}));
   assert.equal(tree.root.findAllByType('input').find(n=>n.props.placeholder==='PIN aktivasi kartu').props.value,'');
   await act(async()=>tree.unmount());
   await act(async()=>{tree=create(React.createElement(Probe));});
   assert.equal(context.businessId,'business-b','Select activated business even when it is not the first business');
   await act(async()=>tree.unmount());
-  window.location.href='https://reputasipro.ulasantoko.space/dashboard/landing-page?business_id=someone-elses-business';
+  window.location.href='https://yukreview.id/dashboard/landing-page?business_id=someone-elses-business';
   await act(async()=>{tree=create(React.createElement(Probe));});
   assert.equal(context.businessId,'business-a','URL cannot select another account business');
   await act(async()=>tree.unmount());

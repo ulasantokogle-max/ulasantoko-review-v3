@@ -6,7 +6,7 @@ class Reader { async write(message,options){writes.push({message,options});if(mo
 global.window={isSecureContext:true,NDEFReader:Reader};Object.defineProperty(global,'navigator',{value:{clipboard:{writeText:async value=>{copied=value;}}},configurable:true});
 const original=Module._load;Module._load=function(id,p,m){if(id.endsWith('/i18n'))return {useLanguage:()=>({tr:(id,en)=>language==='en'?en:id})};return original.call(this,id,p,m);};
 const Component=require('../app/components/WriteCardNfc.tsx').default;
-const url='https://reputasipro.ulasantoko.space/ULAS-01007';
+const url='https://yukreview.id/a7c93e10b842';
 function text(n){return !n?'':typeof n==='string'?n:Array.isArray(n)?n.map(text).join(' '):text(n.children);}
 async function mount(props={}){let tree;await act(async()=>{tree=create(React.createElement(Component,{cardCode:'ULAS-01007',url,...props}));});return tree;}
 (async()=>{

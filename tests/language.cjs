@@ -21,11 +21,16 @@ Module._load = function (id, parent, main) { if (id.endsWith('/supabase') || id 
     return { __esModule: true, default: ({ children, ...p }) => React.createElement('a', p, children) }; if (id === 'next/navigation')
     return { useRouter: () => ({ replace() { }, refresh() { } }), usePathname: () => '/dashboard', useParams: () => ({ cardCode: 'TEST001' }) }; return original.call(this, id, parent, main); };
 const { LanguageProvider, useLanguage } = require(cwd + '/lib/i18n.tsx');
-const { getCardPublicPath } = require(cwd + '/lib/cardPublicId.ts');
+const { getCardPublicPath, getCardPublicUrl } = require(cwd + '/lib/cardPublicId.ts');
 assert.equal(getCardPublicPath('https://reputasipro.ulasantoko.space/A7C93E10B842/', 'TEST001'), '/a7c93e10b842');
 for (const url of [null, 'invalid', 'https://evil.test/a7c93e10b842', 'javascript:alert(1)', 'https://user@reputasipro.ulasantoko.space/a7c93e10b842', 'https://reputasipro.ulasantoko.space/TEST001']) {
     assert.equal(getCardPublicPath(url, 'TEST001'), '/TEST001', 'Untrusted or legacy URLs stay on the local legacy route');
 }
+for(const origin of ['https://yukreview.id','https://www.yukreview.id','https://reputasipro.ulasantoko.space']) {
+    assert.equal(getCardPublicPath(origin+'/A7C93E10B842/', 'TEST001'),'/a7c93e10b842');
+    assert.equal(getCardPublicUrl(origin+'/A7C93E10B842/', 'TEST001'),'https://yukreview.id/a7c93e10b842');
+}
+for(const url of ['http://yukreview.id/a7c93e10b842','https://yukreview.id.evil.test/a7c93e10b842','https://user@yukreview.id/a7c93e10b842','https://yukreview.id:8443/a7c93e10b842']) assert.equal(getCardPublicPath(url,'TEST001'),'/TEST001');
 let control;
 function Probe() { control = useLanguage(); return null; }
 function text(tree) { if (tree == null)
@@ -60,7 +65,15 @@ function text(tree) { if (tree == null)
         assert(enText.includes(en), file + ' EN title');
         if (file === 'app/dashboard/cards/page.tsx') {
             assert.equal(tree.root.findAllByType('a').find(a => a.props.target === '_blank').props.href, '/a7c93e10b842');
-            assert(enText.includes(card.qr_url), 'Customer sees the same short URL as the provider');
+            assert(enText.includes(getCardPublicUrl(card.qr_url, card.card_code)), 'Customer sees the new canonical short URL while stored legacy IDs remain valid');
+        }
+        if (file === 'app/provider/cards/page.tsx') {
+            const canonical = getCardPublicUrl(card.qr_url,card.card_code);
+            assert(enText.includes(canonical),'Provider displays the canonical URL');
+            const Download = require(cwd+'/app/components/DownloadCardQr.tsx').default;
+            const Write = require(cwd+'/app/components/WriteCardNfc.tsx').default;
+            assert(tree.root.findAllByType(Download).every(n=>n.props.url===canonical));
+            assert(tree.root.findAllByType(Write).every(n=>n.props.url===canonical));
         }
         if (file === 'app/dashboard/page.tsx') {
             assert(enText.includes('Business Setup'));
