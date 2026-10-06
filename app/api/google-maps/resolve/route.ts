@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
 import { reserveGoogleRequest, GOOGLE_TEMPORARY_MESSAGE } from "../../../../lib/googleQuota";
+import { hasGoogleBusinessAccess } from "../../../../lib/googleBusinessAccess";
 
 export async function GET() {
   return NextResponse.json({
@@ -47,6 +48,10 @@ export async function POST(request: Request) {
       global: { headers: { Authorization: authorization } },
     });
 
+    if (!await hasGoogleBusinessAccess(scopedClient)) {
+      return NextResponse.json({ success: false, message: "Aktifkan kartu dan bisnis terlebih dahulu." }, { status: 403 });
+    }
+
     const { data: limitData, error: limitError } = await scopedClient.rpc(
       "v3_check_google_maps_resolver_rate_limit"
     );
@@ -76,7 +81,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      const data = await resolveGoogleMapsUrl(mapsUrl, () => reserveGoogleRequest(scopedClient));
+      const data = await resolveGoogleMapsUrl(mapsUrl, reserveGoogleRequest);
       return NextResponse.json({ success: true, ...data });
     } catch (error) {
       const typed = error as Error & { status?: number; code?: string; details?: unknown };

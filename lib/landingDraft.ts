@@ -14,7 +14,9 @@ export function readLandingDraft<T>(key: string, valid: (value: unknown) => valu
 
 export function writeLandingDraft(key: string, value: unknown): boolean {
   try {
-    window.sessionStorage.setItem(key, JSON.stringify({ version: 1, value }));
+    const encoded = JSON.stringify({ version: 1, value });
+    if (encoded.length > 65536) return false;
+    window.sessionStorage.setItem(key, encoded);
     return true;
   } catch { return false; }
 }

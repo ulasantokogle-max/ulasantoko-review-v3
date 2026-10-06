@@ -128,6 +128,9 @@ export function translateInterface(text: string, language: "id" | "en") {
 }
 
 Object.assign(englishText, {
+  "Daftar bisnis belum dapat dimuat. Silakan coba lagi.": "Could not load your businesses. Please try again.",
+  "Belum ada bisnis aktif untuk akun ini.": "This account has no active business yet.",
+  "Landing page belum dapat disimpan. Periksa koneksi lalu coba lagi.": "Could not save the page. Check your connection and try again.",
   "Aktifkan Kartu": "Activate Card", "Memeriksa kartu...": "Checking card...", "Memproses...": "Processing...",
   "Mengaktifkan...": "Activating...", "Kartu tidak ditemukan atau belum tersedia.": "Card not found or unavailable.",
   "sudah terhubung ke bisnis.": "is already linked to a business.", "Kembali ke Dashboard": "Back to Dashboard",

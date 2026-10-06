@@ -7,6 +7,7 @@ for (const ext of ['.ts','.tsx']) require.extensions[ext] = (m,f) => m._compile(
   compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020,esModuleInterop:true}
 }).outputText,f);
 let result = {data:{success:true,business_id:'business-b'},error:null};
+let activationState={success:true,needs_activation:true}, activationStateError=null;
 let calls=[], destinations=[], routeCode='a7c93e10b842';
 let signOutError=null, signOutOptions, signupArgs, authCallback;
 const rows=[{business_id:'business-a',business_name:'A'},{business_id:'business-b',business_name:'B'}];
@@ -19,7 +20,7 @@ const supabase={
   rpc:async(name,args)=>{
     calls.push({name,args});
     if(name==='v3_resolve_card_code') return {data:'ULAS-01007',error:null};
-    if(name==='v3_get_card_activation_state') return {data:{success:true,needs_activation:true}};
+    if(name==='v3_get_card_activation_state') return {data:activationState,error:activationStateError};
     if(name==='v3_get_my_businesses') return {data:rows,error:null};
     if(name==='v3_claim_card') return result;
     return {data:null,error:null};
@@ -83,6 +84,18 @@ function Probe(){context=useBusinessContext('customer@example.com',true);return 
   window.location.href='https://yukreview.id/dashboard/landing-page?business_id=someone-elses-business';
   await act(async()=>{tree=create(React.createElement(Probe));});
   assert.equal(context.businessId,'business-a','URL cannot select another account business');
+  await act(async()=>tree.unmount());
+  activationState={success:false};
+  await act(async()=>{tree=create(React.createElement(Activate));});
+  assert.equal(tree.root.findAllByType('form').length,0,'Unknown card must not expose signup/claim form');
+  assert(JSON.stringify(tree.toJSON()).includes('Kartu belum tersedia'));
+  activationState={success:true,needs_activation:false};
+  await act(async()=>tree.root.findAllByType('button').find(b=>b.children.includes('Coba lagi')).props.onClick());
+  assert(JSON.stringify(tree.toJSON()).includes('Kartu sudah aktif'));
+  await act(async()=>tree.unmount());
+  activationState=null;activationStateError={message:'offline'};
+  await act(async()=>{tree=create(React.createElement(Activate));});
+  assert.equal(tree.root.findAllByType('form').length,0,'Unavailable database must fail closed');
   await act(async()=>tree.unmount());
   console.log('PASS activation → editor: random alias, existing/new business, failed activation stays put, authorized business selection');
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -9,11 +9,11 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
 (async () => {
  const db = new PGlite({ extensions: { pgcrypto } });
  try {
- await db.exec(`create role anon; create role authenticated;
+ await db.exec(`create role anon; create role authenticated; create role service_role;
  create schema auth; create schema extensions; create extension pgcrypto with schema extensions;
  create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
  create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
- grant usage on schema public,auth to anon,authenticated;
+ grant usage on schema public,auth to anon,authenticated,service_role;
  create schema storage;
  create table storage.buckets(id text primary key,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
  create table storage.objects(id uuid default gen_random_uuid(),bucket_id text,name text);
@@ -168,25 +168,29 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
  await assert.rejects(as('anon',null,'select v3_provider_create_card()'),/permission denied/);
  const quotaMigration=fs.readFileSync('supabase/migrations/0042_google_daily_quota.sql','utf8');
  await db.exec(quotaMigration); await db.exec(quotaMigration);
+ const quotaHardening=fs.readFileSync('supabase/migrations/0046_google_quota_server_only.sql','utf8');
+ await db.exec(quotaHardening);await db.exec(quotaHardening);
  await assert.rejects(as('anon',null,'select v3_reserve_google_request()'),/permission denied/);
- await assert.rejects(as('authenticated',null,'select v3_reserve_google_request()'),/AUTH_REQUIRED/);
+ await assert.rejects(as('authenticated',null,'select v3_reserve_google_request()'),/permission denied/);
+ await assert.rejects(as('authenticated',uidA,'select v3_reserve_google_request()'),/permission denied/);
+ await assert.rejects(as('authenticated',provider,'select v3_reserve_google_request()'),/permission denied/);
  await assert.rejects(as('authenticated',uidA,'select v3_get_google_request_usage()'),/FORBIDDEN/);
  await assert.rejects(as('authenticated',uidA,'select * from v3_google_request_usage'),/permission denied/);
- for(let index=0;index<140;index++) assert.equal((await as('authenticated',uidA,'select v3_reserve_google_request() as value')).rows[0].value.success,true);
- assert.equal((await as('authenticated',uidB,'select v3_reserve_google_request() as value')).rows[0].value.success,false);
+ for(let index=0;index<140;index++) assert.equal((await as('service_role',null,'select v3_reserve_google_request() as value')).rows[0].value.success,true);
+ assert.equal((await as('service_role',null,'select v3_reserve_google_request() as value')).rows[0].value.success,false);
  let quota=(await as('authenticated',provider,'select v3_get_google_request_usage() as value')).rows[0].value;
  assert.equal(quota.daily_used,140); assert.equal(quota.monthly_used,140); assert.equal(quota.blocked,true);
  await db.exec("insert into v3_google_request_usage values ((date_trunc('month',now() at time zone 'Asia/Jakarta') - interval '1 day')::date,100)");
  quota=(await as('authenticated',provider,'select v3_get_google_request_usage() as value')).rows[0].value;
  assert.equal(quota.monthly_used,140,'Previous month excluded');
  await db.exec("update v3_google_request_usage set usage_date=usage_date-1 where usage_date=(now() at time zone 'Asia/Jakarta')::date");
- assert.equal((await as('authenticated',uidA,'select v3_reserve_google_request() as value')).rows[0].value.success,true,'New day gets a new allowance');
+ assert.equal((await as('service_role',null,'select v3_reserve_google_request() as value')).rows[0].value.success,true,'New day gets a new allowance');
  quota=(await as('authenticated',provider,'select v3_get_google_request_usage() as value')).rows[0].value;
  assert.equal(quota.daily_used,1); assert.equal(quota.blocked,false);
  await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({aal:'aal1'})]);
  await assert.rejects(as('authenticated',provider,'select v3_get_google_request_usage()'),/FORBIDDEN/);
  await db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({aal:'aal2'})]);
- console.log('PASS Google quota: global cap 140, independent of account, rollover, month filter, provider MFA and private counters');
+ console.log('PASS Google quota: server-only reservations, denied direct customer/provider RPC, global cap 140, rollover, month filter, provider MFA and private counters');
  const deleteMigration=fs.readFileSync('supabase/migrations/0043_provider_delete_card.sql','utf8');
  // First check the foundation enum contract, then reproduce a live text-returning
  // contract with no enums under the original names. Installation must preserve both.

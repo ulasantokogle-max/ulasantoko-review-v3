@@ -2,11 +2,13 @@ const fs=require('node:fs'),ts=require('typescript'),Module=require('node:module
 for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 require.extensions['.css']=()=>{};
 const React=require('react'),{act,create}=require('react-test-renderer');global.IS_REACT_ACT_ENVIRONMENT=true;
-let account='owner@example.com',business='business-a',switchBusiness,saveFails=false,googleCalls=0,calls=[],lateResolve;
+let account='owner@example.com',business='business-a',switchBusiness,saveFails=false,googleCalls=0,calls=[],lateResolve,authCallback,lateSaveResolve,delaySave=false,throwSave=false;
 const storage=new Map();global.window={sessionStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
 global.fetch=async()=>{googleCalls++;return {ok:true,json:async()=>({success:true,maps_url:'https://maps.app.goo.gl/draft'})};};
-const supabase={auth:{getSession:async()=>({data:{session:{user:{email:account},access_token:'token'}}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})},rpc:async(name,args)=>{
+const supabase={auth:{getSession:async()=>({data:{session:{user:{email:account},access_token:'token'}}}),onAuthStateChange:callback=>{authCallback=callback;return ({data:{subscription:{unsubscribe(){}}}});}},rpc:async(name,args)=>{
  calls.push({name,args});
+ if(name==='v3_update_business_display_name'&&throwSave)throw Error('offline');
+ if(name==='v3_update_business_display_name'&&delaySave)return new Promise(resolve=>{lateSaveResolve=resolve;});
  if(name==='v3_get_landing_page_settings'&&args.p_business_id==='business-late')return new Promise(resolve=>{lateResolve=resolve;});
  if(name==='v3_get_business_profile')return {data:{success:true,display_name:'Server name'},error:null};
  if(name==='v3_get_business_contact_settings')return {data:{whatsapp_number:'628111'},error:null};
@@ -25,7 +27,7 @@ Module._load=function(id,parent,main){
  return original.call(this,id,parent,main);
 };
 const Page=require('../app/dashboard/landing-page/page.tsx').default;
-const {landingDraftKey}=require('../lib/landingDraft.ts');
+const {landingDraftKey,writeLandingDraft}=require('../lib/landingDraft.ts');
 const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.map(text).join(' '):text(node.children);
 (async()=>{
  let tree;
@@ -33,6 +35,8 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  const input=placeholder=>tree.root.findAll(n=>n.props.placeholder===placeholder)[0];
  await mount();
  assert.equal(storage.size,0,'Initial server load must not create a stale draft');
+ assert.equal(writeLandingDraft('oversized',{value:'x'.repeat(65536)}),false);
+ assert(!storage.has('oversized'),'Cannot report a draft saved if the reader cannot restore it');
  const fields=['Judul utama','Tentang bisnis'];
  await act(async()=>{
    input(fields[0]).props.onChange({target:{value:'Unsaved title'}});
@@ -57,6 +61,7 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  await act(async()=>switchBusiness('business-a'));
  assert.equal(input(fields[0]).props.value,'Unsaved title');
  await act(async()=>switchBusiness('business-late'));
+ assert.equal(tree.root.findAllByType('input').length,0,'Previous business fields must be hidden while new business loads');
  await act(async()=>switchBusiness('business-a'));
  await act(async()=>lateResolve({data:{hero_title:'Late response'},error:null}));
  assert.equal(input(fields[0]).props.value,'Unsaved title','Late business response must not overwrite the current draft');
@@ -68,6 +73,23 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  assert(!storage.has(keyA),'Successful full save clears that draft');
  assert(storage.has(landingDraftKey(account,'business-b')),'Other business draft remains');
  assert.equal(googleCalls,1);
+ throwSave=true;
+ await act(async()=>input(fields[0]).props.onChange({target:{value:'Keep on thrown network failure'}}));
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert(storage.has(keyA));assert(JSON.stringify(tree.toJSON()).includes('Periksa koneksi'));
+ assert.equal(tree.root.findByType('fieldset').props.disabled,false,'Thrown save must release busy state');
+ throwSave=false;delaySave=true;
+ let savePromise;
+ await act(async()=>{savePromise=tree.root.findByType('form').props.onSubmit({preventDefault(){}});});
+ const writesBefore=calls.filter(c=>c.name==='v3_update_business_contact_settings').length;
+ account='switched@example.com';
+ await act(async()=>authCallback('SIGNED_IN',{user:{email:account}}));
+ await act(async()=>{lateSaveResolve({data:{success:true,display_name:'OLD account response'},error:null});await savePromise;});
+ assert.equal(calls.filter(c=>c.name==='v3_update_business_contact_settings').length,writesBefore,'Account switch must stop remaining old save steps');
+ assert(!JSON.stringify(tree.toJSON()).includes('OLD account response'));
+ assert.equal(input(fields[0]).props.value,'Server title');
+ delaySave=false;account='owner@example.com';
+ await act(async()=>authCallback('SIGNED_IN',{user:{email:account}}));
  await act(async()=>input(fields[0]).props.onChange({target:{value:'Owner A private draft'}}));
  await act(async()=>tree.unmount());account='other@example.com';await mount();
  assert.equal(input(fields[0]).props.value,'Server title','Different account cannot restore previous account draft');

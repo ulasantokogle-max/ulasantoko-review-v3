@@ -89,7 +89,7 @@ export default function LandingPageBuilderPage() {
   const [googleConfigured, setGoogleConfigured] = useState(false);
   const [displayName, setDisplayName] = useState("");
 
-  const { businesses, businessId, setBusinessId, businessLoading, businessError } =
+  const { businesses, businessId, setBusinessId, businessLoading, businessError, reloadBusinesses } =
     useBusinessContext(userEmail, true);
   const draftKey = userEmail && businessId ? landingDraftKey(userEmail, businessId) : "";
   const activeDraftKey = useRef(draftKey);
@@ -100,15 +100,20 @@ export default function LandingPageBuilderPage() {
   const [draftNotice, setDraftNotice] = useState<"" | "restored" | "saved" | "unavailable">("");
 
   useEffect(() => {
+    let active = true;
+    let authEventReceived = false;
     supabase.auth.getSession().then(({ data }) => {
+      if (!active || authEventReceived) return;
       setUserEmail(data.session?.user?.email ?? null);
       setAuthChecked(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      authEventReceived = true;
+      if (!active) return;
       setUserEmail(session?.user?.email ?? null);
       setAuthChecked(true);
     });
-    return () => subscription.unsubscribe();
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => {
@@ -365,165 +370,181 @@ export default function LandingPageBuilderPage() {
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
     if (saving || !businessId || loadedDraftKey !== draftKey) return;
+    const savingKey = draftKey;
+    const stillCurrent = () => activeDraftKey.current === savingKey;
     let savedMapsUrl = mapsUrl;
     setSaving(true);
     setError("");
     setMessage("");
 
-    if (!displayName.trim()) {
-      setSaving(false);
-      setError("Nama Bisnis Publik wajib diisi.");
-      return;
-    }
-
-    const { data: nameData, error: nameError } = await supabase.rpc(
-      "v3_update_business_display_name",
-      {
-        p_business_id: businessId,
-        p_display_name: displayName.trim()
-      }
-    );
-
-    if (nameError) {
-      console.error("Public business name update failed", nameError);
-      setSaving(false);
-      setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
-      return;
-    }
-
-    if (nameData?.success === false) {
-      console.error("Public business name update returned unsuccessful result", nameData);
-      setSaving(false);
-      setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
-      return;
-    }
-
-    setDisplayName(nameData?.display_name ?? displayName.trim());
-
-    if (mapsUrl.trim()) {
-      setLoadingGoogleReview(true);
-
-      const {
-        data: { session },
-        error: sessionError
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session?.access_token) {
-        setLoadingGoogleReview(false);
+    try {
+      if (!displayName.trim()) {
         setSaving(false);
-        setError("Sesi tidak ditemukan. Silakan masuk kembali.");
+        setError("Nama Bisnis Publik wajib diisi.");
         return;
       }
 
-      try {
-        const response = await fetch("/api/google-review/setup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            business_id: businessId,
-            maps_url: mapsUrl.trim()
-          })
-        });
+      const { data: nameData, error: nameError } = await supabase.rpc(
+        "v3_update_business_display_name",
+        {
+          p_business_id: businessId,
+          p_display_name: displayName.trim()
+        }
+      );
 
-        const googleData = await response.json();
+      if (!stillCurrent()) return;
+      if (nameError) {
+        console.error("Public business name update failed", nameError);
+        setSaving(false);
+        setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
 
-        if (!response.ok || !googleData?.success) {
-          console.error("Google Review setup failed", {
-            status: response.status,
-            data: googleData
-          });
+      if (nameData?.success === false) {
+        console.error("Public business name update returned unsuccessful result", nameData);
+        setSaving(false);
+        setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+
+      setDisplayName(nameData?.display_name ?? displayName.trim());
+
+      if (mapsUrl.trim()) {
+        setLoadingGoogleReview(true);
+
+        const {
+          data: { session },
+          error: sessionError
+        } = await supabase.auth.getSession();
+
+        if (!stillCurrent()) return;
+        if (sessionError || !session?.access_token) {
           setLoadingGoogleReview(false);
           setSaving(false);
-
-          if (response.status === 401) {
-            setError("Sesi sudah berakhir. Silakan masuk kembali.");
-          } else if (response.status === 429) {
-            setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
-          } else if (googleData?.code === "GOOGLE_TEMPORARILY_UNAVAILABLE") {
-            setError("Pengaturan Google Maps sementara belum tersedia. Silakan coba lagi nanti.");
-          } else if (googleData?.step === "resolve") {
-            setError("Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.");
-          } else {
-            setError("Google Review belum dapat disimpan. Silakan coba lagi.");
-          }
+          setError("Sesi tidak ditemukan. Silakan masuk kembali.");
           return;
         }
 
-        savedMapsUrl = googleData?.maps_url ?? mapsUrl.trim();
-        setMapsUrl(savedMapsUrl);
-        setGoogleConfigured(true);
-      } catch (googleError) {
-        console.error("Google Review request failed", googleError);
+        try {
+          const response = await fetch("/api/google-review/setup", {
+            method: "POST",
+            signal: AbortSignal.timeout(60000),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              business_id: businessId,
+              maps_url: mapsUrl.trim()
+            })
+          });
+
+          const googleData = await response.json();
+          if (!stillCurrent()) return;
+
+          if (!response.ok || !googleData?.success) {
+            console.error("Google Review setup failed", {
+              status: response.status,
+              data: googleData
+            });
+            setLoadingGoogleReview(false);
+            setSaving(false);
+
+            if (response.status === 401) {
+              setError("Sesi sudah berakhir. Silakan masuk kembali.");
+            } else if (response.status === 429) {
+              setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
+            } else if (googleData?.code === "GOOGLE_TEMPORARILY_UNAVAILABLE") {
+              setError("Pengaturan Google Maps sementara belum tersedia. Silakan coba lagi nanti.");
+            } else if (googleData?.step === "resolve") {
+              setError("Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.");
+            } else {
+              setError("Google Review belum dapat disimpan. Silakan coba lagi.");
+            }
+            return;
+          }
+
+          savedMapsUrl = googleData?.maps_url ?? mapsUrl.trim();
+          setMapsUrl(savedMapsUrl);
+          setGoogleConfigured(true);
+        } catch (googleError) {
+          if (!stillCurrent()) return;
+          console.error("Google Review request failed", googleError);
+          setLoadingGoogleReview(false);
+          setSaving(false);
+          setError("Google Review belum dapat diproses. Periksa koneksi lalu coba lagi.");
+          return;
+        }
+
         setLoadingGoogleReview(false);
+      }
+
+      const { data: contactData, error: contactError } = await supabase.rpc(
+        "v3_update_business_contact_settings",
+        {
+          p_business_id: businessId,
+          p_whatsapp_number: whatsapp
+        }
+      );
+
+      if (!stillCurrent()) return;
+      if (contactError) {
+        console.error("Business contact update failed", contactError);
         setSaving(false);
-        setError("Google Review belum dapat diproses. Periksa koneksi lalu coba lagi.");
+        setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
         return;
       }
 
+      if (contactData?.success === false) {
+        console.error("Business contact update returned unsuccessful result", contactData);
+        setSaving(false);
+        setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+
+      setWhatsapp(contactData?.whatsapp_number ?? whatsapp);
+
+      const { data, error } = await supabase.rpc("v3_update_landing_page_settings", {
+        p_business_id: businessId,
+        p_theme_key: settings.theme_key,
+        p_hero_title: settings.hero_title,
+        p_hero_description: settings.hero_description,
+        p_about_text: settings.about_text,
+        p_promo_text: settings.promo_text,
+        p_logo_url: settings.logo_url,
+        p_cover_url: settings.cover_url,
+        p_cover_position: settings.cover_position,
+        p_instagram_url: settings.instagram_url,
+        p_pdf_title: settings.pdf_title,
+        p_pdf_url: settings.pdf_url,
+        p_show_google_review: settings.show_google_review,
+        p_show_whatsapp: settings.show_whatsapp,
+        p_show_about: settings.show_about,
+        p_show_promo: settings.show_promo,
+        p_show_instagram: settings.show_instagram,
+        p_show_pdf: settings.show_pdf
+      });
+
+      if (!stillCurrent()) return;
+      setSaving(false);
+      if (error) {
+        console.error("Landing page update failed", error);
+        setError("Landing page belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+      if (data?.success === false) {
+        console.error("Landing page update returned unsuccessful result", data);
+        setError("Landing page belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+      setMessage("Landing page berhasil disimpan.");
+      setBaseline(JSON.stringify({ settings, displayName: nameData?.display_name ?? displayName.trim(), whatsapp: contactData?.whatsapp_number ?? whatsapp, mapsUrl: savedMapsUrl }));
+    } catch {
+      if (stillCurrent()) setError("Landing page belum dapat disimpan. Periksa koneksi lalu coba lagi.");
+    } finally {
+      setSaving(false);
       setLoadingGoogleReview(false);
     }
-
-    const { data: contactData, error: contactError } = await supabase.rpc(
-      "v3_update_business_contact_settings",
-      {
-        p_business_id: businessId,
-        p_whatsapp_number: whatsapp
-      }
-    );
-
-    if (contactError) {
-      console.error("Business contact update failed", contactError);
-      setSaving(false);
-      setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
-      return;
-    }
-
-    if (contactData?.success === false) {
-      console.error("Business contact update returned unsuccessful result", contactData);
-      setSaving(false);
-      setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
-      return;
-    }
-
-    setWhatsapp(contactData?.whatsapp_number ?? whatsapp);
-
-    const { data, error } = await supabase.rpc("v3_update_landing_page_settings", {
-      p_business_id: businessId,
-      p_theme_key: settings.theme_key,
-      p_hero_title: settings.hero_title,
-      p_hero_description: settings.hero_description,
-      p_about_text: settings.about_text,
-      p_promo_text: settings.promo_text,
-      p_logo_url: settings.logo_url,
-      p_cover_url: settings.cover_url,
-      p_cover_position: settings.cover_position,
-      p_instagram_url: settings.instagram_url,
-      p_pdf_title: settings.pdf_title,
-      p_pdf_url: settings.pdf_url,
-      p_show_google_review: settings.show_google_review,
-      p_show_whatsapp: settings.show_whatsapp,
-      p_show_about: settings.show_about,
-      p_show_promo: settings.show_promo,
-      p_show_instagram: settings.show_instagram,
-      p_show_pdf: settings.show_pdf
-    });
-
-    setSaving(false);
-    if (error) {
-      console.error("Landing page update failed", error);
-      setError("Landing page belum dapat disimpan. Silakan coba lagi.");
-      return;
-    }
-    if (data?.success === false) {
-      console.error("Landing page update returned unsuccessful result", data);
-      setError("Landing page belum dapat disimpan. Silakan coba lagi.");
-      return;
-    }
-    setMessage("Landing page berhasil disimpan.");
-    setBaseline(JSON.stringify({ settings, displayName: nameData?.display_name ?? displayName.trim(), whatsapp: contactData?.whatsapp_number ?? whatsapp, mapsUrl: savedMapsUrl }));
   }
 
   const theme = themes[settings.theme_key] ?? themes.warm_brown;
@@ -604,6 +625,22 @@ export default function LandingPageBuilderPage() {
         </div>
       </main>
     );
+  }
+
+  if (businessLoading || !businessId || loadedDraftKey !== draftKey) {
+    return <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: 24 }}>
+      <section style={{ maxWidth: 520, margin: "0 auto", background: "white", borderRadius: 18, padding: 24 }}>
+        <h1>{tr("Pengeditan Halaman")}</h1>
+        <p role={error || businessError ? "alert" : "status"}>
+          {tr(error || businessError || (businessLoading || loading ? "Memuat bisnis..." : !businessId ? "Belum ada bisnis aktif untuk akun ini." : "Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi."))}
+        </p>
+        {!businessLoading && !loading && <button type="button" onClick={() => {
+          if (!businessId) reloadBusinesses();
+          else loadSettings(draftKey, ++loadSequence.current);
+        }}>{tr("Coba lagi", "Try again")}</button>}
+        {!businessLoading && !businessId && !businessError && <p><a href="/dashboard/onboarding">{tr("Atur Bisnis", "Set Up Business")}</a></p>}
+      </section>
+    </main>;
   }
 
   return (

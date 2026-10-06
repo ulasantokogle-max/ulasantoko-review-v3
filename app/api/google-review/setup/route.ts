@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
 import { reserveGoogleRequest, GOOGLE_TEMPORARY_MESSAGE } from "../../../../lib/googleQuota";
+import { hasGoogleBusinessAccess } from "../../../../lib/googleBusinessAccess";
 
 export async function POST(request: Request) {
   try {
@@ -54,6 +55,10 @@ export async function POST(request: Request) {
       global: { headers: { Authorization: authorization } },
     });
 
+    if (!await hasGoogleBusinessAccess(scopedClient, businessId)) {
+      return NextResponse.json({ success: false, message: "Bisnis tidak tersedia untuk akun ini." }, { status: 403 });
+    }
+
     const { data: limitData, error: limitError } = await scopedClient.rpc(
       "v3_check_google_maps_resolver_rate_limit"
     );
@@ -72,9 +77,24 @@ export async function POST(request: Request) {
       );
     }
 
+    // Reuse the account-scoped saved profile when the Maps link is unchanged.
+    const { data: saved, error: savedError } = await scopedClient
+      .from("google_review_profiles")
+      .select("maps_url,place_id,business_name")
+      .eq("business_id", businessId).eq("status", "active").maybeSingle();
+    if (savedError) {
+      return NextResponse.json({ success: false, message: "Google Review belum dapat diperiksa. Silakan coba lagi." }, { status: 503 });
+    }
+    if (saved?.maps_url === mapsUrl.trim() && typeof saved.place_id === "string" && /^[A-Za-z0-9_-]{1,256}$/.test(saved.place_id)) {
+      const reviewUrl = `https://search.google.com/local/writereview?placeid=${saved.place_id}`;
+      return NextResponse.json({ success: true, business_id: businessId, maps_url: saved.maps_url,
+        place_id: saved.place_id, business_name: saved.business_name, formatted_address: null,
+        review_url: reviewUrl, profile: { success: true, business_id: businessId, ...saved, review_url: reviewUrl } });
+    }
+
     let resolved;
     try {
-      resolved = await resolveGoogleMapsUrl(mapsUrl, () => reserveGoogleRequest(scopedClient));
+      resolved = await resolveGoogleMapsUrl(mapsUrl, reserveGoogleRequest);
     } catch (error) {
       const typed = error as Error & { status?: number; code?: string; details?: unknown };
 

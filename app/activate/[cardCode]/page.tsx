@@ -21,6 +21,8 @@ export default function ActivateCardPage() {
   const cardCode = params.cardCode;
 
   const [stateLoading, setStateLoading] = useState(true);
+  const [cardUnavailable, setCardUnavailable] = useState(false);
+  const [cardRevision, setCardRevision] = useState(0);
   const [needsActivation, setNeedsActivation] = useState(true);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -41,20 +43,23 @@ export default function ActivateCardPage() {
   const [activating, setActivating] = useState(false);
 
   useEffect(() => {
-    checkCard();
+    let active = true;
+    let authEventReceived = false;
+    checkCard(() => active);
 
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user?.email ?? null);
+      if (active && !authEventReceived) setUserEmail(data.session?.user?.email ?? null);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email ?? null);
+      authEventReceived = true;
+      if (active) setUserEmail(session?.user?.email ?? null);
     });
 
-    return () => subscription.unsubscribe();
-  }, [cardCode]);
+    return () => { active = false; subscription.unsubscribe(); };
+  }, [cardCode, cardRevision]);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,23 +80,24 @@ export default function ActivateCardPage() {
     return () => { cancelled = true; };
   }, [userEmail]);
 
-  async function checkCard() {
+  async function checkCard(isCurrent: () => boolean) {
     setStateLoading(true);
-    const resolvedCode = await resolveCardCode(supabase, cardCode);
-    if (!resolvedCode) { setStateLoading(false); setActivationError("Kartu tidak ditemukan atau belum tersedia."); return; }
-    const { data } = await supabase.rpc("v3_get_card_activation_state", {
-      p_card_code: resolvedCode,
-    });
-    setStateLoading(false);
-
-    if (!data?.success) {
-      console.error("Card activation state unavailable", data);
-      setActivationError("Kartu tidak ditemukan atau belum tersedia.");
-      return;
-    }
-
-    if (!data?.needs_activation) {
-      setNeedsActivation(false);
+    setNeedsActivation(true);
+    setCardUnavailable(false);
+    setActivationError("");
+    setPin("");
+    try {
+      const resolvedCode = await resolveCardCode(supabase, cardCode);
+      if (!isCurrent()) return;
+      if (!resolvedCode) throw new Error("CARD_UNAVAILABLE");
+      const { data, error } = await supabase.rpc("v3_get_card_activation_state", { p_card_code: resolvedCode });
+      if (!isCurrent()) return;
+      if (error || data?.success !== true || typeof data.needs_activation !== "boolean") throw new Error("CARD_UNAVAILABLE");
+      setNeedsActivation(data.needs_activation);
+    } catch {
+      if (isCurrent()) setCardUnavailable(true);
+    } finally {
+      if (isCurrent()) setStateLoading(false);
     }
   }
 
@@ -210,7 +216,7 @@ export default function ActivateCardPage() {
 
   async function activateCard(event: FormEvent) {
     event.preventDefault();
-    if (activating || switchingAccount) return;
+    if (activating || switchingAccount || stateLoading || cardUnavailable || !needsActivation) return;
     setActivationError("");
     setActivating(true);
 
@@ -275,6 +281,17 @@ export default function ActivateCardPage() {
         {tr("Memeriksa kartu...")}
       </main>
     );
+  }
+
+  if (cardUnavailable) {
+    return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", background: "#f5f7fb", padding: 20 }}>
+      <section style={{ maxWidth: 460, width: "100%", background: "white", borderRadius: 20, padding: 24, boxSizing: "border-box" }}>
+        <h1>{tr("Kartu belum tersedia", "Card unavailable")}</h1>
+        <p role="alert">{tr("Kartu tidak ditemukan atau belum dapat diperiksa. Pastikan link benar dan coba lagi.", "The card could not be found or checked. Check the link and try again.")}</p>
+        <button type="button" style={buttonStyle} onClick={() => setCardRevision(value => value + 1)}>{tr("Coba lagi", "Try again")}</button>
+        <a href="/" style={{ display: "block", marginTop: 16 }}>{tr("Kembali ke Beranda", "Back to Home")}</a>
+      </section>
+    </main>;
   }
 
   if (!needsActivation) {
