@@ -12,7 +12,8 @@
     "test:qr": "node tests/card-qr.cjs",
     "test:mfa": "node tests/provider-mfa.cjs",
     "test:nfc": "node tests/card-nfc.cjs",
-    "test:theme": "node tests/dashboard-theme.cjs"
+    "test:theme": "node tests/dashboard-theme.cjs",
+    "test:captcha": "node tests/provider-captcha.cjs && node tests/provider-captcha-ui.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",

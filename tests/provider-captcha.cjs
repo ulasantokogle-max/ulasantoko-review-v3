@@ -1,0 +1,60 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const ts = require('typescript');
+const Module = require('node:module');
+for (const ext of ['.ts', '.tsx']) require.extensions[ext] = (m, f) => m._compile(ts.transpileModule(fs.readFileSync(f, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.ReactJSX, esModuleInterop: true } }).outputText, f);
+let cookie, host = 'yukreview.id';
+const oldLoad = Module._load;
+Module._load = function(id, parent, main) {
+  if (id === 'next/headers') return { cookies: async () => ({ get: () => cookie ? { value: cookie } : undefined }), headers: async () => new Headers({ host }) };
+  if (id.endsWith('/components/ProviderCaptcha')) return { __esModule: true, default: function Captcha() {} };
+  return oldLoad.call(this, id, parent, main);
+};
+const lib = require('../lib/providerCaptcha.ts');
+const layout = require('../app/provider/layout.tsx').default;
+const post = require('../app/api/provider/captcha/route.ts').POST;
+const request = (body, origin = 'https://yukreview.id') => new Request('https://yukreview.id/api/provider/captcha', { method: 'POST', headers: { origin }, body: JSON.stringify(body) });
+(async () => {
+  delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY; delete process.env.TURNSTILE_SECRET_KEY;
+  assert.equal(await layout({ children: 'PORTAL' }), 'PORTAL', 'No keys: staged rollout preserves existing MFA');
+  assert.equal((await post(request({ token: 'test' }))).status, 503);
+  process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY = 'site';
+  assert.notEqual(await layout({ children: 'PORTAL' }), 'PORTAL', 'Partial configuration must block');
+  process.env.TURNSTILE_SECRET_KEY = 'server-test-secret';
+  assert.notEqual(await layout({ children: 'PORTAL' }), 'PORTAL', 'Direct provider entry must require CAPTCHA');
+  const now = Date.now();
+  const pass = lib.createProviderCaptchaPass(process.env.TURNSTILE_SECRET_KEY, host, now);
+  assert(lib.validProviderCaptchaPass(pass, process.env.TURNSTILE_SECRET_KEY, host, now));
+  assert(!lib.validProviderCaptchaPass(pass, 'wrong-secret', host, now));
+  assert(!lib.validProviderCaptchaPass(pass, process.env.TURNSTILE_SECRET_KEY, 'attacker.example', now));
+  assert(!lib.validProviderCaptchaPass(pass, process.env.TURNSTILE_SECRET_KEY, host, now + 900000));
+  assert(!lib.validProviderCaptchaPass(pass + '00', process.env.TURNSTILE_SECRET_KEY, host, now));
+  assert(!lib.validProviderCaptchaPass(lib.createProviderCaptchaPass(process.env.TURNSTILE_SECRET_KEY, host, now + 2000000), process.env.TURNSTILE_SECRET_KEY, host, now));
+  let calls = 0, result = { success: true, hostname: host, action: lib.PROVIDER_CAPTCHA_ACTION };
+  global.fetch = async (url, options) => {
+    calls++; assert.equal(url, 'https://challenges.cloudflare.com/turnstile/v0/siteverify');
+    assert(options.signal); assert.equal(options.redirect, 'error');
+    assert.equal(JSON.parse(options.body).secret, process.env.TURNSTILE_SECRET_KEY);
+    return Response.json(result);
+  };
+  assert.equal((await post(request({ token: 'test' }, 'https://evil.example'))).status, 403);
+  for (const token of ['', ' '.repeat(10), null, 12, 'x'.repeat(2049)]) assert.equal((await post(request({ token }))).status, 400);
+  assert.equal((await post(request({ token: 'x'.repeat(17000) }))).status, 413);
+  assert.equal(calls, 0, 'Reject invalid input before outbound verification');
+  for (const value of [{ success: false }, { success: true, hostname: 'evil.example', action: lib.PROVIDER_CAPTCHA_ACTION }, { success: true, hostname: host, action: 'customer_login' }]) {
+    result = value;
+    const response = await post(request({ token: 'test' }));
+    assert.equal(response.status, 403); assert(!response.headers.get('set-cookie'));
+  }
+  result = { success: true, hostname: host, action: lib.PROVIDER_CAPTCHA_ACTION };
+  const response = await post(request({ token: 'test' }));
+  assert.equal(response.status, 200);
+  const setCookie = response.headers.get('set-cookie');
+  assert.match(setCookie, /HttpOnly/i); assert.match(setCookie, /Secure/i); assert.match(setCookie, /SameSite=strict/i); assert.match(setCookie, /Path=\/provider/); assert.match(setCookie, /Max-Age=900/);
+  cookie = response.cookies.get(lib.PROVIDER_CAPTCHA_COOKIE).value;
+  assert.equal(await layout({ children: 'PORTAL' }), 'PORTAL');
+  cookie = 'forged'; assert.notEqual(await layout({ children: 'PORTAL' }), 'PORTAL');
+  global.fetch = async () => { throw new Error('Network unavailable'); };
+  assert.equal((await post(request({ token: 'test' }))).status, 503);
+  console.log('PASS provider CAPTCHA: direct entry gate, staged/partial configuration, signed host-bound expiry, origin/body validation, Siteverify action/hostname checks, secure cookie and network fail-closed');
+})().catch(error => { console.error(error); process.exitCode = 1; });
