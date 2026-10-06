@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     if (result.success !== true || result.action !== PROVIDER_CAPTCHA_ACTION || result.hostname !== url.hostname) return failure(403);
     const verified = NextResponse.json({ success: true }, { headers: { "Cache-Control": "no-store" } });
     verified.cookies.set(PROVIDER_CAPTCHA_COOKIE, createProviderCaptchaPass(config.secret, url.hostname), {
-      httpOnly: true, secure: url.protocol === "https:", sameSite: "strict", path: "/provider", maxAge: PROVIDER_CAPTCHA_TTL,
+      httpOnly: true, secure: url.protocol === "https:", sameSite: "strict", path: "/", maxAge: PROVIDER_CAPTCHA_TTL,
     });
     return verified;
   } catch { return failure(503); }

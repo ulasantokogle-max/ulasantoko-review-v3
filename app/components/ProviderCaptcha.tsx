@@ -49,15 +49,15 @@ export default function ProviderCaptcha({ siteKey, ready }: { siteKey: string; r
   return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20, background: "#f6f3ef", color: "#29231f" }}>
     <section style={{ width: "100%", maxWidth: 440, padding: 28, background: "white", borderRadius: 24, boxShadow: "0 16px 48px #493a2514" }}>
       <p style={{ fontSize: 12, letterSpacing: 2, color: "#8a6b4d" }}>REPUTASIPRO INTERNAL</p>
-      <h1 style={{ fontSize: 28, marginBottom: 12 }}>Verifikasi Akses Provider</h1>
-      <p style={{ lineHeight: 1.6, color: "#70685f" }}>Selesaikan verifikasi keamanan untuk melanjutkan ke portal provider.</p>
+      <h1 style={{ fontSize: 28, marginBottom: 12 }}>Verifikasi Menu Akses</h1>
+      <p style={{ lineHeight: 1.6, color: "#70685f" }}>Selesaikan verifikasi keamanan untuk membuka menu akses sistem.</p>
       {ready ? <form onSubmit={submit}>
         <Script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" onReady={render} onError={() => setError("Verifikasi tidak dapat dimuat. Muat ulang halaman untuk mencoba lagi.")} />
         <div ref={container} style={{ margin: "24px 0", minHeight: 140, display: "flex", justifyContent: "center" }} />
-        <button type="submit" disabled={!token || busy} style={{ width: "100%", padding: 14, border: 0, borderRadius: 14, background: !token || busy ? "#d5cec6" : "#765338", color: "white", fontWeight: 700, cursor: !token || busy ? "default" : "pointer" }}>{busy ? "Memverifikasi…" : "Lanjut ke Provider"}</button>
+        <button type="submit" disabled={!token || busy} style={{ width: "100%", padding: 14, border: 0, borderRadius: 14, background: !token || busy ? "#d5cec6" : "#765338", color: "white", fontWeight: 700, cursor: !token || busy ? "default" : "pointer" }}>{busy ? "Memverifikasi…" : "Lanjut ke Menu Akses"}</button>
       </form> : <p role="alert">Verifikasi akses sedang disiapkan. Silakan hubungi pengelola sistem.</p>}
       {error && <p role="alert" style={{ color: "#a42f2f", lineHeight: 1.5 }}>{error}</p>}
-      <Link href="/access" style={{ display: "inline-block", marginTop: 24, color: "#765338" }}>Kembali ke Menu Akses</Link>
+      <Link href="/" style={{ display: "inline-block", marginTop: 24, color: "#765338" }}>Kembali ke Beranda</Link>
     </section>
   </main>;
 }

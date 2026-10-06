@@ -54,7 +54,7 @@ function text(tree) { if (tree == null)
     await act(async () => reloadTree.unmount());
     window.localStorage = availableStorage;
     console.log('PASS reload language consistency and unavailable local storage');
-    for (const [file, id, en] of [['app/dashboard/page.tsx', 'Ringkasan Dasbor', 'Dashboard Overview'], ['app/dashboard/cards/page.tsx', 'Manajemen Kartu', 'Card Management'], ['app/dashboard/feedback/page.tsx', 'Masukan Pelanggan', 'Customer Feedback'], ['app/dashboard/analytics/page.tsx', 'Analitik & Wawasan', 'Analytics & Insights'], ['app/dashboard/landing-page/page.tsx', 'Pengeditan Halaman', 'Page Editor'], ['app/dashboard/onboarding/page.tsx', 'Siapkan Bisnis Anda', 'Set Up Your Business'], ['app/provider/cards/page.tsx', 'Pusat Kartu', 'Card Center'], ['app/access/page.tsx', 'Menu Akses Sistem', 'System Access Menu']]) {
+    for (const [file, id, en] of [['app/dashboard/page.tsx', 'Ringkasan Dasbor', 'Dashboard Overview'], ['app/dashboard/cards/page.tsx', 'Manajemen Kartu', 'Card Management'], ['app/dashboard/feedback/page.tsx', 'Masukan Pelanggan', 'Customer Feedback'], ['app/dashboard/analytics/page.tsx', 'Analitik & Wawasan', 'Analytics & Insights'], ['app/dashboard/landing-page/page.tsx', 'Pengeditan Halaman', 'Page Editor'], ['app/dashboard/onboarding/page.tsx', 'Siapkan Bisnis Anda', 'Set Up Your Business'], ['app/provider/cards/page.tsx', 'Pusat Kartu', 'Card Center'], ['app/access/AccessHub.tsx', 'Menu Akses Sistem', 'System Access Menu']]) {
         storage.clear();
         const Page = require(cwd + '/' + file).default;
         let tree;

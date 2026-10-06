@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 
-export const PROVIDER_CAPTCHA_COOKIE = "provider_captcha";
+export const PROVIDER_CAPTCHA_COOKIE = "provider_access_captcha";
 export const PROVIDER_CAPTCHA_ACTION = "provider_entry";
 export const PROVIDER_CAPTCHA_TTL = 15 * 60;
 
