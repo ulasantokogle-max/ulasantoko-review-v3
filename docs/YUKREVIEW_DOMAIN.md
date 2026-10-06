@@ -13,7 +13,7 @@ In the **V3** Supabase project, Authentication → URL Configuration:
 - Keep the existing `https://reputasipro.ulasantoko.space/activate/*` entry for legacy-card account confirmation.
 - Preserve other existing authorized URLs until migration tests are complete.
 
-Activation uses the current browser origin, so customers stay on the domain where they registered. Sessions stored by the browser are separate per domain; a login on the old domain does not automatically log a user into the new one. Project/database/API keys and tenant authorization remain the same. Email sender/SMTP settings are independent and are not configured by a domain change.
+Activation uses the current browser origin, so customers stay on the domain where they registered. Sessions stored by the browser are separate per domain; a login on the old domain does not automatically log a user into the new one. Project/database/API keys and tenant authorization remain the same. Email sender/SMTP settings are independent and are not configured by a domain change. See [YukReview email setup](YUKREVIEW_EMAIL_SETUP.md) for the prepared `noreply@yukreview.id` SMTP rollout and confirmation template; live sender changes require verified DNS and external Auth configuration.
 
 ## Application and database
 
