@@ -65,3 +65,12 @@ main.modern-landing {
 .modern-landing .public-social-link .public-link-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--landing-card); }
 .modern-landing .public-thanks { margin-top: 32px; padding: 18px 0 4px; font-size: 13px; line-height: 1.6; color: var(--landing-muted); }
 .modern-landing .public-thanks > div { margin-bottom: 6px; color: var(--landing-primary); font-size: 18px; }
+
+.modern-landing .public-feedback-actions { display: grid; gap: 10px; margin-top: 18px; }
+.modern-landing .public-feedback-actions .public-link { display: block; width: 100%; font: inherit; font-weight: 800; cursor: pointer; }
+.modern-landing .public-private-fields { display: grid; gap: 12px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.modern-landing .public-private-fields label { font-size: 13px; line-height: 1.6; }
+.modern-landing .public-private-fields input:not([type="checkbox"]), .modern-landing .public-private-fields textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 12px; border-radius: 12px; border: 1px solid var(--landing-muted); background: var(--landing-card); color: var(--landing-text); font: inherit; }
+.modern-landing .public-private-fields textarea { resize: vertical; }
+.modern-landing .public-private-fields input[type="checkbox"] { flex-shrink: 0; margin-top: 4px; accent-color: var(--landing-primary); }
+.modern-landing .public-private-fields button:disabled { opacity: .65; }

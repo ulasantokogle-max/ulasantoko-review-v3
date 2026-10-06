@@ -216,7 +216,7 @@ export default function FeedbackInboxPage() {
             <h1 style={{ margin: 0, fontSize: 30 }}>{tr("Masukan Pelanggan")}</h1>
 
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            {tr("Masukan privat dari pelanggan yang memberikan rating 1–3 bintang.")}
+            {tr("Masukan privat pelanggan dengan penilaian internal 1–5, terpisah dari ulasan Google.", "Private customer feedback with internal ratings from 1–5, separate from Google reviews.")}
           </p>
 
           {!userEmail ? (
@@ -299,7 +299,7 @@ export default function FeedbackInboxPage() {
                 {[
                   [tr("Total Masukan", "Total Feedback"), String(stats.total)],
                   [tr("Status Baru", "New Status"), String(stats.newCount)],
-                  [tr("Rata-rata Rating"), stats.avg],
+                  [tr("Rata-rata Penilaian Internal", "Average Internal Rating"), stats.avg],
                 ].map(([label, value]) => (
                   <div
                     key={label}

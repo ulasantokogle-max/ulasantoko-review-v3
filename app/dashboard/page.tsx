@@ -167,7 +167,7 @@ export default function DashboardHomePage() {
     [tr("Kartu Aktif", "Active Cards"), analytics?.cards?.activated ?? 0],
     [tr("Total Masukan", "Total Feedback"), analytics?.feedback?.total ?? 0],
     [
-      tr("Rata-rata Rating", "Average Rating"),
+      tr("Rata-rata Penilaian Internal", "Average Internal Rating"),
       Number(analytics?.feedback?.average_rating ?? 0).toFixed(1),
     ],
     [tr("Masukan Baru", "New Feedback"), analytics?.feedback?.new ?? 0],

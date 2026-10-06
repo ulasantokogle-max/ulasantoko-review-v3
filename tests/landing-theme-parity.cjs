@@ -12,18 +12,18 @@ function markup(key,preview=false,hidden=false){
  rating:React.createElement(Rating,{cardCode:'TEST',businessName:'Mustika Jaya Herbal',reviewUrl:'https://google.com/review',primaryColor:theme.primary,softColor:theme.soft,textColor:theme.text,mutedColor:theme.muted,smoothMode:true,previewOnly:preview})};
  return renderToStaticMarkup(React.createElement('div',{className:'modern-landing'+(preview?' landing-preview':''),'data-theme':key,style:{'--landing-bg':theme.bg,'--landing-card':theme.card,'--landing-primary':theme.primary,'--landing-secondary':theme.secondary,'--landing-soft':theme.soft,'--landing-text':theme.text,'--landing-muted':theme.muted}},React.createElement('section',{className:'public-shell'},React.createElement(Card,props))));
 }
-function normalize(html){return html.replace(' landing-preview','').replace(/<a\b/g,'<span').replace(/<\/a>/g,'</span>').replace(/ href="[^"]*"| target="[^"]*"| rel="[^"]*"| disabled=""/g,'');}
+function normalize(html){return html.replace(' landing-preview','').replace(/<a\b/g,'<span').replace(/<\/a>/g,'</span>').replace(/<button class="public-link public-review-link" type="button"/g,'<span class="public-link public-review-link"').replace(/(<span class="public-link public-review-link"[^>]*>[^<]*)<\/button>/g,'$1</span>').replace(/ href="[^"]*"| target="[^"]*"| rel="[^"]*"| disabled=""/g,'');}
 for(const key of Object.keys(landingThemes)){
  const live=markup(key),preview=markup(key,true);
  assert.equal(normalize(preview),normalize(live),key+' must share the same theme, layout, fields, labels and rating markup');
  assert(!preview.includes('<a '),'Preview links cannot navigate');
- assert.equal((preview.match(/disabled=""/g)||[]).length,5,'Preview ratings cannot submit or redirect');
+ assert.equal((preview.match(/disabled=""/g)||[]).length,2,'Preview Google and private actions cannot submit or redirect');
  assert(live.includes('background-position:left bottom'));
  assert(live.includes('white-space:pre-wrap'));
  assert(live.indexOf('class="public-rating"') < live.indexOf('class="public-links'),key+' rating precedes links');
  assert(live.indexOf('public-pdf-wide') < live.indexOf('public-social-link'),key+' PDF precedes social links');
  assert.equal((live.match(/class="public-link public-social-link"/g)||[]).length,2);
- assert(live.includes('smoothie-stars') && live.includes('public-thanks'));
+ assert(live.includes('public-feedback-actions') && live.includes('public-thanks'));
  const hidden=markup(key,false,true);
  for(const name of ['public-rating','public-links','public-about','public-promo']) assert(!hidden.includes('class="'+name),key+' visibility toggle '+name);
  assert(live.includes('/a7c93e10b842/menu')||live.includes('href="/a7c93e10b842/menu"'),'Public PDF uses the existing internal viewer');

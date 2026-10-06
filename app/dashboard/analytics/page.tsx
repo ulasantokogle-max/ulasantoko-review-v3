@@ -19,6 +19,8 @@ type AnalyticsData = {
     rating_1?: number;
     rating_2?: number;
     rating_3?: number;
+    rating_4?: number;
+    rating_5?: number;
     new?: number;
     viewed?: number;
     contacted?: number;
@@ -199,7 +201,7 @@ export default function AnalyticsDashboardPage() {
 
   const metricCards = [
     [tr("Total Masukan", "Total Feedback"), feedback.total ?? 0],
-    [tr("Rata-rata Rating", "Average Rating"), Number(feedback.average_rating ?? 0).toFixed(1)],
+    [tr("Rata-rata Penilaian Internal", "Average Internal Rating"), Number(feedback.average_rating ?? 0).toFixed(1)],
     [tr("Bisa Dihubungi", "Contactable"), feedback.contactable ?? 0],
     [tr("Periode", "Period"), periodLabel],
     [tr("Total Kartu", "Total Cards"), cards.total ?? 0],
@@ -354,11 +356,13 @@ export default function AnalyticsDashboardPage() {
 
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
                     <section style={{ padding: 18, borderRadius: 14, border: "1px solid #e5e7eb" }}>
-                      <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Distribusi Rating Masukan")}</h2>
+                      <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Distribusi Penilaian Internal", "Internal Rating Distribution")}</h2>
                       {[
                         ["★", feedback.rating_1 ?? 0],
                         ["★★", feedback.rating_2 ?? 0],
                         ["★★★", feedback.rating_3 ?? 0],
+                        ["★★★★", feedback.rating_4 ?? 0],
+                        ["★★★★★", feedback.rating_5 ?? 0],
                       ].map(([label, value]) => (
                         <div key={String(label)} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: "1px solid #f3f4f6" }}>
                           <span>{label}</span>

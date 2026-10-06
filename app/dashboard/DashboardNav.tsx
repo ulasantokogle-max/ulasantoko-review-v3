@@ -27,7 +27,7 @@ export default function DashboardNav() {
     {
       href: "/dashboard/feedback",
       label: tr("Masukan", "Feedback"),
-      description: tr("Kelola masukan pelanggan 1–3 bintang", "Manage 1–3 star customer feedback"),
+      description: tr("Kelola masukan privat pelanggan", "Manage private customer feedback"),
     },
     {
       href: "/dashboard/analytics",

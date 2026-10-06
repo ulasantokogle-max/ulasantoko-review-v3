@@ -91,7 +91,7 @@ export default function CustomerOnboardingPage() {
       {
         number: 1,
         title: "Google Review",
-        description: tr("Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review."),
+        description: tr("Hubungkan lokasi Google Maps agar semua pelanggan dapat menulis ulasan langsung di Google.", "Connect Google Maps so every customer can write a review directly on Google."),
         done: Boolean(setup.google_review_configured),
         href: "/dashboard/landing-page",
         action: setup.google_review_configured ? tr("Sudah terhubung", "Connected") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),

@@ -210,6 +210,7 @@ export default async function PublicCardPage({
     { data: publicNameData },
     { data: publicContactData },
     { data: landingSettingsData },
+    { data: feedbackCapabilities, error: feedbackCapabilitiesError },
   ] = await Promise.all([
     supabase.rpc("v3_get_public_card", {
       p_card_code: cardCode,
@@ -223,6 +224,7 @@ export default async function PublicCardPage({
     supabase.rpc("v3_get_public_landing_page", {
       p_card_code: cardCode,
     }),
+    supabase.rpc("v3_get_feedback_capabilities"),
   ]);
 
   if (error || !data) {
@@ -356,7 +358,7 @@ export default async function PublicCardPage({
           showGoogleReview={showGoogleReview} showWhatsapp={showWhatsapp} showInstagram={showInstagram}
           showPdf={showPdf} showAbout={showAbout} showPromo={showPromo}
           labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
-          rating={<RatingFlow cardCode={cardCode} businessName={businessName} reviewUrl={showGoogleReview ? reviewUrl : null}
+          rating={<RatingFlow privateFeedbackAvailable={!feedbackCapabilitiesError && feedbackCapabilities?.private_rating_max === 5} cardCode={cardCode} businessName={businessName} reviewUrl={showGoogleReview ? reviewUrl : null}
             whatsappUrl={showWhatsapp ? whatsappUrl : null} primaryColor={theme.primary} softColor={theme.soft}
             textColor={theme.text} mutedColor={theme.muted} smoothMode />}
         />

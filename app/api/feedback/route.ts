@@ -33,7 +33,7 @@ export async function POST(request: Request) {
     });
     const invalidConsent = body.contact_consent != null && typeof body.contact_consent !== "boolean";
 
-    if (!cardCode || cardCode.length > 160 || !Number.isInteger(rating) || rating < 1 || rating > 3 || invalidText || invalidConsent) {
+    if (!cardCode || cardCode.length > 160 || !Number.isInteger(rating) || rating < 1 || rating > 5 || invalidText || invalidConsent) {
       return NextResponse.json(
         {
           success: false,

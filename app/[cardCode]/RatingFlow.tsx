@@ -5,16 +5,9 @@ import { getFeedbackError } from "../../lib/feedbackErrors";
 import { useLanguage } from "../../lib/i18n";
 
 type Props = {
-  cardCode: string;
-  businessName: string;
-  reviewUrl: string | null;
-  whatsappUrl?: string | null;
-  primaryColor?: string;
-  softColor?: string;
-  textColor?: string;
-  mutedColor?: string;
-  smoothMode?: boolean;
-  previewOnly?: boolean;
+  cardCode: string; businessName: string; reviewUrl: string | null; whatsappUrl?: string | null;
+  primaryColor?: string; softColor?: string; textColor?: string; mutedColor?: string;
+  smoothMode?: boolean; previewOnly?: boolean; privateFeedbackAvailable?: boolean;
 };
 
 function GoogleMark() {
@@ -41,19 +34,12 @@ function GoogleMark() {
   );
 }
 
-export default function RatingFlow({
-  cardCode,
-  businessName,
-  reviewUrl,
-  whatsappUrl,
-  primaryColor = "#8B5E3C",
-  softColor = "#F2E5D8",
-  textColor = "#4B3428",
-  mutedColor = "#7A6659",
-  smoothMode = false,
-  previewOnly = false,
-}: Props) {
+// Google access never depends on an internal rating or submitting feedback.
+export default function RatingFlow({ cardCode, businessName, reviewUrl, whatsappUrl,
+  primaryColor = "#8B5E3C", softColor = "#F2E5D8", textColor = "#4B3428", mutedColor = "#7A6659",
+  smoothMode = false, previewOnly = false, privateFeedbackAvailable = true }: Props) {
   const { tr } = useLanguage();
+  const [privateOpen, setPrivateOpen] = useState(false);
   const [rating, setRating] = useState<number | null>(null);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -63,377 +49,99 @@ export default function RatingFlow({
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
 
-  function chooseRating(value: number) {
-    if (previewOnly) return;
-    setRating(value);
-    setError("");
-
-    if (value >= 4) {
-      if (!reviewUrl) {
-        setError(tr("Link Google Review belum tersedia. Silakan hubungi pemilik bisnis.", "Google Review link is not available yet. Please contact the business owner."));
-        return;
-      }
-
-      window.location.assign(reviewUrl);
-    }
-  }
-
   function getFeedbackSessionId() {
-    if (typeof window === "undefined") return null;
-
-    const key = "ulasantoko_feedback_session";
-    let value = window.sessionStorage.getItem(key);
-
-    if (!value) {
-      value =
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      window.sessionStorage.setItem(key, value);
-    }
-
-    return value;
+    try {
+      const key = "ulasantoko_feedback_session";
+      let value = window.sessionStorage.getItem(key);
+      if (!value) {
+        value = typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        window.sessionStorage.setItem(key, value);
+      }
+      return value;
+    } catch { return null; } // SQL keeps a conservative anonymous throttle.
   }
 
   async function submitFeedback(event: FormEvent) {
     event.preventDefault();
-    if (previewOnly) return;
-
-    if (!rating || rating > 3) return;
-
-    setSending(true);
-    setError("");
-
+    if (previewOnly || !privateFeedbackAvailable || sending || sent) return;
+    if (!rating || !message.trim()) {
+      setError(tr("Pilih penilaian internal dan isi masukan Anda.", "Choose an internal rating and enter your feedback."));
+      return;
+    }
+    setSending(true); setError("");
     try {
       const response = await fetch("/api/feedback", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          card_code: cardCode,
-          rating,
-          customer_name: name,
-          customer_phone: phone,
-          message,
-          category: "service",
-          contact_consent: consent,
-          session_id: getFeedbackSessionId(),
-        }),
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ card_code: cardCode, rating, customer_name: name, customer_phone: phone,
+          message, category: "service", contact_consent: consent, session_id: getFeedbackSessionId() }),
       });
-
       const data = await response.json();
-
-      if (!response.ok || !data?.success) {
-        console.error("Private feedback submission failed", {
-          status: response.status,
-          data
-        });
+      if (!response.ok || data?.success !== true) {
         const failure = getFeedbackError(data?.code);
         setError(failure ? tr(failure.id, failure.en) : tr("Masukan belum dapat dikirim. Silakan coba lagi.", "Feedback could not be sent. Please try again."));
         return;
       }
-
       setSent(true);
-    } catch (err) {
-      console.error("Private feedback request failed", err);
+    } catch {
       setError(tr("Masukan belum dapat dikirim. Periksa koneksi lalu coba lagi.", "Feedback could not be sent. Check your connection and try again."));
-    } finally {
-      setSending(false);
-    }
+    } finally { setSending(false); }
   }
 
-  if (sent) {
-    return (
-      <div
-        style={{
-          marginTop: smoothMode ? 18 : 22,
-          padding: smoothMode ? "22px 18px" : 18,
-          borderRadius: smoothMode ? 28 : 16,
-          background: smoothMode
-            ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))"
-            : "#f0fdf4",
-          border: smoothMode ? "1px solid rgba(255,255,255,.78)" : "1px solid #bbf7d0",
-          boxShadow: smoothMode
-            ? "0 18px 46px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.9)"
-            : "none",
-          textAlign: smoothMode ? "center" : "left",
-        }}
-      >
-        {smoothMode && (
-          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-            <GoogleMark />
-          </div>
-        )}
-        <div style={{ fontWeight: 900, fontSize: smoothMode ? 20 : 18, marginBottom: 8, color: textColor }}>
-          {tr("Terima kasih atas masukannya", "Thank you for your feedback")}
-        </div>
-        <div style={{ color: mutedColor, lineHeight: 1.6 }}>
-          {tr("Masukan Anda sudah diterima oleh", "Your feedback has been received by")} {businessName}.
-        </div>
-
-        {whatsappUrl && (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              display: "block",
-              marginTop: 14,
-              textAlign: "center",
-              textDecoration: "none",
-              background: primaryColor,
-              color: "#ffffff",
-              padding: "12px 14px",
-              borderRadius: 12,
-              fontWeight: 800,
-            }}
-          >
-            {tr("Hubungi Bisnis via WhatsApp", "Contact Business via WhatsApp")}
-          </a>
-        )}
+  return <section className={"public-rating " + (smoothMode ? "smoothie-rating-card" : "")} style={{ color: textColor }}>
+    <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}><GoogleMark /></div>
+    <h2 style={{ fontWeight: 900, fontSize: 21, textAlign: "center", margin: 0 }}>
+      {tr("Bagikan pengalaman Anda", "Share your experience")}
+    </h2>
+    <p style={{ color: mutedColor, textAlign: "center", fontSize: 14, lineHeight: 1.6 }}>
+      {tr("Berikan ulasan jujur di Google. Semua pengalaman Anda berarti bagi kami.", "Leave an honest review on Google. Every experience matters to us.")}
+    </p>
+    <div className="public-feedback-actions">
+      {reviewUrl && !previewOnly ? <a className="public-link public-review-link" href={reviewUrl} target="_blank" rel="noreferrer">
+        {tr("Tulis Ulasan di Google", "Write a Review on Google")}
+      </a> : <button className="public-link public-review-link" type="button" disabled>
+        {tr("Tulis Ulasan di Google", "Write a Review on Google")}
+      </button>}
+      {!reviewUrl && <p style={{ color: mutedColor, fontSize: 13 }}>{tr("Link ulasan Google belum tersedia.", "The Google review link is not available yet.")}</p>}
+      <button className="public-link" type="button" disabled={previewOnly} aria-expanded={privateOpen}
+        onClick={() => { if (!previewOnly) setPrivateOpen(!privateOpen); }}>
+        {tr("Kirim Masukan untuk Bisnis", "Send Feedback to the Business")}
+      </button>
+    </div>
+    <p style={{ color: mutedColor, fontSize: 12, lineHeight: 1.6 }}>
+      {tr("Masukan privat bersifat opsional. Anda dapat menulis ulasan Google tanpa mengisi formulir ini.", "Private feedback is optional. You can write a Google review without completing this form.")}
+    </p>
+    {privateOpen && (sent ? <div role="status" style={{ padding: 18, borderRadius: 18, background: softColor }}>
+      <strong>{tr("Terima kasih atas masukannya", "Thank you for your feedback")}</strong>
+      <p>{tr("Masukan Anda sudah diterima oleh", "Your feedback has been received by")} {businessName}.</p>
+      {whatsappUrl && <a href={whatsappUrl} target="_blank" rel="noreferrer" style={{ color: textColor }}>{tr("Hubungi Bisnis via WhatsApp", "Contact Business via WhatsApp")}</a>}
+    </div> : !privateFeedbackAvailable ? <p role="status" style={{ color: mutedColor }}>
+      {tr("Masukan privat sementara belum tersedia. Silakan coba lagi nanti.", "Private feedback is temporarily unavailable. Please try again later.")}
+    </p> : <form onSubmit={submitFeedback} style={{ marginTop: 20, padding: 18, borderRadius: 18, background: softColor, textAlign: "left" }}>
+      <h3 style={{ marginTop: 0 }}>{tr("Penilaian internal", "Internal Rating")}</h3>
+      <p style={{ color: mutedColor, fontSize: 13, lineHeight: 1.6 }}>
+        {tr("Penilaian 1–5 ini hanya dikirim ke bisnis, bukan rating Google. Ceritakan pengalaman Anda, baik maupun kurang baik.", "This 1–5 rating is sent only to the business, not Google. Share your experience, positive or negative.")}
+      </p>
+      <div className="smoothie-stars" role="radiogroup" aria-label={tr("Penilaian internal", "Internal Rating")}
+        style={{ display: "grid", gridTemplateColumns: "repeat(5, minmax(0, 1fr))", gap: 8, marginBottom: 18 }}>
+        {[1, 2, 3, 4, 5].map(value => <button key={value} role="radio" aria-checked={rating === value}
+          aria-label={`${value} ${tr("bintang", "stars")}`} type="button" disabled={sending || previewOnly}
+          onClick={() => { if (!previewOnly) { setRating(value); setError(""); } }}
+          style={{ fontSize: "clamp(27px, 8vw, 34px)", padding: 8, minWidth: 0, cursor: "pointer", color: rating !== null && value <= rating ? "#e5a323" : "#918579" }}>★</button>)}
       </div>
-    );
-  }
-
-  return (
-    <section
-      className={"public-rating " + (smoothMode ? "smoothie-rating-card" : "")}
-      style={{
-        marginTop: smoothMode ? 18 : 24,
-        padding: smoothMode ? "22px 18px 20px" : 0,
-        paddingTop: smoothMode ? 22 : 22,
-        borderTop: smoothMode ? "1px solid rgba(255,255,255,.72)" : "1px solid rgba(0,0,0,.07)",
-        borderRadius: smoothMode ? 28 : 0,
-        background: smoothMode
-          ? "linear-gradient(145deg, rgba(255,255,255,.86), rgba(244,231,215,.86))"
-          : "transparent",
-        boxShadow: smoothMode
-          ? "0 18px 46px rgba(103,73,48,.11), inset 0 1px 0 rgba(255,255,255,.9)"
-          : "none",
-      }}
-    >
-      {smoothMode && (
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
-          <GoogleMark />
-        </div>
-      )}
-      <div style={{ fontWeight: 900, fontSize: smoothMode ? 21 : 19, textAlign: "center", color: textColor }}>
-        {smoothMode ? tr("Beri kami ulasan Google", "Leave us a Google review") : tr("Bagaimana pengalaman Anda?", "How was your experience?")}
-      </div>
-      <div
-        style={{
-          color: mutedColor,
-          textAlign: "center",
-          fontSize: 14,
-          marginTop: 6,
-        }}
-      >
-        {smoothMode ? tr("Hanya 10 detik, sangat berarti bagi kami", "It only takes 10 seconds and means a lot to us") : tr("Pilih rating 1 sampai 5 bintang", "Choose a rating from 1 to 5 stars")}
-      </div>
-
-      <div
-        className={smoothMode ? "smoothie-stars" : undefined}
-        style={{
-          display: smoothMode ? "grid" : "flex",
-          gridTemplateColumns: smoothMode ? "repeat(5, minmax(0, 1fr))" : undefined,
-          justifyContent: "center",
-          gap: smoothMode ? 8 : 6,
-          marginTop: smoothMode ? 18 : 16,
-          flexWrap: smoothMode ? undefined : "wrap",
-        }}
-      >
-        {[1, 2, 3, 4, 5].map((value) => (
-          <button
-            key={value}
-            type="button"
-            aria-label={`${value} ${tr("bintang", "stars")}`}
-            disabled={previewOnly}
-            onClick={() => chooseRating(value)}
-            style={{
-              border: smoothMode ? "1px solid rgba(255,255,255,.8)" : 0,
-              background: smoothMode ? "rgba(255,255,255,.72)" : "transparent",
-              fontSize: smoothMode ? "clamp(27px, 8vw, 34px)" : 40,
-              lineHeight: 1,
-              cursor: "pointer",
-              padding: smoothMode ? 8 : 5,
-              width: smoothMode ? "100%" : "auto",
-              minWidth: 0,
-              borderRadius: smoothMode ? 16 : 0,
-              boxShadow: smoothMode ? "0 8px 18px rgba(103,73,48,.08)" : "none",
-              color:
-                rating !== null && value <= rating ? "#e5a323" : smoothMode ? "#cfc5bb" : "#d1d5db",
-            }}
-          >
-            ★
-          </button>
-        ))}
-      </div>
-
-      {rating !== null && rating >= 4 && reviewUrl && (
-        <div
-          style={{
-            marginTop: 14,
-            padding: 14,
-            borderRadius: 12,
-            background: softColor,
-            color: textColor,
-            textAlign: "center",
-            lineHeight: 1.55,
-          }}
-        >
-          {tr("Mengarahkan ke halaman ulasan Google...", "Redirecting to Google Reviews...")}
-        </div>
-      )}
-
-      {error && rating !== null && rating >= 4 && (
-        <div
-          style={{
-            marginTop: 12,
-            padding: 12,
-            borderRadius: 12,
-            background: "#fef2f2",
-            color: "#991b1b",
-            textAlign: "center",
-            fontSize: 13,
-          }}
-        >
-          {tr(error)}
-        </div>
-      )}
-
-      {rating !== null && rating <= 3 && (
-        <form
-          onSubmit={submitFeedback}
-          style={{
-            marginTop: 20,
-            padding: 18,
-            borderRadius: 18,
-            background: softColor,
-            border: "1px solid rgba(0,0,0,.06)",
-          }}
-        >
-          <div style={{ fontWeight: 800, marginBottom: 6 }}>
-            {tr("Kami ingin memperbaiki pengalaman Anda")}
-          </div>
-          <div
-            style={{
-              color: mutedColor,
-              fontSize: 14,
-              lineHeight: 1.55,
-              marginBottom: 14,
-            }}
-          >
-            {tr("Masukan ini dikirim secara privat ke bisnis dan tidak diposting ke Google.")}
-          </div>
-
-          <div style={{ display: "grid", gap: 10 }}>
-            <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={tr("Nama (opsional)")}
-              maxLength={120}
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "12px 13px",
-                border: "1px solid #d1d5db",
-                borderRadius: 12,
-                fontSize: 14,
-                outline: "none",
-                background: "#fff",
-              }}
-            />
-
-            <input
-              value={phone}
-              onChange={(event) => setPhone(event.target.value)}
-              placeholder={tr("No. WhatsApp (opsional)")}
-              maxLength={32}
-              inputMode="tel"
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "12px 13px",
-                border: "1px solid #d1d5db",
-                borderRadius: 12,
-                fontSize: 14,
-                outline: "none",
-                background: "#fff",
-              }}
-            />
-
-            <textarea
-              value={message}
-              onChange={(event) => setMessage(event.target.value)}
-              placeholder={tr("Ceritakan apa yang bisa kami perbaiki...")}
-              required
-              maxLength={2000}
-              rows={4}
-              style={{
-                width: "100%",
-                boxSizing: "border-box",
-                padding: "12px 13px",
-                border: "1px solid #d1d5db",
-                borderRadius: 12,
-                fontSize: 14,
-                resize: "vertical",
-                outline: "none",
-                background: "#fff",
-              }}
-            />
-
-            <label
-              style={{
-                display: "flex",
-                gap: 8,
-                alignItems: "flex-start",
-                fontSize: 13,
-                color: mutedColor,
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={consent}
-                onChange={(event) => setConsent(event.target.checked)}
-                style={{ marginTop: 2 }}
-              />
-              {tr("Saya bersedia dihubungi oleh bisnis terkait masukan ini.")}
-            </label>
-
-            <button
-              type="submit"
-              disabled={sending}
-              style={{
-                border: 0,
-                borderRadius: 13,
-                padding: "13px 14px",
-                fontWeight: 800,
-                cursor: "pointer",
-                background: primaryColor,
-                color: "#ffffff",
-              }}
-            >
-              {sending ? tr("Mengirim...", "Sending...") : tr("Kirim Masukan Privat", "Send Private Feedback")}
-            </button>
-          </div>
-
-          {error && (
-            <div
-              style={{
-                marginTop: 12,
-                padding: 10,
-                borderRadius: 10,
-                background: "#fef2f2",
-                color: "#991b1b",
-                fontSize: 13,
-              }}
-            >
-              {tr(error)}
-            </div>
-          )}
-        </form>
-      )}
-    </section>
-  );
+      <fieldset disabled={sending || previewOnly} className="public-private-fields">
+        <label>{tr("Nama (opsional)", "Name (optional)")}<input value={name} onChange={event => setName(event.target.value)} maxLength={120} autoComplete="name" /></label>
+        <label>{tr("No. WhatsApp (opsional)", "WhatsApp Number (optional)")}<input value={phone} onChange={event => setPhone(event.target.value)} maxLength={32} inputMode="tel" autoComplete="tel" /></label>
+        <label>{tr("Masukan Anda", "Your Feedback")}<textarea value={message} onChange={event => setMessage(event.target.value)} required maxLength={2000} rows={4} /></label>
+        <label style={{ display: "flex", gap: 8, alignItems: "flex-start", color: mutedColor }}>
+          <input type="checkbox" checked={consent} onChange={event => setConsent(event.target.checked)} />
+          {tr("Saya bersedia dihubungi oleh bisnis terkait masukan ini.", "I agree to be contacted by the business about this feedback.")}
+        </label>
+        <button type="submit" className="public-link" disabled={!rating || !message.trim() || sending || previewOnly}>
+          {sending ? tr("Mengirim...", "Sending...") : tr("Kirim Masukan Privat", "Send Private Feedback")}
+        </button>
+      </fieldset>
+      {error && <p role="alert" style={{ color: "#991b1b", background: "#fef2f2", borderRadius: 10, padding: 10 }}>{error}</p>}
+    </form>)}
+  </section>;
 }

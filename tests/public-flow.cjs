@@ -14,14 +14,16 @@ let outcome = { data: { success: true, feedback_id: 'saved' }, error: null };
 let calls = [];
 let language = 'en';
 let activation = { success: true, needs_activation: false };
-let card = { business: { name: 'Nama Bisnis Asli' }, card: { card_code: 'TEST001' }, blocks: [] };
+let card = { google_review: {review_url:'https://search.google.com/local/writereview?placeid=test'}, business: { name: 'Nama Bisnis Asli' }, card: { card_code: 'TEST001' }, blocks: [] };
 let pageCalls = [];
+let capabilities = {private_rating_max:5};
 let pageSettings = { success: true, theme_key: 'soft_smoothie', pdf_url: 'https://example.com/menu.pdf', pdf_title: 'Dokumen Bisnis Asli' };
 const originalLoad = Module._load;
 Module._load = function (id, parent, main) {
   if (id === '@supabase/supabase-js') return { createClient: () => ({ rpc: async (name, args) => {
     pageCalls.push({ name, args });
     if (name === 'v3_resolve_card_code') return { data: args.p_public_id === 'a7c93e10b842' ? 'TEST001' : null, error: null };
+    if (name === 'v3_get_feedback_capabilities') return {data:capabilities,error:null};
     if (name === 'v3_submit_feedback') { calls.push(args); return outcome; }
     if (name === 'v3_get_card_activation_state') return { data: activation };
     if (name === 'v3_get_public_card') return { data: card, error: null };
@@ -43,12 +45,13 @@ const { POST } = require('../app/api/feedback/route.ts');
 function request(body) { return new Request('https://example.com/api/feedback', { method: 'POST', body: JSON.stringify(body) }); }
 const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli', contact_consent: false, session_id: 'test-session' };
 (async () => {
-  for (const invalid of [{ ...valid, rating: 4 }, { ...valid, rating: true }, { ...valid, card_code: {} }, { ...valid, contact_consent: 'false' }, { ...valid, message: {} }, { ...valid, customer_name: 'x'.repeat(121) }, []]) {
+  for (const invalid of [{ ...valid, rating: 6 }, { ...valid, rating: 0 }, { ...valid, rating: 2.5 }, { ...valid, rating: true }, { ...valid, card_code: {} }, { ...valid, contact_consent: 'false' }, { ...valid, message: {} }, { ...valid, customer_name: 'x'.repeat(121) }, []]) {
     const before = calls.length;
     assert.equal((await POST(request(invalid))).status, 400);
     assert.equal(calls.length, before, 'Invalid input must not reach RPC');
   }
   assert.equal((await POST(new Request('https://example.com/api/feedback', { method: 'POST', body: '{bad' }))).status, 400);
+  for (const rating of [1,2,3,4,5]) assert.equal((await POST(request({...valid,rating}))).status,200);
   const saved = await POST(request(valid));
   assert.equal(saved.status, 200);
   assert.equal((await saved.json()).success, true);
@@ -77,8 +80,13 @@ const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli'
     const page = await PublicPage({ params: Promise.resolve({ cardCode: 'TEST001' }) });
     const html = renderToStaticMarkup(React.createElement(LanguageProvider, { initialLanguage: language }, page));
     assert(html.includes('Nama Bisnis Asli'));
-    assert(html.includes(language === 'en' ? 'Leave us a Google review' : 'Beri kami ulasan Google'));
+    assert(html.includes('href="https://search.google.com/local/writereview?placeid=test"'));
+    assert(html.includes(language === 'en' ? 'Write a Review on Google' : 'Tulis Ulasan di Google'));
   }
+  capabilities = null;
+  const unavailableMarkerPage = await PublicPage({ params: Promise.resolve({cardCode:'TEST001'}) });
+  assert(renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},unavailableMarkerPage)).includes('href="https://search.google.com/local/writereview?placeid=test"'),'Missing migration must not affect Google access');
+  capabilities = {private_rating_max:5};
   const originalSettings = pageSettings;
   for (const theme of ['warm_brown', 'soft_smoothie', 'soft_tosca', 'elegant_cream', 'minimal_dark']) {
     pageSettings = { ...originalSettings, theme_key: theme, hero_title: 'Judul dari form', hero_description: 'Deskripsi dari form', promo_text: 'Promo dari form', about_text: 'Tentang dari form', cover_position: 'bottom-right', instagram_url: 'https://instagram.com/business' };
