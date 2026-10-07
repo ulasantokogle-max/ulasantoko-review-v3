@@ -101,5 +101,26 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  assert(text(tree.toJSON()).includes('Browser tidak dapat menyimpan draft'));
  assert.equal(input(fields[0]).props.value,'Still editable');
  await act(async()=>tree.unmount());
+ // Upload errors must release UI state; delayed results must not leak into another business.
+ window.sessionStorage.setItem=(k,v)=>storage.set(k,v);
+ await mount();
+ let mode='fail',finish,paths=[];
+ supabase.auth.getUser=async()=>({data:{user:{id:'upload-user'}},error:null});
+ supabase.storage={from:()=>({upload:async(path)=>{paths.push(path);if(mode==='fail')throw Error('network');if(mode==='late')return new Promise(resolve=>{finish=resolve;});return {error:null};},getPublicUrl:path=>({data:{publicUrl:'https://assets.example/'+path}})})};
+ const file={type:'application/pdf',size:1024,name:'menu.pdf'};
+ const upload=()=>tree.root.findAllByType('input').find(n=>n.props.accept==='application/pdf').props.onChange({target:{files:[file]},currentTarget:{value:"selected.pdf"}});
+ await act(async()=>upload());
+ assert(text(tree.toJSON()).includes('Unggah PDF belum berhasil'));
+ assert(!text(tree.toJSON()).includes('Mengunggah PDF'));
+ mode='late';await act(async()=>upload());
+ await act(async()=>switchBusiness('business-upload-next'));
+ await act(async()=>finish({error:null}));
+ const pdfInput=()=>tree.root.findAllByType('input').find(n=>n.props.placeholder==='Atau tempel URL PDF (HTTPS)');
+ assert(!pdfInput().props.value.includes('business-a'),'Late upload must not populate the new business');
+ mode='ok';await act(async()=>upload());
+ assert(pdfInput().props.value.includes('/business-upload-next/pdf/'));
+ assert(paths.every(path=>path.endsWith('.pdf')));
+ await act(async()=>tree.unmount());
+ console.log('PASS uploads: thrown network failure unlocks, business change discards late results, new business upload succeeds');
  console.log('PASS editor drafts: refresh restoration of text/contact/Maps/toggles, business/account isolation, failed/successful save, no automatic Google calls, malformed/blocked storage');
 })().catch(error=>{console.error(error);process.exitCode=1;});

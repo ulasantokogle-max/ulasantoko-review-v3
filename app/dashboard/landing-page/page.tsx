@@ -95,6 +95,8 @@ export default function LandingPageBuilderPage() {
   const draftKey = userEmail && businessId ? landingDraftKey(userEmail, businessId) : "";
   const activeDraftKey = useRef(draftKey);
   const loadSequence = useRef(0);
+  const uploadSequence = useRef({ logo: 0, cover: 0, pdf: 0 });
+  const uploadBusy = useRef({ logo: false, cover: false, pdf: false });
   activeDraftKey.current = draftKey;
   const [loadedDraftKey, setLoadedDraftKey] = useState("");
   const [baseline, setBaseline] = useState("");
@@ -118,11 +120,13 @@ export default function LandingPageBuilderPage() {
   }, []);
 
   useEffect(() => {
+    for (const kind of ["logo", "cover", "pdf"] as const) { uploadSequence.current[kind]++; uploadBusy.current[kind] = false; }
+    setUploadingLogo(false); setUploadingCover(false); setUploadingPdf(false);
     const sequence = ++loadSequence.current;
     setLoadedDraftKey("");
     setDraftNotice("");
     if (businessId && draftKey) loadSettings(draftKey, sequence);
-    return () => { if (loadSequence.current === sequence) loadSequence.current++; };
+    return () => { if (loadSequence.current === sequence) loadSequence.current++; for (const kind of ["logo", "cover", "pdf"] as const) uploadSequence.current[kind]++; };
   }, [businessId, draftKey]);
 
   useEffect(() => {
@@ -251,121 +255,55 @@ export default function LandingPageBuilderPage() {
   }
 
   async function uploadMedia(file: File, kind: "logo" | "cover") {
-    if (!userEmail) return;
-
-    const isImage = ["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type);
-    if (!isImage) {
-      setError("File harus berupa gambar.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Ukuran gambar maksimal 5 MB.");
-      return;
-    }
-
-    const setUploading = kind === "logo" ? setUploadingLogo : setUploadingCover;
-    setUploading(true);
-    setError("");
-    setMessage("");
-
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-
-    if (!uid) {
-      setUploading(false);
-      setError("Sesi tidak ditemukan. Silakan masuk kembali.");
-      return;
-    }
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = uid + "/" + businessId + "/" + kind + "-" + Date.now() + "." + safeExt;
-
-    const { error: uploadError } = await supabase.storage
-      .from("landing-media")
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
-      });
-
-    if (uploadError) {
-      console.error("Landing image upload failed", uploadError);
-      setUploading(false);
-      setError("Upload gambar belum berhasil. Silakan coba lagi.");
-      return;
-    }
-
-    const { data: publicData } = supabase.storage
-      .from("landing-media")
-      .getPublicUrl(path);
-
-    if (kind === "logo") {
-      setSettings((s) => ({ ...s, logo_url: publicData.publicUrl }));
-    } else {
-      setSettings((s) => ({ ...s, cover_url: publicData.publicUrl }));
-    }
-
-    setUploading(false);
-    setMessage((kind === "logo" ? "Logo" : tr("Cover")) + tr(" berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan."));
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { setError("File harus berupa gambar."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Ukuran gambar maksimal 5 MB."); return; }
+    await uploadLandingFile(file, kind);
   }
 
   async function uploadPdf(file: File) {
-    if (!userEmail) return;
+    if (file.type !== "application/pdf") { setError("File harus berupa PDF."); return; }
+    if (file.size > 10 * 1024 * 1024) { setError("Ukuran PDF maksimal 10 MB."); return; }
+    await uploadLandingFile(file, "pdf");
+  }
 
-    if (file.type !== "application/pdf") {
-      setError("File harus berupa PDF.");
-      return;
+  async function uploadLandingFile(file: File, kind: "logo" | "cover" | "pdf") {
+    const capturedKey = draftKey;
+    const capturedBusiness = businessId;
+    if (!userEmail || !capturedBusiness || !capturedKey || loadedDraftKey !== capturedKey || uploadBusy.current[kind]) return;
+    const request = ++uploadSequence.current[kind];
+    uploadBusy.current[kind] = true;
+    const current = () => activeDraftKey.current === capturedKey && uploadSequence.current[kind] === request;
+    const setUploading = kind === "logo" ? setUploadingLogo : kind === "cover" ? setUploadingCover : setUploadingPdf;
+    setUploading(true); setError(""); setMessage("");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const result = await Promise.race([
+        (async () => {
+          const { data, error: authError } = await supabase.auth.getUser();
+          if (!current()) return null;
+          if (authError || !data.user?.id) throw new Error("AUTH_REQUIRED");
+          const uid = data.user.id;
+          const ext = kind === "pdf" ? "pdf" : ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" } as Record<string, string>)[file.type];
+          const path = `${uid}/${capturedBusiness}/${kind === "pdf" ? "pdf/menu" : kind}-${Date.now()}-${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("landing-media").upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+          if (!current()) return null;
+          if (uploadError) throw new Error("UPLOAD_FAILED");
+          return supabase.storage.from("landing-media").getPublicUrl(path).data.publicUrl;
+        })(),
+        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("UPLOAD_TIMEOUT")), 60000); }),
+      ]);
+      if (!current() || !result) return;
+      setSettings(settings => kind === "pdf"
+        ? { ...settings, pdf_url: result, pdf_title: settings.pdf_title || file.name.replace(/\.pdf$/i, "") }
+        : { ...settings, [kind === "logo" ? "logo_url" : "cover_url"]: result });
+      setMessage(kind === "pdf" ? "PDF berhasil diunggah. Klik Simpan Perubahan untuk menyimpan perubahan."
+        : (kind === "logo" ? "Logo" : tr("Cover")) + tr(" berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan."));
+    } catch {
+      if (current()) setError(kind === "pdf" ? "Unggah PDF belum berhasil. Silakan coba lagi." : "Upload gambar belum berhasil. Silakan coba lagi.");
+    } finally {
+      clearTimeout(timer);
+      if (current()) { uploadBusy.current[kind] = false; setUploading(false); uploadSequence.current[kind]++; }
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Ukuran PDF maksimal 10 MB.");
-      return;
-    }
-
-    setUploadingPdf(true);
-    setError("");
-    setMessage("");
-
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-
-    if (!uid) {
-      setUploadingPdf(false);
-      setError("Sesi tidak ditemukan. Silakan masuk kembali.");
-      return;
-    }
-
-    const path = uid + "/" + businessId + "/pdf/menu-" + Date.now() + ".pdf";
-
-    const { error: uploadError } = await supabase.storage
-      .from("landing-media")
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: "application/pdf"
-      });
-
-    if (uploadError) {
-      console.error("Landing PDF upload failed", uploadError);
-      setUploadingPdf(false);
-      setError("Unggah PDF belum berhasil. Silakan coba lagi.");
-      return;
-    }
-
-    const { data: publicData } = supabase.storage
-      .from("landing-media")
-      .getPublicUrl(path);
-
-    setSettings((s) => ({
-      ...s,
-      pdf_url: publicData.publicUrl,
-      pdf_title: s.pdf_title || file.name.replace(/\.pdf$/i, "")
-    }));
-
-    setUploadingPdf(false);
-    setMessage("PDF berhasil diunggah. Klik Simpan Perubahan untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {

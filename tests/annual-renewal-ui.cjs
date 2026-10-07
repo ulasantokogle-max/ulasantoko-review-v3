@@ -4,9 +4,9 @@ global.IS_REACT_ACT_ENVIRONMENT=true;
 require.extensions['.tsx']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,esModuleInterop:true}}).outputText,f);
 let term={success:true,enabled:true,expires_on:'2027-10-07',days_remaining:7};
 let rows=[{business_id:'business-a',business_name:'Business A',expires_on:null,revision:0,days_remaining:null}];
-let fail=false, writes=[];
+let fail=false, writes=[], termError=null;
 const rpc=async(name,args)=>{
- if(name==='v3_get_business_term')return {data:term};
+ if(name==='v3_get_business_term')return {data:term,error:termError};
  if(name==='v3_provider_list_business_terms')return {data:rows};
  writes.push(args);
  return fail ? {error:{message:'network'}} : {data:{success:true,expires_on:'2027-10-07',revision:1}};
@@ -50,6 +50,10 @@ const text=n=>!n?'':typeof n==='string'?n:Array.isArray(n)?n.map(text).join(' ')
  term={success:true,enabled:false};
  await act(async()=>{root=create(React.createElement(Gate,{businessId:'legacy-business',userEmail:'owner@example.com',businesses:[],setBusinessId:()=>{}},React.createElement('button',null,'Save')));});
  assert.equal(root.root.findByType('fieldset').props.disabled,false);
+ await act(async()=>root.unmount());
+ termError={code:'PGRST202',message:'RPC missing'};
+ await act(async()=>{root=create(React.createElement(Gate,{businessId:'legacy-business',userEmail:'owner@example.com',businesses:[],setBusinessId:()=>{}},React.createElement('button',null,'Save')));});
+ assert.equal(root.root.findByType('fieldset').props.disabled,true,'Missing term RPC must lock management');
  await act(async()=>root.unmount());
  console.log('PASS annual renewal UI: legacy notice hidden, upcoming/expired reminders, confirmation required, idempotent retry and success feedback');
 })().catch(e=>{console.error(e);process.exitCode=1});

@@ -13,16 +13,16 @@ export default function BusinessManagementGate({ children, businessId, userEmail
   const key = `${userEmail}:${businessId}`;
   useEffect(() => {
     let active = true;
+    let sequence = 0;
     async function check() {
       if (!businessId || !userEmail) return;
+      const request = ++sequence;
       try {
         const { data, error } = await supabase.rpc('v3_get_business_term', { p_business_id: businessId });
-        if (!active) return;
-        // A project without 0048 has no annual terms yet. Preserve the legacy flow.
-        if (error?.code === 'PGRST202') { setState({ key, locked: false, error: false }); return; }
+        if (!active || request !== sequence) return;
         if (error || data?.success !== true || typeof data.enabled !== 'boolean' || (data.enabled && !Number.isFinite(data.days_remaining))) throw new Error('UNAVAILABLE');
         setState({ key, locked: data.enabled === true && data.days_remaining < 0, error: false });
-      } catch { if (active) setState({ key, locked: true, error: true }); }
+      } catch { if (active && request === sequence) setState({ key, locked: true, error: true }); }
     }
     void check();
     const timer = setInterval(check, 60000);

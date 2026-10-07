@@ -284,6 +284,23 @@ const provider = '10efbe80-21ab-470d-aafb-43c33fedf612';
  const yukAlias=yukCard.qr_url.split('/').pop();
  assert.equal((await as('anon',null,'select v3_resolve_card_code($1) as value',[yukAlias])).rows[0].value,yukCard.card_code);
  assert.equal((await as('authenticated',uidA,'select v3_claim_card($1,$2,$3,null,null) as value',[yukCard.card_code,yukCard.activation_pin,businessA])).rows[0].value.success,true);
+
+ // Integration against the full V3 schema/RPCs, not only minimal renewal fixtures.
+ for (const prefix of ['0024','0030','0032','0033','0034','0035','0040','0047','0048','0049']) {
+   const file=fs.readdirSync('supabase/migrations').find(name=>name.startsWith(prefix+'_'));
+   await db.exec(fs.readFileSync('supabase/migrations/'+file,'utf8'));
+ }
+ const publicBefore=(await as('anon',null,'select v3_get_public_landing_page($1) as value',[yukCard.card_code])).rows[0].value;
+ await db.query("insert into v3_business_terms(business_id,expires_on,revision) values($1,(now() at time zone 'Asia/Jakarta')::date-1,1)",[businessA]);
+ await assert.rejects(as('authenticated',uidA,"select v3_update_business_display_name($1,'Expired change')",[businessA]),/BUSINESS_TERM_EXPIRED/);
+ await assert.rejects(as('authenticated',uidA,"select v3_update_business_contact_settings($1,'081234567890')",[businessA]),/BUSINESS_TERM_EXPIRED/);
+ await assert.rejects(as('authenticated',uidA,"select v3_set_google_review_profile($1,'https://maps.google.com/maps/place/Test','ChIJtest')",[businessA]),/BUSINESS_TERM_EXPIRED/);
+ assert.deepEqual((await as('anon',null,'select v3_get_public_landing_page($1) as value',[yukCard.card_code])).rows[0].value,publicBefore,'Annual expiry must preserve the public landing payload');
+ assert.equal((await as('anon',null,"select v3_submit_feedback($1,5::smallint,null,null,'Still works',null,false,'after-term-expiry') as value",[yukCard.card_code])).rows[0].value.success,true);
+ const renewed=(await as('authenticated',provider,"select v3_provider_renew_business_year($1,1,'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee') as value",[businessA])).rows[0].value;
+ assert.equal(renewed.success,true);
+ assert.equal((await as('authenticated',uidA,"select v3_update_business_display_name($1,'Renewed business') as value",[businessA])).rows[0].value.success,true);
+ console.log('PASS full V3 expiry integration: contact/name/Google edits blocked, public payload and feedback preserved, provider renewal restores management');
  console.log('PASS yukreview domain migration: repeatable backup, stable aliases, canonical short URLs, new card PIN/activation, deleted rows preserved and provider MFA');
  console.log('PASS neutral feedback migration: repeated install preserves data, all five ratings accepted, invalid/deleted/duplicate rejected, tenant isolation and five-rating analytics');
  console.log('PASS provider deletion: MFA/auth guards, typed code, ready/activated cards, hidden lists/counts, blocked aliases/legacy/claim/reactivation, preserved business/feedback/other cards and one audit entry');
