@@ -20,6 +20,7 @@ let capabilities = {private_rating_max:5};
 let pageSettings = { success: true, theme_key: 'soft_smoothie', pdf_url: 'https://example.com/menu.pdf', pdf_title: 'Dokumen Bisnis Asli' };
 const originalLoad = Module._load;
 Module._load = function (id, parent, main) {
+  if (id === "./PdfViewer") return { __esModule: true, default: () => React.createElement("div", null, "PDF viewer") };
   if (id === '@supabase/supabase-js') return { createClient: () => ({ rpc: async (name, args) => {
     pageCalls.push({ name, args });
     if (name === 'v3_resolve_card_code') return { data: args.p_public_id === 'a7c93e10b842' ? 'TEST001' : null, error: null };

@@ -1,3 +1,5 @@
+import PdfViewer from "./PdfViewer";
+import { isHostedMenuPdf } from "../../../lib/publicPdf";
 import { resolveCardCode } from "../../../lib/cardPublicId";
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
@@ -93,7 +95,8 @@ export default async function PublicPdfMenuPage({
   const businessName = firstString(data?.business_name) ?? "ReputasiPro";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
-  const mobileViewerUrl = pdfUrl + "#view=FitH&zoom=page-width";
+  const documentSource = isHostedMenuPdf(pdfUrl, supabaseUrl)
+    ? `/${encodeURIComponent(routeCode)}/menu/file` : pdfUrl;
 
   return (
     <main
@@ -154,9 +157,8 @@ export default async function PublicPdfMenuPage({
               {tr("Kembali", "Back")}
             </a>
             <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noreferrer"
+              href={documentSource}
+              download="menu.pdf"
               style={{
                 textDecoration: "none",
                 padding: "10px 12px",
@@ -166,38 +168,12 @@ export default async function PublicPdfMenuPage({
                 fontWeight: 800,
               }}
             >
-              {tr("Buka PDF", "Open PDF")}
+              {tr("Unduh PDF", "Download PDF")}
             </a>
           </div>
         </div>
 
-        <iframe
-          className="pdf-viewer-desktop"
-          src={pdfUrl}
-          title={title}
-          style={{
-            width: "100%",
-            height: "78vh",
-            minHeight: 620,
-            border: 0,
-            display: "block",
-            background: "#f7f3ef",
-          }}
-        />
-
-        <iframe
-          className="pdf-viewer-mobile"
-          src={mobileViewerUrl}
-          title={title + " mobile"}
-          style={{
-            width: "100%",
-            height: "calc(100vh - 112px)",
-            minHeight: 620,
-            border: 0,
-            display: "none",
-            background: "#fff",
-          }}
-        />
+        <PdfViewer source={documentSource} title={title} language={language} />
       </section>
 
       <style>{`
@@ -211,18 +187,7 @@ export default async function PublicPdfMenuPage({
             border-radius: 0 !important;
             box-shadow: none !important;
           }
-          .pdf-viewer-desktop {
-            display: none !important;
-          }
-          .pdf-viewer-mobile {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-height: calc(100vh - 112px) !important;
-            height: calc(100vh - 112px) !important;
-            border: 0 !important;
-            background: #fff !important;
-          }
+
         }
       `}</style>
     </main>
