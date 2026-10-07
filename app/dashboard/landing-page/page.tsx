@@ -1,4 +1,5 @@
 "use client";
+import BusinessManagementGate from "../../components/BusinessManagementGate";
 
 import "../../components/public-landing.css";
 import LandingCardContent from "../../components/LandingCardContent";
@@ -279,7 +280,7 @@ export default function LandingPageBuilderPage() {
 
     const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = uid + "/" + kind + "-" + Date.now() + "." + safeExt;
+    const path = uid + "/" + businessId + "/" + kind + "-" + Date.now() + "." + safeExt;
 
     const { error: uploadError } = await supabase.storage
       .from("landing-media")
@@ -336,7 +337,7 @@ export default function LandingPageBuilderPage() {
       return;
     }
 
-    const path = uid + "/pdf/menu-" + Date.now() + ".pdf";
+    const path = uid + "/" + businessId + "/pdf/menu-" + Date.now() + ".pdf";
 
     const { error: uploadError } = await supabase.storage
       .from("landing-media")
@@ -644,6 +645,7 @@ export default function LandingPageBuilderPage() {
   }
 
   return (
+    <BusinessManagementGate businessId={businessId} userEmail={userEmail} businesses={businesses} setBusinessId={setBusinessId}>
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
@@ -962,5 +964,6 @@ export default function LandingPageBuilderPage() {
         </div>
       </div>
     </main>
+    </BusinessManagementGate>
   );
 }

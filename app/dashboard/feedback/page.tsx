@@ -1,4 +1,5 @@
 "use client";
+import BusinessManagementGate from "../../components/BusinessManagementGate";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -197,6 +198,7 @@ export default function FeedbackInboxPage() {
   } as const;
 
   return (
+    <BusinessManagementGate businessId={businessId} userEmail={userEmail} businesses={businesses} setBusinessId={setBusinessId}>
     <main style={pageStyle}>
       <div style={shellStyle}>
         <section style={cardStyle}>
@@ -582,5 +584,6 @@ export default function FeedbackInboxPage() {
         </section>
       </div>
     </main>
+    </BusinessManagementGate>
   );
 }

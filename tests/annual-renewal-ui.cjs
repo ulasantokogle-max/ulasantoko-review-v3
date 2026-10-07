@@ -14,6 +14,7 @@ const rpc=async(name,args)=>{
 const original=Module._load;
 Module._load=function(id,parent,main){if(id.endsWith('/supabase'))return {supabase:{rpc}};if(id.endsWith('/i18n'))return {useLanguage:()=>({tr:(id,en)=>id})};return original.call(this,id,parent,main);};
 const Notice=require('../app/components/BusinessTermNotice.tsx').default;
+const Gate=require('../app/components/BusinessManagementGate.tsx').default;
 const Provider=require('../app/components/ProviderBusinessTerms.tsx').default;
 const text=n=>!n?'':typeof n==='string'?n:Array.isArray(n)?n.map(text).join(' '):text(n.children);
 (async()=>{
@@ -40,6 +41,15 @@ const text=n=>!n?'':typeof n==='string'?n:Array.isArray(n)?n.map(text).join(' ')
  assert.equal(writes.length,2);
  assert.equal(writes[0].p_request_id,writes[1].p_request_id,'A failed-response retry must retain its idempotency key');
  assert(text(root.toJSON()).includes('berhasil diperpanjang'));
+ await act(async()=>root.unmount());
+ term={success:true,enabled:true,days_remaining:-1};
+ await act(async()=>{root=create(React.createElement(Gate,{businessId:'business-a',userEmail:'owner@example.com',businesses:[],setBusinessId:()=>{}},React.createElement('button',null,'Save')));});
+ assert.equal(root.root.findByType('fieldset').props.disabled,true);
+ assert(text(root.toJSON()).includes('halaman publik tetap aktif'));
+ await act(async()=>root.unmount());
+ term={success:true,enabled:false};
+ await act(async()=>{root=create(React.createElement(Gate,{businessId:'legacy-business',userEmail:'owner@example.com',businesses:[],setBusinessId:()=>{}},React.createElement('button',null,'Save')));});
+ assert.equal(root.root.findByType('fieldset').props.disabled,false);
  await act(async()=>root.unmount());
  console.log('PASS annual renewal UI: legacy notice hidden, upcoming/expired reminders, confirmation required, idempotent retry and success feedback');
 })().catch(e=>{console.error(e);process.exitCode=1});

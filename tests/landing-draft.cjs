@@ -7,6 +7,7 @@ const storage=new Map();global.window={sessionStorage:{getItem:k=>storage.get(k)
 global.fetch=async()=>{googleCalls++;return {ok:true,json:async()=>({success:true,maps_url:'https://maps.app.goo.gl/draft'})};};
 const supabase={auth:{getSession:async()=>({data:{session:{user:{email:account},access_token:'token'}}}),onAuthStateChange:callback=>{authCallback=callback;return ({data:{subscription:{unsubscribe(){}}}});}},rpc:async(name,args)=>{
  calls.push({name,args});
+ if(name==='v3_get_business_term')return {data:{success:true,enabled:false},error:null};
  if(name==='v3_update_business_display_name'&&throwSave)throw Error('offline');
  if(name==='v3_update_business_display_name'&&delaySave)return new Promise(resolve=>{lateSaveResolve=resolve;});
  if(name==='v3_get_landing_page_settings'&&args.p_business_id==='business-late')return new Promise(resolve=>{lateResolve=resolve;});
@@ -77,7 +78,7 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  await act(async()=>input(fields[0]).props.onChange({target:{value:'Keep on thrown network failure'}}));
  await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
  assert(storage.has(keyA));assert(JSON.stringify(tree.toJSON()).includes('Periksa koneksi'));
- assert.equal(tree.root.findByType('fieldset').props.disabled,false,'Thrown save must release busy state');
+ assert.equal(tree.root.findAllByType('fieldset').find(n=>n.props.style?.display==='contents').props.disabled,false,'Thrown save must release busy state');
  throwSave=false;delaySave=true;
  let savePromise;
  await act(async()=>{savePromise=tree.root.findByType('form').props.onSubmit({preventDefault(){}});});

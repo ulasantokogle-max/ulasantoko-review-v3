@@ -1,4 +1,5 @@
 "use client";
+import BusinessManagementGate from "../../components/BusinessManagementGate";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
@@ -237,6 +238,7 @@ export default function CardsDashboardPage() {
   } as const;
 
   return (
+    <BusinessManagementGate businessId={businessId} userEmail={userEmail} businesses={businesses} setBusinessId={setBusinessId}>
     <main
       style={{
         minHeight: "100vh",
@@ -733,5 +735,6 @@ export default function CardsDashboardPage() {
         )}
       </section>
     </main>
+    </BusinessManagementGate>
   );
 }

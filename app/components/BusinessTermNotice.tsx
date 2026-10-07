@@ -21,7 +21,7 @@ export default function BusinessTermNotice({ businessId }: { businessId: string 
     <strong>{tr('Masa Aktif Tahunan', 'Annual Service Term')}</strong>
     <p>{tr('Berlaku sampai', 'Valid through')}: {term.expires_on.split('-').reverse().join('/')}</p>
     {reminder && <p>{term.days_remaining < 0
-      ? tr('Masa aktif tahunan telah berakhir. Hubungi penyedia kartu untuk perpanjangan. QR/NFC tetap dapat digunakan.', 'Your annual term has ended. Contact your card provider to renew. QR/NFC remain available.')
+      ? tr('Masa aktif tahunan telah berakhir. Hubungi penyedia kartu untuk perpanjangan. Pengelolaan dashboard dikunci; QR/NFC tetap dapat digunakan.', 'Your annual term has ended. Contact your card provider to renew. Dashboard management is locked; QR/NFC remain available.')
       : tr(`Masa aktif tersisa ${term.days_remaining} hari. Hubungi penyedia kartu untuk memperpanjang satu tahun.`, `${term.days_remaining} days remaining. Contact your card provider to renew for one year.`)}</p>}
   </section>;
 }

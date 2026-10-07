@@ -51,7 +51,7 @@ export default function ProviderBusinessTerms() {
   return <section style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 18, padding: 20, marginBottom: 20 }}>
     <h2>{tr('Masa Aktif & Perpanjangan', 'Service Terms & Renewal')}</h2>
     <p>{tr('Satu masa aktif untuk semua kartu dalam satu bisnis. Perpanjangan dicatat setelah pembayaran dikonfirmasi secara manual.', 'One term covers all cards in a business. Record renewal after manually confirming payment.')}</p>
-    <p>{tr('Bisnis lama tetap berjalan. Tanggal berakhir tidak otomatis memblokir QR/NFC atau dashboard.', 'Existing businesses remain operational. Expiry does not automatically block QR/NFC or the dashboard.')}</p>
+    <p>{tr('Bisnis lama tetap berjalan. QR/NFC tetap aktif. Setelah kedaluwarsa, dashboard tetap bisa dilihat tetapi pengelolaan dikunci sampai diperpanjang.', 'Existing businesses remain operational. QR/NFC remain active. After expiry, the dashboard remains readable but management is locked until renewal.')}</p>
     <button disabled={loading || busy} onClick={reload}>{tr('Perbarui', 'Refresh')}</button>
     <input aria-label={tr('Cari bisnis untuk perpanjangan', 'Search businesses for renewal')} placeholder={tr('Cari bisnis', 'Search businesses')} value={search} onChange={e => setSearch(e.target.value)} style={{ margin: 12, maxWidth: '100%', padding: 10 }} />
     {error && <p role="alert">{error}</p>}{message && <p role="status">{message}</p>}

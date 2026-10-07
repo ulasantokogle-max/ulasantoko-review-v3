@@ -4,10 +4,11 @@ const ts = require('typescript');
 const Module = require('node:module');
 for (const ext of ['.ts','.tsx']) require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
 let businessRows=[{business_id:'00000000-0000-0000-0000-000000000001'}], cached=null, cacheError=null, clients=[];
+let termState={success:true,enabled:false};
 let allowed=false, limit={success:true}, quota={success:true}, fetched=0, rpcCalls=0;
 const oldLoad=Module._load;
 Module._load=function(id,parent,main){
- if(id==='@supabase/supabase-js')return {createClient:(url,key,options)=>{clients.push({url,key,options});return {from:()=>({select:()=>({eq:()=>({eq:()=>({maybeSingle:async()=>({data:cached,error:cacheError})})})})}),auth:{getUser:async()=>({data:{user:allowed?{id:'user'}:null},error:null})},rpc:async(name)=>{rpcCalls++;return {data:name==='v3_get_my_businesses'?businessRows:name==='v3_reserve_google_request'?quota:limit,error:null}}};}};
+ if(id==='@supabase/supabase-js')return {createClient:(url,key,options)=>{clients.push({url,key,options});return {from:()=>({select:()=>({eq:()=>({eq:()=>({maybeSingle:async()=>({data:cached,error:cacheError})})})})}),auth:{getUser:async()=>({data:{user:allowed?{id:'user'}:null},error:null})},rpc:async(name)=>{rpcCalls++;return {data:name==='v3_get_business_term'?termState:name==='v3_get_my_businesses'?businessRows:name==='v3_reserve_google_request'?quota:limit,error:null}}};}};
  return oldLoad.call(this,id,parent,main);
 };
 process.env.NEXT_PUBLIC_SUPABASE_URL='https://example.supabase.co';
@@ -84,6 +85,11 @@ const request=(body,headers={})=>new Request('https://example.com/api',{method:'
  cacheError={message:'offline'};
  assert.equal((await setup(request(setupBody,authHeaders))).status,503);
  assert.equal(placesFetched,beforePlaces+1);
+ termState={success:true,enabled:true,days_remaining:-1};
+ const beforeExpired=placesFetched;
+ assert.equal((await setup(request(setupBody,authHeaders))).status,403);
+ assert.equal((await resolve(request(setupBody,authHeaders))).status,403);
+ assert.equal(placesFetched,beforeExpired,'Expired customer must not reserve quota or call Google');
  console.log('PASS Google access: unactivated/cross-business denied before fetch; unchanged profile reuses saved result; server-only quota key and cache/network failure closed');
  console.log('PASS Google quota: both API routes fail closed with generic customer message; allowed reservation dispatches once');
  console.log('PASS bounded request bodies, login checks, fail-closed limiter, resolver destination/redirect validation and timeout signals');

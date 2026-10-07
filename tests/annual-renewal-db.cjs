@@ -60,5 +60,44 @@ const req = n => `20000000-0000-0000-0000-${String(n).padStart(12,'0')}`;
   assert.equal((await db.query('select count(*) n from v3_business_term_events')).rows[0].n,3);
   assert.equal((await db.query("select status from businesses where id=$1",[business])).rows[0].status,'active');
   console.log('PASS annual renewal: additive/repeatable install, MFA/provider-only writes, customer tenant isolation, idempotent retries, stale requests, remaining validity preserved and legacy business status unchanged');
+
+  await db.exec(`create table cards(id uuid primary key,business_id uuid,label text);
+    create table landing_page_settings(business_id uuid primary key,logo_url text,cover_url text,pdf_url text);
+    create table google_review_profiles(id uuid primary key,business_id uuid,maps_url text);
+    create table feedback_submissions(id uuid primary key,business_id uuid,status text);
+    create schema storage; create table storage.objects(bucket_id text,name text);
+    alter table storage.objects enable row level security;
+    grant all on businesses,cards,google_review_profiles,feedback_submissions,storage.objects to authenticated;
+    grant usage on schema storage to authenticated;
+    create policy upload_owner on storage.objects for all to authenticated using (split_part(name,'/',1)=auth.uid()::text) with check(split_part(name,'/',1)=auth.uid()::text);
+    create policy public_read on storage.objects for select to anon using(true);
+    grant select on storage.objects to anon;
+    insert into business_members values('${other}','${owner}');
+    insert into cards values('${req(100)}','${business}','Old');
+    insert into google_review_profiles values('${req(101)}','${business}','https://maps.google.com/');
+    insert into feedback_submissions values('${req(102)}','${business}','new');
+    insert into landing_page_settings values('${business}',null,null,'https://project.supabase.co/storage/v1/object/public/landing-media/${owner}/pdf/menu.pdf');
+    insert into storage.objects values('landing-media','${owner}/pdf/menu.pdf');`);
+  const lockSql=fs.readFileSync('supabase/migrations/0049_expired_dashboard_write_lock.sql','utf8');
+  await db.exec(lockSql);await db.exec(lockSql);
+  await db.query("update v3_business_terms set expires_on=(now() at time zone 'Asia/Jakarta')::date-1 where business_id=$1",[business]);
+  for (const statement of ["update businesses set name='Changed' where id=$1", "update cards set label='Changed' where business_id=$1", "update google_review_profiles set maps_url='Changed' where business_id=$1", "update feedback_submissions set status='resolved' where business_id=$1", "delete from cards where business_id=$1", `update cards set business_id='${other}' where business_id=$1`]) {
+    await assert.rejects(as('authenticated',owner,'aal1',statement,[business]),/BUSINESS_TERM_EXPIRED/);
+  }
+  // Public feedback inserts and reads are preserved even when a customer is signed in.
+  await as('authenticated',owner,'aal1',"insert into feedback_submissions values($1,$2,'new')",[req(103),business]);
+  await as('authenticated',owner,'aal1','select * from cards where business_id=$1',[business]);
+  await assert.rejects(as('authenticated',owner,'aal1',"insert into storage.objects values('landing-media',$1)",[`${owner}/${business}/pdf/new.pdf`]),/row-level security/);
+  await assert.rejects(as('authenticated',owner,'aal1',"delete from storage.objects where name=$1 returning name v",[`${owner}/pdf/menu.pdf`]).then(v=>{ if(v===undefined)throw Error('RLS_DENIED'); }),/RLS_DENIED|row-level security/);
+  // An unrelated legacy business and valid assets remain writable.
+  await as('authenticated',owner,'aal1',"update businesses set name='Legacy Changed' where id=$1",[other]);
+  await as('authenticated',owner,'aal1',"insert into storage.objects values('landing-media',$1)",[`${owner}/${other}/pdf/new.pdf`]);
+  // MFA provider can manage an expired business and renew it without changing card status.
+  await as('authenticated',provider,'aal2',"update cards set label='Provider Changed' where business_id=$1",[business]);
+  await renew(provider,'aal2',3,req(4));
+  await as('authenticated',owner,'aal1',"update cards set label='Renewed' where business_id=$1",[business]);
+  await as('authenticated',owner,'aal1',"insert into storage.objects values('landing-media',$1)",[`${owner}/${business}/pdf/renewed.pdf`]);
+  await db.exec(lockSql);
+  console.log('PASS dashboard expiry lock: direct writes and moves denied, storage protected, public feedback/read preserved, legacy business unaffected, provider renewal restores edits');
  } finally { await db.close(); }
 })().catch(error=>{console.error(error);process.exitCode=1});
