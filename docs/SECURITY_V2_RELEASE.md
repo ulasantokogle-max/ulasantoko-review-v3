@@ -27,11 +27,11 @@ The stored QR link `https://ulasantoko.space/ULAS-00136` displays a short-link-s
 
 ## Selected V3 hostname
 
-The user selected `reputasipro.ulasantoko.space`. DNS and deployment assignment are not yet verified. Follow `REPUTASIPRO_DOMAIN_SETUP.md`; migration 0038 changes only future provider-created card URLs after the hostname serves V3. Existing physical/stored links need a separate audit.
+The user selected `reputasipro.ulasantoko.space`. DNS and deployment assignment are not yet verified. Follow `YUKREVIEW_DOMAIN_SETUP.md`; migration 0038 changes only future provider-created card URLs after the hostname serves V3. Existing physical/stored links need a separate audit.
 
 ## Domain and provisioning evidence update
 
-Screenshots on the new hostname show the public BISNIS TES B page and separate customer dashboards: account A displays BANANA KREZZZ and account B displays BISNIS TES B with zero feedback. After assigning the selected subdomain to the cleanup preview branch, the UI displays ReputasiPro with ID/EN navigation. Migration 0038 reports SQL success and subsequent provider-created ULAS-01007 returns the new hostname in its stored QR/NFC URL. A second-card claim into the same business remains pending. Provider QR PNG downloads are implemented and locally verified by decoding actual generated images; physical scanning/browser downloads remain to be checked.
+Screenshots on the new hostname show the public BISNIS TES B page and separate customer dashboards: account A displays BANANA KREZZZ and account B displays BISNIS TES B with zero feedback. After assigning the selected subdomain to the cleanup preview branch, the UI displays YukReview with ID/EN navigation. Migration 0038 reports SQL success and subsequent provider-created ULAS-01007 returns the new hostname in its stored QR/NFC URL. A second-card claim into the same business remains pending. Provider QR PNG downloads are implemented and locally verified by decoding actual generated images; physical scanning/browser downloads remain to be checked.
 
 
 ## Provider MFA update — 3 October 2026

@@ -69,7 +69,7 @@ export const englishText: Record<string, string> = {
   "Memeriksa sesi...": "Checking session...", "Sesi tidak ditemukan. Silakan masuk kembali.": "Session not found. Please sign in again.",
   "Sesi sudah berakhir. Silakan masuk kembali.": "Your session has ended. Please sign in again.",
   "Onboarding Bisnis": "Business Onboarding", "Siapkan Bisnis Anda": "Set Up Your Business",
-  "Kartu sudah aktif. Selesaikan beberapa langkah ini agar ReputasiPro siap digunakan pelanggan.": "Your card is active. Complete these steps to get ReputasiPro ready for customers.",
+  "Kartu sudah aktif. Selesaikan beberapa langkah ini agar YukReview siap digunakan pelanggan.": "Your card is active. Complete these steps to get YukReview ready for customers.",
   "Memuat status setup...": "Loading setup status...", "Progress setup": "Setup progress", "LANGKAH": "STEP", "SELESAI": "COMPLETE", "BELUM": "INCOMPLETE",
   "Kartu aktif": "Active card", "Cek Kartu": "Check Cards", "Lihat Kartu Saya": "View My Cards",
   "Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review.": "Connect your Google Maps location to send 4–5 star ratings to Google Review.",

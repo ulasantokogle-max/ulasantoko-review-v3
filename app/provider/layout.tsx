@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { providerCaptchaStatus } from "../../lib/providerCaptchaServer";
 
 export const metadata = {
-  title: "Provider | ReputasiPro",
+  title: "Provider | YukReview",
   robots: {
     index: false,
     follow: false,

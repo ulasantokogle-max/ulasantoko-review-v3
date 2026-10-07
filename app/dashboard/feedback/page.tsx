@@ -212,7 +212,7 @@ export default function FeedbackInboxPage() {
               marginBottom: 8,
             }}
           >
-            ReputasiPro
+            YukReview
           </div>
 
             <h1 style={{ margin: 0, fontSize: 30 }}>{tr("Masukan Pelanggan")}</h1>

@@ -1,6 +1,6 @@
 # V3 domain: yukreview.id
 
-Canonical domain: https://yukreview.id. Branding remains ReputasiPro.
+Canonical domain: https://yukreview.id. Application branding: YukReview.
 
 ## External configuration
 

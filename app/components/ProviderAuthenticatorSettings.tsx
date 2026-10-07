@@ -21,7 +21,7 @@ export default function ProviderAuthenticatorSettings() {
     supabase.auth.mfa.listFactors().then(({ data, error }) => {
       if (!active) return;
       if (error) setError(tr("Daftar authenticator belum dapat dimuat. Masuk melalui Provider Portal lalu coba lagi.", "Could not load authenticators. Sign in through the Provider Portal and try again."));
-      else setFactors(data.totp.filter(f => f.status === "verified").map((f, i) => ({ id: f.id, name: f.friendly_name || `Authenticator ${i + 1}` })));
+      else setFactors(data.totp.filter(f => f.status === "verified").map((f, i) => ({ id: f.id, name: f.friendly_name?.replace(/^ReputasiPro(?= Provider$| backup: )/, "YukReview") || `Authenticator ${i + 1}` })));
       setLoading(false);
     }).catch(() => {
       if (active) { setError(tr("Daftar authenticator belum dapat dimuat. Coba muat ulang halaman.", "Could not load authenticators. Reload this page.")); setLoading(false); }
@@ -41,12 +41,12 @@ export default function ProviderAuthenticatorSettings() {
       if (!listed.data.totp.some(f => f.status === "verified")) throw new Error("Primary factor required");
       // Incomplete backup setups from this page can be restarted without touching active factors.
       for (const factor of listed.data.all) {
-        if (factor.status === "unverified" && factor.friendly_name?.startsWith("ReputasiPro backup: ")) {
+        if (factor.status === "unverified" && ["YukReview backup: ", "ReputasiPro backup: "].some(prefix => factor.friendly_name?.startsWith(prefix))) {
           const result = await supabase.auth.mfa.unenroll({ factorId: factor.id });
           if (result.error) throw result.error;
         }
       }
-      const result = await supabase.auth.mfa.enroll({ factorType: "totp", issuer: "ReputasiPro", friendlyName: "ReputasiPro backup: " + (name.trim() || "Authenticator") + " " + Date.now() });
+      const result = await supabase.auth.mfa.enroll({ factorType: "totp", issuer: "YukReview", friendlyName: "YukReview backup: " + (name.trim() || "Authenticator") + " " + Date.now() });
       if (result.error) throw result.error;
       const image = result.data.totp.qr_code;
       setPending({ id: result.data.id, qr: image.startsWith("data:image/") ? image : "data:image/svg+xml;charset=utf-8," + encodeURIComponent(image), secret: result.data.totp.secret });
@@ -65,7 +65,7 @@ export default function ProviderAuthenticatorSettings() {
       setPending(null); setCode(""); setName("");
       const listed = await supabase.auth.mfa.listFactors();
       if (listed.error) throw listed.error;
-      setFactors(listed.data.totp.filter(f => f.status === "verified").map((f, i) => ({ id: f.id, name: f.friendly_name || `Authenticator ${i + 1}` })));
+      setFactors(listed.data.totp.filter(f => f.status === "verified").map((f, i) => ({ id: f.id, name: f.friendly_name?.replace(/^ReputasiPro(?= Provider$| backup: )/, "YukReview") || `Authenticator ${i + 1}` })));
       setMessage(tr("Authenticator cadangan sudah aktif. Saat login, pilih salah satu authenticator.", "Backup authenticator activated. Choose either authenticator when signing in."));
     } catch {
       setError(tr("Verifikasi belum berhasil. Periksa kode terbaru dari authenticator cadangan.", "Verification failed. Check the latest code from the backup authenticator."));

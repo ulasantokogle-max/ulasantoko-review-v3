@@ -27,7 +27,7 @@ export default function LandingCardContent(props: Props) {
       {logoUrl ? <img src={logoUrl} alt={businessName} style={{ objectFit: "cover", background: theme.card }} />
         : <div style={{ display: "grid", placeItems: "center", background: theme.soft, color: theme.primary, fontSize: 24, fontWeight: 900 }}>{businessName.slice(0, 2).toUpperCase()}</div>}
     </div>
-    <div className="public-brand" style={{ color: theme.muted, fontWeight: 900 }}>ReputasiPro</div>
+    <div className="public-brand" style={{ color: theme.muted, fontWeight: 900 }}>YukReview</div>
     <div className="public-content">
       <BusinessTitle style={{ margin: "0 0 10px", fontSize: 32, fontWeight: 800 }}>{title}</BusinessTitle>
       {category && <div className="public-category">{category}</div>}

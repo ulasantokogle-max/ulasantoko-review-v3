@@ -1,6 +1,6 @@
-# ReputasiPro V3 domain setup
+# YukReview V3 domain setup
 
-Selected hostname: `reputasipro.ulasantoko.space`. Screenshots confirm valid Vercel domain configuration and a DNS-only CNAME. After the user switched the domain to the cleanup preview branch, the domain shows ReputasiPro with ID/EN controls. The user ran migration 0038 successfully; newly provisioned ULAS-01007 has the selected hostname. Exact deployment metadata and signed-out preview protection still need verification. V1, WiV1 and the apex domain remain on their existing services.
+Selected hostname: `reputasipro.ulasantoko.space`. Screenshots confirm valid Vercel domain configuration and a DNS-only CNAME. After the user switched the domain to the cleanup preview branch, the domain shows YukReview with ID/EN controls. The user ran migration 0038 successfully; newly provisioned ULAS-01007 has the selected hostname. Exact deployment metadata and signed-out preview protection still need verification. V1, WiV1 and the apex domain remain on their existing services.
 
 1. In Vercel project `ulasantoko-review-v3`, add this hostname under Settings → Domains. Add only the CNAME host `reputasipro` at the current DNS provider, using the exact target shown by Vercel. Do not change apex DNS or nameservers.
 2. Confirm which deployment the hostname serves. The tested code is currently on `cleanup/production-surface-v1`; `main` has not been released. A default production domain can therefore show the old application. Verify the release/deployment assignment before directing customers or writing physical cards.

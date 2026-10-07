@@ -518,7 +518,7 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>YUKREVIEW</div>
           <h1 style={{ marginBottom: 8 }}>{tr("Pengeditan Halaman")}</h1>
           <p style={{ color: "#6b7280" }}>{tr("Memeriksa sesi...")}</p>
         </div>
@@ -530,7 +530,7 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>YUKREVIEW</div>
           <h1 style={{ margin: "6px 0 8px" }}>{tr("Pengeditan Halaman")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
             {tr("Masuk untuk mengatur halaman bisnis Anda.")}
@@ -587,7 +587,7 @@ export default function LandingPageBuilderPage() {
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>REPUTASIPRO</div>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>YUKREVIEW</div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Pengeditan Halaman")}</h1>
           <p style={{ margin: 0, color: "#6b7280" }}>{tr("Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.")}</p>
         </div>
@@ -895,7 +895,7 @@ export default function LandingPageBuilderPage() {
                   smoothMode />}
               />
               <div className="public-footer" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
-                <span>{tr("Preview")}</span><span>Powered by ReputasiPro</span>
+                <span>{tr("Preview")}</span><span>Powered by YukReview</span>
               </div>
             </section>
           </aside>

@@ -63,7 +63,7 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
         if (listed.error) throw listed.error;
         if (!active) return;
         const verified = listed.data.totp.filter(factor => factor.status === "verified");
-        setFactors(verified.map((factor, index) => ({ id: factor.id, name: factor.friendly_name || `Authenticator ${index + 1}` })));
+        setFactors(verified.map((factor, index) => ({ id: factor.id, name: factor.friendly_name?.replace(/^ReputasiPro(?= Provider$| backup: )/, "YukReview") || `Authenticator ${index + 1}` })));
         setFactorId(verified[0]?.id ?? "");
         setState("mfa");
       } catch {
@@ -82,12 +82,12 @@ export default function ProviderMfaGate({ children, allowCustomers = false }: { 
       if (factors.error) throw factors.error;
       // Remove only incomplete enrollments created by this UI, never verified factors.
       for (const factor of factors.data.all) {
-        if (factor.status === "unverified" && factor.friendly_name === "ReputasiPro Provider") {
+        if (factor.status === "unverified" && ["YukReview Provider", "ReputasiPro Provider"].includes(factor.friendly_name ?? "")) {
           const removed = await supabase.auth.mfa.unenroll({ factorId: factor.id });
           if (removed.error) throw removed.error;
         }
       }
-      const result = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "ReputasiPro Provider", issuer: "ReputasiPro" });
+      const result = await supabase.auth.mfa.enroll({ factorType: "totp", friendlyName: "YukReview Provider", issuer: "YukReview" });
       if (result.error) throw result.error;
       setFactorId(result.data.id);
       const image = result.data.totp.qr_code;

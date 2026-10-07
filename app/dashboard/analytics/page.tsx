@@ -213,7 +213,7 @@ export default function AnalyticsDashboardPage() {
       <div style={{ maxWidth: 1040, margin: "0 auto" }}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            REPUTASIPRO
+            YUKREVIEW
           </div>
           <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>
             {tr("Analitik & Wawasan")}

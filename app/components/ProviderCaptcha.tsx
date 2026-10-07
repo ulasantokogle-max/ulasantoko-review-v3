@@ -48,7 +48,7 @@ export default function ProviderCaptcha({ siteKey, ready }: { siteKey: string; r
   }
   return <main style={{ minHeight: "100vh", display: "grid", placeItems: "center", padding: 20, background: "#f6f3ef", color: "#29231f" }}>
     <section style={{ width: "100%", maxWidth: 440, padding: 28, background: "white", borderRadius: 24, boxShadow: "0 16px 48px #493a2514" }}>
-      <p style={{ fontSize: 12, letterSpacing: 2, color: "#8a6b4d" }}>REPUTASIPRO INTERNAL</p>
+      <p style={{ fontSize: 12, letterSpacing: 2, color: "#8a6b4d" }}>YUKREVIEW INTERNAL</p>
       <h1 style={{ fontSize: 28, marginBottom: 12 }}>Verifikasi Menu Akses</h1>
       <p style={{ lineHeight: 1.6, color: "#70685f" }}>Selesaikan verifikasi keamanan untuk membuka menu akses sistem.</p>
       {ready ? <form onSubmit={submit}>

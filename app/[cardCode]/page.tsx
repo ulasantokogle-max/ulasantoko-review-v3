@@ -140,7 +140,7 @@ export async function generateMetadata({
 
   if (!supabaseUrl || !supabaseKey) {
     return {
-      title: "ReputasiPro",
+      title: "YukReview",
       description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
     };
   }
@@ -155,15 +155,15 @@ export async function generateMetadata({
     });
 
     const name =
-      firstString(data?.display_name, data?.business_name) ?? "ReputasiPro";
+      firstString(data?.display_name, data?.business_name) ?? "YukReview";
 
     return {
-      title: name + " | ReputasiPro",
+      title: name + " | YukReview",
       description: tr("Bagikan pengalaman dan masukan Anda untuk ", "Share your experience and feedback for ") + name + ".",
     };
   } catch {
     return {
-      title: "ReputasiPro",
+      title: "YukReview",
       description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
     };
   }
@@ -260,7 +260,7 @@ export default async function PublicCardPage({
       business.name,
       business.business_name,
       payload.business_name
-    ) ?? "ReputasiPro";
+    ) ?? "YukReview";
 
   const category = firstString(
     business.category,
@@ -471,7 +471,7 @@ export default async function PublicCardPage({
           }}
         >
           <span>{tr("Kartu", "Card")}: {card.card_code ?? cardCode}</span>
-          <span>Powered by ReputasiPro</span>
+          <span>Powered by YukReview</span>
         </div>
       </section>
     </main>

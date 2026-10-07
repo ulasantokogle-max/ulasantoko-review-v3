@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Dashboard | ReputasiPro",
+  title: "Dashboard | YukReview",
   robots: {
     index: false,
     follow: false,
@@ -36,7 +36,7 @@ export default async function DashboardLayout({
               marginBottom: 6,
             }}
           >
-            ReputasiPro
+            YukReview
           </div>
 
           <div

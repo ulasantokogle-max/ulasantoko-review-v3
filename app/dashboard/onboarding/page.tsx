@@ -146,7 +146,7 @@ export default function CustomerOnboardingPage() {
       <main style={pageStyle}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            REPUTASIPRO
+            YUKREVIEW
           </div>
           <h1 style={{ marginBottom: 8 }}>{tr("Onboarding Bisnis")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
@@ -162,7 +162,7 @@ export default function CustomerOnboardingPage() {
       <main style={pageStyle}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            REPUTASIPRO
+            YUKREVIEW
           </div>
           <h1 style={{ marginBottom: 8 }}>{tr("Onboarding Bisnis")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
@@ -192,11 +192,11 @@ export default function CustomerOnboardingPage() {
     <main style={pageStyle}>
       <section style={cardStyle}>
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          REPUTASIPRO
+          YUKREVIEW
         </div>
         <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Siapkan Bisnis Anda")}</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6, marginTop: 0 }}>
-          {tr("Kartu sudah aktif. Selesaikan beberapa langkah ini agar ReputasiPro siap digunakan pelanggan.")}
+          {tr("Kartu sudah aktif. Selesaikan beberapa langkah ini agar YukReview siap digunakan pelanggan.")}
         </p>
 
         <div

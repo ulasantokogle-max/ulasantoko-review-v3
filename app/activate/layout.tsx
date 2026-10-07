@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Aktivasi Kartu | ReputasiPro",
+  title: "Aktivasi Kartu | YukReview",
   robots: {
     index: false,
     follow: false,

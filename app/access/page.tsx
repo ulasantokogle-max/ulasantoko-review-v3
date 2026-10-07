@@ -3,7 +3,7 @@ import ProviderCaptcha from "../components/ProviderCaptcha";
 import { providerCaptchaStatus } from "../../lib/providerCaptchaServer";
 
 export const metadata = {
-  title: "Menu Akses | ReputasiPro",
+  title: "Menu Akses | YukReview",
   robots: { index: false, follow: false },
 };
 

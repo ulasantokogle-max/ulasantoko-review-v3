@@ -1,6 +1,6 @@
 # Provider authenticator setup
 
-This change belongs to standalone ReputasiPro V3 only. Do not run it in V1 or WiV1.
+This change belongs to standalone YukReview V3 only. Do not run it in V1 or WiV1.
 
 ## Enable enforcement
 

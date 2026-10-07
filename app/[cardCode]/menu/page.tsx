@@ -27,7 +27,7 @@ export async function generateMetadata({
 
   if (!supabaseUrl || !supabaseKey) {
     return {
-      title: tr("Dokumen | ReputasiPro", "Document | ReputasiPro"),
+      title: tr("Dokumen | YukReview", "Document | YukReview"),
       description: tr("Dokumen publik bisnis.", "Public business document."),
     };
   }
@@ -41,16 +41,16 @@ export async function generateMetadata({
       p_card_code: cardCode,
     });
 
-    const businessName = firstString(data?.business_name) ?? "ReputasiPro";
+    const businessName = firstString(data?.business_name) ?? "YukReview";
     const title = firstString(data?.pdf_title) ?? tr("Informasi", "Information");
 
     return {
       title: title + " | " + businessName,
-      description: tr("Dokumen publik ", "Public document for ") + businessName + tr(" melalui ReputasiPro.", " via ReputasiPro."),
+      description: tr("Dokumen publik ", "Public document for ") + businessName + tr(" melalui YukReview.", " via YukReview."),
     };
   } catch {
     return {
-      title: tr("Dokumen | ReputasiPro", "Document | ReputasiPro"),
+      title: tr("Dokumen | YukReview", "Document | YukReview"),
       description: tr("Dokumen publik bisnis.", "Public business document."),
     };
   }
@@ -92,7 +92,7 @@ export default async function PublicPdfMenuPage({
   }
 
   const title = firstString(data?.pdf_title) ?? tr("Informasi", "Information");
-  const businessName = firstString(data?.business_name) ?? "ReputasiPro";
+  const businessName = firstString(data?.business_name) ?? "YukReview";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
   const documentSource = isHostedMenuPdf(pdfUrl, supabaseUrl)
