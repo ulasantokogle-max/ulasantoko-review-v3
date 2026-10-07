@@ -1,4 +1,5 @@
 "use client";
+import ProviderBusinessTerms from "../../components/ProviderBusinessTerms";
 
 import Link from "next/link";
 import { getCardPublicUrl } from "../../../lib/cardPublicId";
@@ -387,6 +388,7 @@ function ProviderCardsPageContent() {
           )}
         </header>
         {providerAllowed && <GoogleQuotaPanel />}
+        {providerAllowed && <ProviderBusinessTerms key={userEmail} />}
 
         {!userEmail ? (
           <section

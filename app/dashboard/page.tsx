@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import BusinessTermNotice from "../components/BusinessTermNotice";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../lib/supabase";
 import { useBusinessContext } from "../../lib/useBusinessContext";
@@ -320,6 +321,7 @@ export default function DashboardHomePage() {
               </div>
             )}
 
+            {userEmail && businessId && <BusinessTermNotice key={userEmail + businessId} businessId={businessId} />}
             {loadError && (
               <div
                 style={{
