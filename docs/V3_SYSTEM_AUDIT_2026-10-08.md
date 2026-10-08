@@ -7,9 +7,11 @@
 - Provider list reload, creation and PIN reset catch thrown failures and release controls. Creation and PIN reset have synchronous duplicate-request guards. Failed provider verification is shown as a retryable verification error instead of a membership denial.
 - Provider list requests ignore superseded or signed-out-account responses. Removal invalidates outstanding list requests. Initial session results cannot override newer auth events. Clipboard failures show a manual-copy message.
 
+- The health endpoint rejects unsuccessful/malformed card payloads, returns 503 for unavailable configuration/backend and catches thrown failures without exposing error details. The historical card probe remains independent of database connectivity.
+
 ## Verification
 
-All 22 automated suites passed; Next.js production build and whitespace check passed. New regressions simulate business-list failure/retry, thrown claim/signup/sign-out failures, rapid duplicate claims/creation, failed provider verification/list/create/PIN reset, retries and late inventory results after logout. Existing database tenant/MFA/quota/renewal, public feedback, QR/NFC generation, editor draft/upload and PDF tests passed.
+All 23 automated suites passed; Next.js production build and whitespace check passed. New regressions simulate business-list failure/retry, thrown claim/signup/sign-out failures, rapid duplicate claims/creation, failed provider verification/list/create/PIN reset, retries and late inventory results after logout. Health-probe regressions cover unsuccessful/malformed payloads, thrown/returned errors, missing configuration and no-store responses. Existing database tenant/MFA/quota/renewal, public feedback, QR/NFC generation, editor draft/upload and PDF tests passed.
 
 Read-only production inspection: the dashboard sign-in page loaded with YukReview branding. Card aefc8615f27d was already activated and opened the Bakso Balungan public page. Google-review, WhatsApp and Instagram links were present; private feedback was optional. The menu PDF rendered visually in the browser, reported 24 pages and moved from page 1 to page 2. Public feedback was not submitted and external Google/WhatsApp actions were not performed. The separate health endpoint navigation was blocked by the browser client, so its production response was not independently verified.
 
