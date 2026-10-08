@@ -1,18 +1,12 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { resolveCardCode } from "../../../lib/cardPublicId";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
+import { useBusinessContext } from "../../../lib/useBusinessContext";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
-
-type Business = {
-  business_id: string;
-  business_name: string;
-  display_name: string;
-  category: string | null;
-};
 
 export default function ActivateCardPage() {
   const { tr } = useLanguage();
@@ -33,14 +27,19 @@ export default function ActivateCardPage() {
   const [authLoading, setAuthLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const [switchingAccount, setSwitchingAccount] = useState(false);
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const { businesses, businessId: selectedBusinessId, setBusinessId: setSelectedBusinessId, businessLoading, businessError, reloadBusinesses } = useBusinessContext(userEmail);
   const [businessMode, setBusinessMode] = useState<"existing" | "new">("new");
-  const [selectedBusinessId, setSelectedBusinessId] = useState("");
   const [businessName, setBusinessName] = useState("");
   const [category, setCategory] = useState("restaurant");
   const [pin, setPin] = useState("");
   const [activationError, setActivationError] = useState("");
   const [activating, setActivating] = useState(false);
+  const identity = `${cardCode}:${userEmail}`;
+  const currentIdentity = useRef(identity);
+  currentIdentity.current = identity;
+  const claimBusy = useRef(false);
+  useEffect(() => () => { currentIdentity.current = ""; }, []);
+  useEffect(() => { claimBusy.current = false; setActivating(false); setPin(""); setActivationError(""); }, [identity]);
 
   useEffect(() => {
     let active = true;
@@ -49,7 +48,7 @@ export default function ActivateCardPage() {
 
     supabase.auth.getSession().then(({ data }) => {
       if (active && !authEventReceived) setUserEmail(data.session?.user?.email ?? null);
-    });
+    }).catch(() => { if (active && !authEventReceived) setAuthError("Sesi belum dapat diperiksa. Silakan coba lagi."); });
 
     const {
       data: { subscription },
@@ -62,23 +61,8 @@ export default function ActivateCardPage() {
   }, [cardCode, cardRevision]);
 
   useEffect(() => {
-    let cancelled = false;
-    setBusinesses([]);
-    setSelectedBusinessId("");
-    setBusinessMode("new");
-    if (userEmail) {
-      supabase.rpc("v3_get_my_businesses").then(({ data }) => {
-        if (cancelled) return;
-        const rows = (data ?? []) as Business[];
-        setBusinesses(rows);
-        if (rows.length > 0) {
-          setBusinessMode("existing");
-          setSelectedBusinessId(rows[0].business_id);
-        }
-      });
-    }
-    return () => { cancelled = true; };
-  }, [userEmail]);
+    if (!businessLoading && !businessError) setBusinessMode(businesses.length > 0 ? "existing" : "new");
+  }, [userEmail, businessLoading, businessError, businesses]);
 
   async function checkCard(isCurrent: () => boolean) {
     setStateLoading(true);
@@ -104,154 +88,91 @@ export default function ActivateCardPage() {
   async function handleAuth(event: FormEvent) {
     event.preventDefault();
     if (authLoading) return;
-
-    setAuthLoading(true);
-    setAuthError("");
-    setAuthMessage("");
-
-    if (mode === "login") {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      setAuthLoading(false);
-
-      if (error) {
-        console.error("Activation login failed", error);
-        setAuthMessage("");
-        setAuthError("Email atau password tidak sesuai.");
+    setAuthLoading(true); setAuthError(""); setAuthMessage("");
+    try {
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) { setAuthError("Email atau password tidak sesuai."); return; }
+        setPassword("");
+        return;
       }
-      return;
-    }
-
-    const emailRedirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/activate/${cardCode}`
-        : undefined;
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo,
-      },
-    });
-    setAuthLoading(false);
-
-    if (error) {
-      console.error("Activation signup failed", error);
-      setAuthMessage("");
-      setAuthError("Akun belum dapat dibuat. Periksa data lalu coba lagi.");
-      return;
-    }
-
-    setAuthError("");
-
-    if (!data.session) {
-      setAuthMessage(
-        tr("Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini.")
-      );
-      return;
-    }
-
-    setAuthMessage(tr("Akun berhasil dibuat dan Anda sudah masuk.", "Account created and you are signed in."));
+      const emailRedirectTo = typeof window !== "undefined" ? `${window.location.origin}/activate/${cardCode}` : undefined;
+      const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo } });
+      if (error) { setAuthError("Akun belum dapat dibuat. Periksa data lalu coba lagi."); return; }
+      setPassword("");
+      setAuthMessage(!data.session
+        ? tr("Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini.")
+        : tr("Akun berhasil dibuat dan Anda sudah masuk.", "Account created and you are signed in."));
+    } catch {
+      setAuthError(tr("Koneksi belum berhasil. Silakan coba lagi.", "Connection failed. Please try again."));
+    } finally { setAuthLoading(false); }
   }
 
   async function registerDashboardAccount() {
     if (switchingAccount || activating) return;
     setSwitchingAccount(true);
     setAuthError("");
-    if (userEmail) {
-      const { error } = await supabase.auth.signOut({ scope: "local" });
-      if (error) {
-        setAuthError(tr("Belum dapat mengganti akun. Silakan coba lagi.", "Unable to switch accounts. Please try again."));
-        setSwitchingAccount(false);
-        return;
+    try {
+      if (userEmail) {
+        const { error } = await supabase.auth.signOut({ scope: "local" });
+        if (error) {
+          setAuthError(tr("Belum dapat mengganti akun. Silakan coba lagi.", "Unable to switch accounts. Please try again."));
+          return;
+        }
       }
-    }
-    setUserEmail(null);
-    setBusinesses([]);
-    setSelectedBusinessId("");
-    setBusinessMode("new");
-    setBusinessName("");
-    setCategory("restaurant");
-    setPin("");
-    setActivationError("");
-    setEmail("");
-    setPassword("");
-    setAuthMessage("");
-    setMode("signup");
-    setSwitchingAccount(false);
+      setUserEmail(null);
+      setSelectedBusinessId(null);
+      setBusinessMode("new");
+      setBusinessName("");
+      setCategory("restaurant");
+      setPin("");
+      setActivationError("");
+      setEmail("");
+      setPassword("");
+      setAuthMessage("");
+      setMode("signup");
+
+    } catch {
+      setAuthError(tr("Belum dapat mengganti akun. Silakan coba lagi.", "Unable to switch accounts. Please try again."));
+    } finally { setSwitchingAccount(false); }
   }
 
   async function resendConfirmation() {
     if (!email || resendLoading) return;
-
-    setResendLoading(true);
-    setAuthError("");
-    setAuthMessage("");
-
-    const emailRedirectTo =
-      typeof window !== "undefined"
-        ? `${window.location.origin}/activate/${cardCode}`
-        : undefined;
-
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email,
-      options: {
-        emailRedirectTo,
-      },
-    });
-
-    setResendLoading(false);
-
-    if (error) {
-      console.error("Activation confirmation resend failed", error);
-      setAuthError("Email konfirmasi belum dapat dikirim. Silakan coba lagi.");
-      return;
-    }
-
-    setAuthMessage(
-      tr("Email konfirmasi baru sudah dikirim. Gunakan email terbaru karena link lama bisa kedaluwarsa.")
-    );
+    setResendLoading(true); setAuthError(""); setAuthMessage("");
+    try {
+      const emailRedirectTo = typeof window !== "undefined" ? `${window.location.origin}/activate/${cardCode}` : undefined;
+      const { error } = await supabase.auth.resend({ type: "signup", email, options: { emailRedirectTo } });
+      if (error) throw error;
+      setAuthMessage(tr("Email konfirmasi baru sudah dikirim. Gunakan email terbaru karena link lama bisa kedaluwarsa."));
+    } catch { setAuthError(tr("Email konfirmasi belum dapat dikirim. Silakan coba lagi.", "Confirmation email could not be sent. Please try again.")); }
+    finally { setResendLoading(false); }
   }
 
   async function activateCard(event: FormEvent) {
     event.preventDefault();
-    if (activating || switchingAccount || stateLoading || cardUnavailable || !needsActivation) return;
-    setActivationError("");
-    setActivating(true);
-
-    const resolvedCode = await resolveCardCode(supabase, cardCode);
-    if (!resolvedCode) { setActivating(false); setActivationError("Kartu tidak ditemukan atau belum tersedia."); return; }
-    const { data, error } = await supabase.rpc("v3_claim_card", {
-      p_card_code: resolvedCode,
-      p_pin: pin,
-      p_business_id:
-        businessMode === "existing" ? selectedBusinessId || null : null,
-      p_business_name: businessMode === "new" ? businessName : null,
-      p_category: businessMode === "new" ? category : null,
-    });
-
-    setActivating(false);
-
-    if (error) {
-      console.error("Card activation failed", error);
-      setActivationError("Aktivasi belum berhasil. Periksa PIN dan coba lagi.");
-      return;
-    }
-
-    if (!data?.success) {
-      console.error("Card activation returned unsuccessful result", data);
-      setActivationError("Aktivasi belum berhasil. Periksa PIN dan status kartu lalu coba lagi.");
-      return;
-    }
-
-    const activatedBusinessId = data.business_id || (businessMode === "existing" ? selectedBusinessId : null);
-    router.replace(
-      "/dashboard/landing-page" +
-      (typeof activatedBusinessId === "string" && activatedBusinessId
-        ? "?business_id=" + encodeURIComponent(activatedBusinessId)
-        : "")
-    );
+    if (claimBusy.current || switchingAccount || stateLoading || cardUnavailable || !needsActivation || !userEmail || businessLoading || businessError) return;
+    if (businessMode === "existing" && !businesses.some(b => b.business_id === selectedBusinessId)) return;
+    const capturedIdentity = identity;
+    const current = () => currentIdentity.current === capturedIdentity;
+    claimBusy.current = true; setActivationError(""); setActivating(true);
+    try {
+      const resolvedCode = await resolveCardCode(supabase, cardCode);
+      if (!current()) return;
+      if (!resolvedCode) throw new Error("CARD_UNAVAILABLE");
+      const { data, error } = await supabase.rpc("v3_claim_card", {
+        p_card_code: resolvedCode, p_pin: pin,
+        p_business_id: businessMode === "existing" ? selectedBusinessId : null,
+        p_business_name: businessMode === "new" ? businessName : null,
+        p_category: businessMode === "new" ? category : null,
+      });
+      if (!current()) return;
+      if (error || data?.success !== true) throw new Error("ACTIVATION_FAILED");
+      const activatedBusinessId = data.business_id || (businessMode === "existing" ? selectedBusinessId : null);
+      router.replace("/dashboard/landing-page" + (typeof activatedBusinessId === "string" && activatedBusinessId ? "?business_id=" + encodeURIComponent(activatedBusinessId) : ""));
+    } catch {
+      if (current()) setActivationError(tr("Aktivasi belum dapat dikonfirmasi. Periksa PIN dan status kartu lalu coba lagi.", "Activation could not be confirmed. Check the PIN and card status, then retry."));
+    } finally { if (current()) { claimBusy.current = false; setActivating(false); } }
   }
 
   const inputStyle = {
@@ -482,6 +403,9 @@ export default function ActivateCardPage() {
               {tr("Akun:")} <strong>{userEmail}</strong>
             </div>
 
+            {businessLoading && <p role="status">{tr("Memuat daftar bisnis…", "Loading businesses…")}</p>}
+            {businessError && <div role="alert"><p>{tr(businessError, "Businesses could not be loaded. Please retry.")}</p><button type="button" onClick={reloadBusinesses}>{tr("Coba lagi", "Retry")}</button></div>}
+            <fieldset disabled={businessLoading || !!businessError || activating || switchingAccount} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
             {businesses.length > 0 && (
               <div style={{ display: "flex", gap: 8 }}>
                 <button
@@ -514,7 +438,7 @@ export default function ActivateCardPage() {
             {businessMode === "existing" && businesses.length > 0 ? (
               <select
                 style={inputStyle}
-                value={selectedBusinessId}
+                value={selectedBusinessId ?? ""}
                 onChange={(e) => setSelectedBusinessId(e.target.value)}
                 required
               >
@@ -557,10 +481,11 @@ export default function ActivateCardPage() {
               required
             />
 
-            <button style={buttonStyle} type="submit" disabled={activating || switchingAccount}>
+            <button style={buttonStyle} type="submit" disabled={activating || switchingAccount || businessLoading || !!businessError}>
               {activating ? tr("Mengaktifkan...") : tr("Aktifkan Kartu")}
             </button>
 
+            </fieldset>
             {activationError && (
               <div
                 style={{

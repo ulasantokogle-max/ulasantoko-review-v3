@@ -9,20 +9,21 @@ for (const ext of ['.ts','.tsx']) require.extensions[ext] = (m,f) => m._compile(
 let result = {data:{success:true,business_id:'business-b'},error:null};
 let activationState={success:true,needs_activation:true}, activationStateError=null;
 let calls=[], destinations=[], routeCode='a7c93e10b842';
+let throwClaim=false, throwSignup=false, throwSignout=false, businessFailure=false, claimDeferred=null;
 let signOutError=null, signOutOptions, signupArgs, authCallback;
 const rows=[{business_id:'business-a',business_name:'A'},{business_id:'business-b',business_name:'B'}];
 global.window={location:{origin:'https://yukreview.id',href:'https://yukreview.id/dashboard/landing-page?business_id=business-b'}};
 const supabase={
   auth:{getSession:async()=>({data:{session:{user:{email:'customer@example.com'}}}}),
     onAuthStateChange:callback=>{authCallback=callback;return {data:{subscription:{unsubscribe(){}}}};},
-    signOut:async options=>{signOutOptions=options;return {error:signOutError};},
-    signUp:async args=>{signupArgs=args;return {data:{session:null},error:null};}},
+    signOut:async options=>{if(throwSignout)throw Error("offline");signOutOptions=options;return {error:signOutError};},
+    signUp:async args=>{if(throwSignup)throw Error("offline");signupArgs=args;return {data:{session:null},error:null};}},
   rpc:async(name,args)=>{
     calls.push({name,args});
     if(name==='v3_resolve_card_code') return {data:'ULAS-01007',error:null};
     if(name==='v3_get_card_activation_state') return {data:activationState,error:activationStateError};
-    if(name==='v3_get_my_businesses') return {data:rows,error:null};
-    if(name==='v3_claim_card') return result;
+    if(name==='v3_get_my_businesses') return businessFailure ? {data:null,error:{message:'offline'}} : {data:rows,error:null};
+    if(name==='v3_claim_card'){if(throwClaim)throw Error('offline');if(claimDeferred)return await new Promise(resolve=>claimDeferred.resolve=resolve);return result;}
     return {data:null,error:null};
   }
 };
@@ -49,12 +50,22 @@ function Probe(){context=useBusinessContext('customer@example.com',true);return 
   await act(async()=>submit()); assert.equal(destinations.length,0);
   result={data:null,error:{message:'Denied'}};
   await act(async()=>submit()); assert.equal(destinations.length,0);
+  throwClaim=true;
+  await act(async()=>submit());
+  assert.equal(tree.root.findAllByType('button').find(b=>b.children.includes('Aktifkan Kartu')).props.disabled,false,'Thrown claim errors must release the busy state');
+  throwClaim=false;claimDeferred={};const claimsBefore=calls.filter(c=>c.name==='v3_claim_card').length;
+  let pendingClaim;
+  await act(async()=>{pendingClaim=submit();void submit();});
+  assert.equal(calls.filter(c=>c.name==='v3_claim_card').length,claimsBefore+1,'Rapid duplicate submit must dispatch only one claim');
+  await act(async()=>{claimDeferred.resolve(result);await pendingClaim;});claimDeferred=null;
   // New-business activation uses the business ID returned by the server.
   await act(async()=>tree.root.findAllByType('button').find(b=>b.children.includes('Bisnis Baru')).props.onClick());
   result={data:{success:true,business_id:'new-business'},error:null};
   await act(async()=>submit()); assert.equal(destinations[0],'/dashboard/landing-page?business_id=new-business');
   assert.equal(tree.root.findAllByType('a').find(a=>a.children.includes('Kelola Dashboard')).props.href,'/dashboard');
   const register=()=>tree.root.findAllByType('button').find(b=>b.children.includes('Daftar dengan Email Lain')).props.onClick();
+  throwSignout=true;await act(async()=>register());throwSignout=false;
+  assert(tree.root.findAllByType('strong').some(n=>n.children.includes('customer@example.com')));
   signOutError={message:'Failed'};
   await act(async()=>register());
   assert(tree.root.findAllByType('strong').some(n=>n.children.includes('customer@example.com')),'Failed sign-out must preserve current account');
@@ -66,6 +77,10 @@ function Probe(){context=useBusinessContext('customer@example.com',true);return 
     tree.root.findAllByType('input').find(n=>n.props.type==='email').props.onChange({target:{value:'new@example.com'}});
     tree.root.findAllByType('input').find(n=>n.props.type==='password').props.onChange({target:{value:'validpassword'}});
   });
+  await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+  throwSignup=true;
+  await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));throwSignup=false;
+  assert.equal(tree.root.findAllByType('button').find(b=>b.props.type==='submit').props.disabled,false,'Thrown signup errors must release the busy state');
   await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
   assert.equal(signupArgs.email,'new@example.com');
   assert.equal(signupArgs.options.emailRedirectTo,'https://yukreview.id/activate/a7c93e10b842');
@@ -84,6 +99,17 @@ function Probe(){context=useBusinessContext('customer@example.com',true);return 
   window.location.href='https://yukreview.id/dashboard/landing-page?business_id=someone-elses-business';
   await act(async()=>{tree=create(React.createElement(Probe));});
   assert.equal(context.businessId,'business-a','URL cannot select another account business');
+  await act(async()=>tree.unmount());
+  businessFailure=true;
+  await act(async()=>{tree=create(React.createElement(Activate));});
+  const beforeFailedLoad=calls.filter(c=>c.name==='v3_claim_card').length;
+  await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+  assert.equal(calls.filter(c=>c.name==='v3_claim_card').length,beforeFailedLoad,'Failed business list must never fall back to creating a business');
+  assert.equal(tree.root.findByType('fieldset').props.disabled,true);
+  businessFailure=false;
+  await act(async()=>tree.root.findAllByType('button').find(b=>b.children.includes('Coba lagi')).props.onClick());
+  assert.equal(tree.root.findByType('fieldset').props.disabled,false);
+  assert.equal(tree.root.findAllByType('select')[0].props.value,'business-a','Retry restores existing business selection');
   await act(async()=>tree.unmount());
   activationState={success:false};
   await act(async()=>{tree=create(React.createElement(Activate));});

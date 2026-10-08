@@ -4,7 +4,7 @@ import ProviderBusinessTerms from "../../components/ProviderBusinessTerms";
 import Link from "next/link";
 import { getCardPublicUrl } from "../../../lib/cardPublicId";
 import ProviderMfaGate from "../../components/ProviderMfaGate";
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useLanguage } from "../../../lib/i18n";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
@@ -80,47 +80,43 @@ function ProviderCardsPageContent() {
   const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
   const [resetPinError, setResetPinError] = useState("");
   const [deleteMessage, setDeleteMessage] = useState("");
+  const currentAccount = useRef(userEmail);
+  currentAccount.current = userEmail;
+  const listSequence = useRef(0);
+  const createBusy = useRef(false);
+  const resetBusy = useRef(false);
 
   useEffect(() => {
+    let active = true; let eventReceived = false;
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user?.email ?? null);
+      if (active && !eventReceived) setUserEmail(data.session?.user?.email ?? null);
+    }).catch(() => { if (active) setLoginError("Sesi belum dapat diperiksa. Silakan coba lagi."); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      eventReceived = true;
+      if (active) setUserEmail(session?.user?.email ?? null);
     });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => { active = false; listSequence.current++; currentAccount.current = null; subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => {
-    if (userEmail) {
-      checkProvider();
-    } else {
-      setProviderAllowed(null);
-      setCards([]);
-    }
+    setProviderAllowed(null); setCards([]); setCreated(null); setResetPinResult(null);
+    setLoadingCards(false);
+    listSequence.current++;
+    if (userEmail) void checkProvider();
   }, [userEmail]);
 
   async function checkProvider() {
-    setLoadError("");
-
-    const { data, error } = await supabase.rpc("v3_is_provider_admin");
-
-    if (error) {
-      console.error("Provider access check failed", error);
-      setLoadError("Akses provider belum dapat diverifikasi. Silakan coba lagi.");
-      setProviderAllowed(false);
-      return;
-    }
-
-    const allowed = Boolean(data);
-    setProviderAllowed(allowed);
-
-    if (allowed) {
-      loadCards();
+    const account = userEmail;
+    setProviderAllowed(null); setLoadError("");
+    try {
+      const { data, error } = await supabase.rpc("v3_is_provider_admin");
+      if (currentAccount.current !== account) return;
+      if (error) throw error;
+      const allowed = data === true;
+      setProviderAllowed(allowed);
+      if (allowed) void loadCards();
+    } catch {
+      if (currentAccount.current === account) { setLoadError("Akses provider belum dapat diverifikasi. Silakan coba lagi."); setProviderAllowed(false); }
     }
   }
 
@@ -128,133 +124,144 @@ function ProviderCardsPageContent() {
     event.preventDefault();
     setLoginError("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      console.error("Provider login failed", error);
-      setLoginError("Email atau password tidak sesuai.");
-      return;
-    }
+      if (error) {
+        console.error("Provider login failed", error);
+        setLoginError("Email atau password tidak sesuai.");
+        return;
+      }
 
-    setUserEmail(data.user?.email ?? null);
-    setPassword("");
+      setUserEmail(data.user?.email ?? null);
+      setPassword("");
+    } catch { setLoginError("Koneksi belum berhasil. Silakan coba lagi."); }
   }
 
   async function handleLogout() {
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setProviderAllowed(null);
-    setCards([]);
-    setCreated(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUserEmail(null);
+      setProviderAllowed(null);
+      setCards([]);
+      setCreated(null);
+    } catch { setLoginError("Belum dapat keluar. Silakan coba lagi."); }
   }
 
   async function loadCards() {
-    setLoadingCards(true);
-    setLoadError("");
-
-    const { data, error } = await supabase.rpc("v3_provider_list_cards", {
-      p_limit: 200,
-    });
-
-    setLoadingCards(false);
-
-    if (error) {
-      console.error("Provider card list load failed", error);
-      setLoadError("Daftar kartu belum dapat dimuat. Silakan coba lagi.");
-      setCards([]);
-      return;
-    }
-
-    setCards(((data ?? []) as ProviderCard[]).map(card => ({
-      ...card, qr_url: card.qr_url ? getCardPublicUrl(card.qr_url, card.card_code) : null,
-    })));
+    const account = userEmail;
+    const request = ++listSequence.current;
+    const current = () => currentAccount.current === account && listSequence.current === request;
+    setLoadingCards(true); setLoadError("");
+    try {
+      const { data, error } = await supabase.rpc("v3_provider_list_cards", { p_limit: 200 });
+      if (!current()) return;
+      if (error || !Array.isArray(data)) throw new Error("CARDS_UNAVAILABLE");
+      setCards(data.map(card => ({ ...card, qr_url: card.qr_url ? getCardPublicUrl(card.qr_url, card.card_code) : null })));
+    } catch {
+      if (current()) { setLoadError("Daftar kartu belum dapat dimuat. Silakan coba lagi."); setCards([]); }
+    } finally { if (current()) setLoadingCards(false); }
   }
 
   async function createCard(event: FormEvent) {
     event.preventDefault();
+    if (createBusy.current || providerAllowed !== true || !userEmail) return;
+    const account = userEmail;
+    createBusy.current = true;
     setCreating(true);
     setCreateError("");
     setCreated(null);
 
-    const { data, error } = await supabase.rpc("v3_provider_create_card", {
-      p_label: label || null,
-      p_area: area || null,
-      p_internal_code: internalCode || null,
-    });
+    try {
+      const { data, error } = await supabase.rpc("v3_provider_create_card", {
+        p_label: label || null,
+        p_area: area || null,
+        p_internal_code: internalCode || null,
+      });
 
-    setCreating(false);
+      if (currentAccount.current !== account) return;
 
-    if (error) {
-      console.error("Provider card creation failed", error);
-      setCreateError("Kartu belum dapat dibuat. Silakan coba lagi.");
-      return;
-    }
+      if (error) {
+        console.error("Provider card creation failed", error);
+        setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi.");
+        return;
+      }
 
-    if (!data?.success) {
-      console.error("Provider card creation returned unsuccessful result", data);
-      setCreateError("Kartu belum dapat dibuat. Periksa data lalu coba lagi.");
-      return;
-    }
+      if (!data?.success) {
+        console.error("Provider card creation returned unsuccessful result", data);
+        setCreateError("Kartu belum dapat dibuat. Periksa data lalu coba lagi.");
+        return;
+      }
 
-    const result = data as CreateResult;
-    if (result.card_code && result.qr_url) {
-      result.qr_url = getCardPublicUrl(result.qr_url, result.card_code);
-      result.nfc_url = result.qr_url;
-    }
-    setCreated(result);
-    setLabel("");
-    setArea("");
-    setInternalCode("");
-    await loadCards();
+      const result = data as CreateResult;
+      if (result.card_code && result.qr_url) {
+        result.qr_url = getCardPublicUrl(result.qr_url, result.card_code);
+        result.nfc_url = result.qr_url;
+      }
+      setCreated(result);
+      setLabel("");
+      setArea("");
+      setInternalCode("");
+      await loadCards();
+    } catch { if (currentAccount.current === account) setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi."); }
+    finally { createBusy.current = false; setCreating(false); }
   }
 
   async function copyText(value?: string, label?: string) {
     if (!value) return;
-    await navigator.clipboard.writeText(value);
-    setCopied(label || tr("Tersalin"));
+    try { await navigator.clipboard.writeText(value); setCopied(label || tr("Tersalin")); }
+    catch { setCopied(tr("Belum dapat menyalin. Salin teks secara manual.", "Unable to copy. Copy the text manually.")); }
     window.setTimeout(() => setCopied(""), 1800);
   }
 
   async function resetActivationPin(card: ProviderCard) {
+    if (resetBusy.current || !userEmail || providerAllowed !== true) return;
+    const account = userEmail;
     const confirmed = window.confirm(
       tr(`Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`, `Reset the activation PIN for ${card.card_code}? The old PIN will stop working immediately.`)
     );
 
     if (!confirmed) return;
 
+    resetBusy.current = true;
     setResetPinError("");
     setResetPinResult(null);
     setResettingCardId(card.id);
 
-    const { data, error } = await supabase.rpc(
-      "v3_provider_reset_activation_pin",
-      {
-        p_card_id: card.id,
+    try {
+      const { data, error } = await supabase.rpc(
+        "v3_provider_reset_activation_pin",
+        {
+          p_card_id: card.id,
+        }
+      );
+
+      if (currentAccount.current !== account) return;
+
+      if (error) {
+        console.error("Provider PIN reset failed", error);
+        setResetPinError("PIN belum dapat direset. Silakan coba lagi.");
+        return;
       }
-    );
 
-    setResettingCardId(null);
+      if (!data?.success) {
+        console.error("Provider PIN reset returned unsuccessful result", data);
+        setResetPinError("PIN belum dapat direset untuk kartu ini.");
+        return;
+      }
 
-    if (error) {
-      console.error("Provider PIN reset failed", error);
-      setResetPinError("PIN belum dapat direset. Silakan coba lagi.");
-      return;
-    }
-
-    if (!data?.success) {
-      console.error("Provider PIN reset returned unsuccessful result", data);
-      setResetPinError("PIN belum dapat direset untuk kartu ini.");
-      return;
-    }
-
-    setResetPinResult(data as ResetPinResult);
-    await loadCards();
+      setResetPinResult(data as ResetPinResult);
+      await loadCards();
+    } catch { if (currentAccount.current === account) setResetPinError("PIN belum dapat direset. Silakan coba lagi."); }
+    finally { resetBusy.current = false; setResettingCardId(null); }
   }
 
   function cardDeleted(id: string) {
+    listSequence.current++; setLoadingCards(false);
     setCards(current => current.filter(card => card.id !== id));
     setCreated(current => current?.card_id === id ? null : current);
     setResetPinResult(current => current?.card_id === id ? null : current);
@@ -434,7 +441,8 @@ function ProviderCardsPageContent() {
               color: "#991b1b",
             }}
           >
-            {tr("Akun")} <strong>{userEmail}</strong> {tr("tidak memiliki akses provider.")}
+            {loadError ? <><p role="alert">{tr(loadError, "Provider access could not be verified. Please retry.")}</p><button type="button" onClick={checkProvider}>{tr("Coba lagi", "Retry")}</button></>
+              : <>{tr("Akun")} <strong>{userEmail}</strong> {tr("tidak memiliki akses provider.")}</>}
           </section>
         ) : providerAllowed === null ? (
           <p>{tr("Memeriksa akses provider...")}</p>
