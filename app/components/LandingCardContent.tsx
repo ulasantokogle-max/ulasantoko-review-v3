@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import type { LandingTheme } from "../../lib/landingThemes";
+import { safeYouTubeUrl } from "../../lib/youtube";
 import { safeTikTokUrl } from "../../lib/tiktok";
 import BusinessTitle from "./BusinessTitle";
 
@@ -7,8 +8,8 @@ type Props = {
   theme: LandingTheme; themeKey: string; businessName: string; title: string; description: string;
   category?: string | null; logoUrl?: string | null; coverUrl?: string | null; coverPosition?: string;
   promoText?: string | null; aboutText?: string | null;
-  reviewUrl?: string | null; whatsappUrl?: string | null; instagramUrl?: string | null; tiktokUrl?: string | null; pdfUrl?: string | null; pdfHref?: string; pdfTitle: string;
-  showGoogleReview: boolean; showWhatsapp: boolean; showInstagram: boolean; showTikTok?: boolean; showPdf: boolean; showAbout: boolean; showPromo: boolean;
+  reviewUrl?: string | null; whatsappUrl?: string | null; instagramUrl?: string | null; tiktokUrl?: string | null; youtubeUrl?: string | null; pdfUrl?: string | null; pdfHref?: string; pdfTitle: string;
+  showGoogleReview: boolean; showWhatsapp: boolean; showInstagram: boolean; showTikTok?: boolean; showYouTube?: boolean; showPdf: boolean; showAbout: boolean; showPromo: boolean;
   labels: { review: string; about: string; thanks?: string }; rating: ReactNode; preview?: boolean;
 };
 
@@ -18,11 +19,13 @@ export default function LandingCardContent(props: Props) {
   const { theme, themeKey, businessName, title, description, category, logoUrl, coverUrl, coverPosition = "center", preview } = props;
   const position = coverPosition.replace("top-left", "left top").replace("top-right", "right top").replace("bottom-left", "left bottom").replace("bottom-right", "right bottom");
   const tiktokUrl = safeTikTokUrl(props.tiktokUrl);
+  const youtubeUrl = safeYouTubeUrl(props.youtubeUrl);
   const links = [
     props.showPdf && props.pdfUrl ? { key: "pdf", label: props.pdfTitle, href: props.pdfHref || props.pdfUrl } : null,
     props.showWhatsapp && props.whatsappUrl ? { key: "whatsapp", label: "WhatsApp", href: props.whatsappUrl } : null,
     props.showInstagram && props.instagramUrl ? { key: "instagram", label: "Instagram", href: props.instagramUrl } : null,
     props.showTikTok !== false && tiktokUrl ? { key: "tiktok", label: "TikTok", href: tiktokUrl } : null,
+    props.showYouTube !== false && youtubeUrl ? { key: "youtube", label: "YouTube", href: youtubeUrl } : null,
   ].filter(item => item !== null);
   return <>
     <div className="public-hero" style={{ aspectRatio: "16 / 7", backgroundImage: coverUrl ? `url(${JSON.stringify(coverUrl)})` : `linear-gradient(135deg, ${theme.primary}, ${theme.secondary})`, backgroundSize: "cover", backgroundRepeat: "no-repeat", backgroundPosition: position }} />
@@ -57,6 +60,7 @@ export default function LandingCardContent(props: Props) {
 function LinkIcon({ kind }: { kind: string }) {
   return <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     {kind === "pdf" ? <><path d="M6 3h8l4 4v14H6zM14 3v5h4" /><path d="M8 17c3-1 5-5 4-6s-2 5 4 6" /></>
+      : kind === "youtube" ? <><rect x="2" y="5" width="20" height="14" rx="4" /><path d="m10 9 5 3-5 3Z" fill="currentColor" stroke="none" /></>
       : kind === "tiktok" ? <path d="M14 3v12a4 4 0 1 1-4-4M14 3c0 4 3 6 6 6" />
       : kind === "instagram" ? <><rect x="3" y="3" width="18" height="18" rx="5" /><circle cx="12" cy="12" r="4" /><circle cx="17.5" cy="6.5" r=".7" fill="currentColor" stroke="none" /></>
       : <><path d="M4.5 18.5 3 22l4.4-1.4A9.5 9.5 0 1 0 4.5 18.5Z" /><path d="M8 7c-2 2 1 7 5 9 2 1 4 0 4-2l-3-1-1 1c-2-1-3-2-4-4l1-1Z" /></>}

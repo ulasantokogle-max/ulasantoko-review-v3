@@ -3,11 +3,13 @@ for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.tra
 require.extensions['.css']=()=>{};
 const React=require('react'),{act,create}=require('react-test-renderer');global.IS_REACT_ACT_ENVIRONMENT=true;
 let account='owner@example.com',business='business-a',switchBusiness,saveFails=false,googleCalls=0,calls=[],lateResolve,authCallback,lateSaveResolve,delaySave=false,throwSave=false;
-let tikTokEnabled=false,savedTikTok='',savedShowTikTok=true;
+let tikTokEnabled=false,savedTikTok='',savedShowTikTok=true,youTubeEnabled=false,savedYouTube='',savedShowYouTube=true;
 const storage=new Map();global.window={sessionStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
 global.fetch=async()=>{googleCalls++;return {ok:true,json:async()=>({success:true,maps_url:'https://maps.app.goo.gl/draft'})};};
 const supabase={auth:{getSession:async()=>({data:{session:{user:{email:account},access_token:'token'}}}),onAuthStateChange:callback=>{authCallback=callback;return ({data:{subscription:{unsubscribe(){}}}});}},rpc:async(name,args)=>{
  calls.push({name,args});
+ if(name==='v3_get_landing_page_settings_with_youtube')return youTubeEnabled?{data:{success:true,hero_title:'Server title',youtube_available:true,youtube_url:savedYouTube,show_youtube:savedShowYouTube,tiktok_available:true,tiktok_url:savedTikTok,show_tiktok:savedShowTikTok},error:null}:{data:null,error:{code:'PGRST202'}};
+ if(name==='v3_update_landing_page_settings_with_youtube'){savedYouTube=args.p_youtube_url;savedShowYouTube=args.p_show_youtube;savedTikTok=args.p_tiktok_url;savedShowTikTok=args.p_show_tiktok;return {data:{success:true},error:null};}
  if(name==='v3_get_landing_page_settings_with_tiktok')return tikTokEnabled?{data:{success:true,hero_title:'Server title',tiktok_available:true,tiktok_url:savedTikTok,show_tiktok:savedShowTikTok},error:null}:{data:null,error:{code:'PGRST202'}};
  if(name==='v3_update_landing_page_settings_with_tiktok'){savedTikTok=args.p_tiktok_url;savedShowTikTok=args.p_show_tiktok;return {data:{success:true},error:null};}
  if(name==='v3_get_business_term')return {data:{success:true,enabled:false},error:null};
@@ -38,6 +40,7 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  const mount=async()=>{await act(async()=>{tree=create(React.createElement(Page));});};
  const input=placeholder=>tree.root.findAll(n=>n.props.placeholder===placeholder)[0];
  await mount();
+ assert.equal(input('https://www.youtube.com/@username').props.disabled,true,'YouTube waits for its migration');
  assert.equal(input('https://www.tiktok.com/@username').props.disabled,true,'Before migration the old editor remains usable');
  assert.equal(storage.size,0,'Initial server load must not create a stale draft');
  assert.equal(writeLandingDraft('oversized',{value:'x'.repeat(65536)}),false);
@@ -147,6 +150,25 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  assert.equal(tiktokInput().props.value,savedTikTok,'Saved TikTok reloads from the server');
  assert.equal(toggle().props.checked,false);
  await act(async()=>tree.unmount());
+ youTubeEnabled=true;storage.clear();await mount();
+ const youtubeInput=()=>input('https://www.youtube.com/@username');
+ assert.equal(youtubeInput().props.disabled,false);
+ const beforeBadYouTube=calls.length;
+ await act(async()=>youtubeInput().props.onChange({target:{value:'https://youtube.com.evil.com/@business'}}));
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert.equal(calls.length,beforeBadYouTube,'Invalid YouTube must fail before save steps');
+ await act(async()=>youtubeInput().props.onChange({target:{value:'https://www.youtube.com/@business'}}));
+ await act(async()=>tree.unmount());await mount();
+ assert.equal(youtubeInput().props.value,'https://www.youtube.com/@business','YouTube draft survives refresh');
+ const youtubeToggle=()=>tree.root.findAllByType('label').find(n=>n.findAllByType('span').some(span=>span.children.join('')==='Tampilkan YouTube')).findByType('input');
+ await act(async()=>youtubeToggle().props.onChange({target:{checked:false}}));
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert.equal(savedYouTube,'https://www.youtube.com/@business');assert.equal(savedShowYouTube,false);
+ assert.equal(savedTikTok,'https://www.tiktok.com/@business','YouTube save preserves TikTok');
+ await act(async()=>tree.unmount());await mount();
+ assert.equal(youtubeInput().props.value,savedYouTube);assert.equal(youtubeToggle().props.checked,false);
+ await act(async()=>tree.unmount());
+ console.log('PASS YouTube editor: missing-migration fallback, early validation, draft/server restoration, save/toggle and TikTok preservation');
  console.log('PASS TikTok editor: legacy fallback, early validation, draft restoration, atomic RPC args, server reload and visibility toggle');
  console.log('PASS uploads: thrown network failure unlocks, business change discards late results, new business upload succeeds');
  console.log('PASS editor drafts: refresh restoration of text/contact/Maps/toggles, business/account isolation, failed/successful save, no automatic Google calls, malformed/blocked storage');

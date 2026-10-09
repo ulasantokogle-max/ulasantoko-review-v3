@@ -17,13 +17,14 @@ let activation = { success: true, needs_activation: false };
 let card = { google_review: {review_url:'https://search.google.com/local/writereview?placeid=test'}, business: { name: 'Nama Bisnis Asli' }, card: { card_code: 'TEST001' }, blocks: [] };
 let pageCalls = [];
 let capabilities = {private_rating_max:5};
-let tikTokEnabled=false;
+let tikTokEnabled=false,youTubeEnabled=false;
 let pageSettings = { success: true, theme_key: 'soft_smoothie', pdf_url: 'https://example.com/menu.pdf', pdf_title: 'Dokumen Bisnis Asli' };
 const originalLoad = Module._load;
 Module._load = function (id, parent, main) {
   if (id === "./PdfViewer") return { __esModule: true, default: () => React.createElement("div", null, "PDF viewer") };
   if (id === '@supabase/supabase-js') return { createClient: () => ({ rpc: async (name, args) => {
     pageCalls.push({ name, args });
+    if(name==='v3_get_public_landing_page_with_youtube')return youTubeEnabled?{data:pageSettings,error:null}:{data:null,error:{code:'PGRST202'}};
     if (name === 'v3_get_public_landing_page_with_tiktok') return tikTokEnabled?{data:pageSettings,error:null}:{data:null,error:{code:'PGRST202'}};
     if (name === 'v3_resolve_card_code') return { data: args.p_public_id === 'a7c93e10b842' ? 'TEST001' : null, error: null };
     if (name === 'v3_get_feedback_capabilities') return {data:capabilities,error:null};
@@ -98,6 +99,15 @@ const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli'
   tiktokHtml=renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},await PublicPage({params:Promise.resolve({cardCode:'a7c93e10b842'})})));
   assert(!tiktokHtml.includes('href="https://www.tiktok.com/@business"'));
   pageSettings={...pageSettings,tiktok_url:null};
+  youTubeEnabled=true;
+  pageSettings={...pageSettings,tiktok_url:'https://www.tiktok.com/@business',show_tiktok:true,youtube_url:'https://www.youtube.com/@business',show_youtube:true};
+  let youtubeHtml=renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},await PublicPage({params:Promise.resolve({cardCode:'a7c93e10b842'})})));
+  assert(youtubeHtml.includes('href="https://www.youtube.com/@business"'));
+  assert(youtubeHtml.includes('href="https://www.tiktok.com/@business"'),'YouTube keeps TikTok visible');
+  pageSettings={...pageSettings,show_youtube:false};
+  youtubeHtml=renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},await PublicPage({params:Promise.resolve({cardCode:'a7c93e10b842'})})));
+  assert(!youtubeHtml.includes('href="https://www.youtube.com/@business"'));
+  pageSettings={...pageSettings,youtube_url:null,tiktok_url:null};
   const originalSettings = pageSettings;
   for (const theme of ['warm_brown', 'soft_smoothie', 'soft_tosca', 'elegant_cream', 'minimal_dark']) {
     pageSettings = { ...originalSettings, theme_key: theme, hero_title: 'Judul dari form', hero_description: 'Deskripsi dari form', promo_text: 'Promo dari form', about_text: 'Tentang dari form', cover_position: 'bottom-right', instagram_url: 'https://instagram.com/business' };

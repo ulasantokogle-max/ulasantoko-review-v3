@@ -222,9 +222,9 @@ export default async function PublicCardPage({
     supabase.rpc("v3_get_public_business_contact", {
       p_card_code: cardCode,
     }),
-    landingWithTikTok(supabase.rpc("v3_get_public_landing_page_with_tiktok", {
+    landingWithTikTok(supabase.rpc("v3_get_public_landing_page_with_youtube", { p_card_code: cardCode }), () => landingWithTikTok(supabase.rpc("v3_get_public_landing_page_with_tiktok", {
       p_card_code: cardCode,
-    }), () => supabase.rpc("v3_get_public_landing_page", { p_card_code: cardCode })),
+    }), () => supabase.rpc("v3_get_public_landing_page", { p_card_code: cardCode }))),
     supabase.rpc("v3_get_feedback_capabilities"),
   ]);
 
@@ -310,6 +310,8 @@ export default async function PublicCardPage({
   const coverPosition = firstString(landingSettingsData?.cover_position) ?? "center";
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
+  const youtubeUrl = firstString(landingSettingsData?.youtube_url);
+  const showYouTube = landingSettingsData?.show_youtube !== false;
   const tiktokUrl = firstString(landingSettingsData?.tiktok_url);
   const showTikTok = landingSettingsData?.show_tiktok !== false;
   const instagramUrl = firstString(landingSettingsData?.instagram_url);
@@ -357,8 +359,8 @@ export default async function PublicCardPage({
           theme={theme} themeKey={themeKey} businessName={businessName} title={pageTitle} description={pageDescription}
           category={category} logoUrl={logoUrl} coverUrl={coverUrl} coverPosition={coverPosition}
           promoText={promoText} aboutText={aboutText} reviewUrl={reviewUrl} whatsappUrl={whatsappUrl}
-          instagramUrl={instagramUrl} tiktokUrl={tiktokUrl} pdfUrl={pdfUrl} pdfHref={`/${routeCode}/menu`} pdfTitle={pdfTitle}
-          showGoogleReview={showGoogleReview} showWhatsapp={showWhatsapp} showInstagram={showInstagram} showTikTok={showTikTok}
+          instagramUrl={instagramUrl} tiktokUrl={tiktokUrl} youtubeUrl={youtubeUrl} pdfUrl={pdfUrl} pdfHref={`/${routeCode}/menu`} pdfTitle={pdfTitle}
+          showGoogleReview={showGoogleReview} showWhatsapp={showWhatsapp} showInstagram={showInstagram} showTikTok={showTikTok} showYouTube={showYouTube}
           showPdf={showPdf} showAbout={showAbout} showPromo={showPromo}
           labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
           rating={<RatingFlow privateFeedbackAvailable={!feedbackCapabilitiesError && feedbackCapabilities?.private_rating_max === 5} cardCode={cardCode} businessName={businessName} reviewUrl={showGoogleReview ? reviewUrl : null}
