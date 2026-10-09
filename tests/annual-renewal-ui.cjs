@@ -42,6 +42,33 @@ const text=n=>!n?'':typeof n==='string'?n:Array.isArray(n)?n.map(text).join(' ')
  assert.equal(writes[0].p_request_id,writes[1].p_request_id,'A failed-response retry must retain its idempotency key');
  assert(text(root.toJSON()).includes('berhasil diperpanjang'));
  await act(async()=>root.unmount());
+ rows=[
+  {business_id:'active',business_name:'Bisnis Aktif',expires_on:'2027-10-07',revision:1,days_remaining:365},
+  {business_id:'today',business_name:'Bisnis Hari Ini',expires_on:'2026-10-09',revision:1,days_remaining:0},
+  {business_id:'expired',business_name:'Bisnis Lama',expires_on:'2026-10-08',revision:1,days_remaining:-1},
+  {business_id:'legacy',business_name:'Bisnis Lama',expires_on:null,revision:0,days_remaining:null},
+ ];
+ await act(async()=>{root=create(React.createElement(Provider));});
+ const articles=()=>root.root.findAllByType('article');
+ assert.equal(articles().length,4,'Distinct businesses with duplicate names remain separate');
+ const summary=root.root.findAll(n=>n.props.className==='pt-stat');
+ assert.deepEqual(summary.map(n=>text(n.findByType('strong').children)),['1','1','1','1']);
+ const filter=root.root.findByType('select');
+ await act(async()=>filter.props.onChange({target:{value:'soon'}}));
+ assert.equal(articles().length,1);
+ assert(text(articles()[0].children).includes('Berakhir hari ini'),'Today remains valid and due soon');
+ await act(async()=>filter.props.onChange({target:{value:'expired'}}));
+ assert.equal(articles().length,1);
+ assert(text(articles()[0].children).includes('Pengelolaan terkunci'));
+ await act(async()=>filter.props.onChange({target:{value:'unset'}}));
+ assert.equal(articles().length,1,'Unconfigured legacy terms must not count as expired');
+ await act(async()=>filter.props.onChange({target:{value:'all'}}));
+ await act(async()=>root.root.findByType('input').props.onChange({target:{value:'  AKTIF  '}}));
+ assert.equal(articles().length,1,'Search ignores case and surrounding whitespace');
+ await act(async()=>filter.props.onChange({target:{value:'expired'}}));
+ assert.equal(articles().length,0,'Search and status filters must combine');
+ assert(text(root.toJSON()).includes('Tidak ada bisnis yang cocok'));
+ await act(async()=>root.unmount());
  term={success:true,enabled:true,days_remaining:-1};
  await act(async()=>{root=create(React.createElement(Gate,{businessId:'business-a',userEmail:'owner@example.com',businesses:[],setBusinessId:()=>{}},React.createElement('button',null,'Save')));});
  assert.equal(root.root.findByType('fieldset').props.disabled,true);
