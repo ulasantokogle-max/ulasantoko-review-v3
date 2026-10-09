@@ -8,7 +8,7 @@ const {landingThemes}=require('../lib/landingThemes.ts');
 const css=fs.readFileSync('app/components/public-landing.css','utf8');
 function markup(key,preview=false,hidden=false){
  const theme=landingThemes[key];
- const props={theme,themeKey:key,businessName:'Mustika Jaya Herbal',title:'Mustika Jaya Herbal',description:'Deskripsi dari form',category:'retail',coverPosition:'bottom-left',promoText:'Promo dari form',aboutText:'Tentang bisnis\nBaris kedua',reviewUrl:'https://google.com/review',whatsappUrl:'https://wa.me/628123',instagramUrl:'https://instagram.com/test',pdfUrl:'https://example.com/menu.pdf',pdfHref:'/a7c93e10b842/menu',pdfTitle:'Daftar Menu',showGoogleReview:!hidden,showWhatsapp:!hidden,showInstagram:!hidden,showPdf:!hidden,showAbout:!hidden,showPromo:!hidden,labels:{review:'★ Beri Ulasan',about:'Tentang Kami',thanks:'Terima kasih sudah mendukung'},preview,
+ const props={theme,themeKey:key,businessName:'Mustika Jaya Herbal',title:'Mustika Jaya Herbal',description:'Deskripsi dari form',category:'retail',coverPosition:'bottom-left',promoText:'Promo dari form',aboutText:'Tentang bisnis\nBaris kedua',reviewUrl:'https://google.com/review',whatsappUrl:'https://wa.me/628123',instagramUrl:'https://instagram.com/test',tiktokUrl:'https://www.tiktok.com/@test',showTikTok:!hidden,pdfUrl:'https://example.com/menu.pdf',pdfHref:'/a7c93e10b842/menu',pdfTitle:'Daftar Menu',showGoogleReview:!hidden,showWhatsapp:!hidden,showInstagram:!hidden,showPdf:!hidden,showAbout:!hidden,showPromo:!hidden,labels:{review:'★ Beri Ulasan',about:'Tentang Kami',thanks:'Terima kasih sudah mendukung'},preview,
  rating:React.createElement(Rating,{cardCode:'TEST',businessName:'Mustika Jaya Herbal',reviewUrl:'https://google.com/review',primaryColor:theme.primary,softColor:theme.soft,textColor:theme.text,mutedColor:theme.muted,smoothMode:true,previewOnly:preview})};
  return renderToStaticMarkup(React.createElement('div',{className:'modern-landing'+(preview?' landing-preview':''),'data-theme':key,style:{'--landing-bg':theme.bg,'--landing-card':theme.card,'--landing-primary':theme.primary,'--landing-secondary':theme.secondary,'--landing-soft':theme.soft,'--landing-text':theme.text,'--landing-muted':theme.muted}},React.createElement('section',{className:'public-shell'},React.createElement(Card,props))));
 }
@@ -22,7 +22,8 @@ for(const key of Object.keys(landingThemes)){
  assert(live.includes('white-space:pre-wrap'));
  assert(live.indexOf('class="public-rating"') < live.indexOf('class="public-links'),key+' rating precedes links');
  assert(live.indexOf('public-pdf-wide') < live.indexOf('public-social-link'),key+' PDF precedes social links');
- assert.equal((live.match(/class="public-link public-social-link"/g)||[]).length,2);
+ assert.equal((live.match(/class="public-link public-social-link"/g)||[]).length,3);
+ assert(live.includes('href="https://www.tiktok.com/@test"'));
  assert(live.includes('public-feedback-actions') && live.includes('public-thanks'));
  const hidden=markup(key,false,true);
  for(const name of ['public-rating','public-links','public-about','public-promo']) assert(!hidden.includes('class="'+name),key+' visibility toggle '+name);

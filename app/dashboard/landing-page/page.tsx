@@ -1,4 +1,5 @@
 "use client";
+import { landingWithTikTok, safeTikTokUrl } from "../../../lib/tiktok";
 import BusinessManagementGate from "../../components/BusinessManagementGate";
 
 import "../../components/public-landing.css";
@@ -14,7 +15,7 @@ import { landingDraftKey, readLandingDraft, writeLandingDraft, clearLandingDraft
 
 
 type ThemeKey = keyof typeof themes;
-type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_pdf";
+type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_tiktok" | "show_pdf";
 
 type Settings = {
   theme_key: ThemeKey;
@@ -26,6 +27,7 @@ type Settings = {
   cover_url: string;
   cover_position: "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
   instagram_url: string;
+  tiktok_url: string;
   pdf_title: string;
   pdf_url: string;
   show_google_review: boolean;
@@ -33,6 +35,7 @@ type Settings = {
   show_about: boolean;
   show_promo: boolean;
   show_instagram: boolean;
+  show_tiktok: boolean;
   show_pdf: boolean;
 };
 
@@ -44,6 +47,8 @@ function validDraft(value: unknown): value is EditorDraft {
   if (!draft.settings || !Object.hasOwn(themes, draft.settings.theme_key)) return false;
   const strings = ["hero_title", "hero_description", "about_text", "promo_text", "logo_url", "cover_url", "instagram_url", "pdf_title", "pdf_url"] as const;
   const toggles = ["show_google_review", "show_whatsapp", "show_about", "show_promo", "show_instagram", "show_pdf"] as const;
+  if (draft.settings.tiktok_url !== undefined && (typeof draft.settings.tiktok_url !== "string" || draft.settings.tiktok_url.length > 2048)) return false;
+  if (draft.settings.show_tiktok !== undefined && typeof draft.settings.show_tiktok !== "boolean") return false;
   return strings.every(key => typeof draft.settings[key] === "string" && draft.settings[key].length <= 10000)
     && toggles.every(key => typeof draft.settings[key] === "boolean")
     && ["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right"].includes(draft.settings.cover_position);
@@ -67,6 +72,7 @@ export default function LandingPageBuilderPage() {
     cover_url: "",
     cover_position: "center",
     instagram_url: "",
+    tiktok_url: "",
     pdf_title: tr("Informasi", "Information"),
     pdf_url: "",
     show_google_review: true,
@@ -74,8 +80,10 @@ export default function LandingPageBuilderPage() {
     show_about: true,
     show_promo: true,
     show_instagram: true,
+    show_tiktok: true,
     show_pdf: true
   });
+  const [tikTokAvailable, setTikTokAvailable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -175,7 +183,7 @@ export default function LandingPageBuilderPage() {
       { data: profileData, error: profileError },
       { data: setupData }
     ] = await Promise.all([
-      supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId }),
+      landingWithTikTok(supabase.rpc("v3_get_landing_page_settings_with_tiktok", { p_business_id: businessId }), () => supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId })),
       supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId }),
       supabase.rpc("v3_get_business_profile", { p_business_id: businessId }),
       supabase.rpc("v3_get_business_setup_status", { p_business_id: businessId })
@@ -210,6 +218,7 @@ export default function LandingPageBuilderPage() {
       return;
     }
 
+    setTikTokAvailable(data?.tiktok_available === true);
     const serverSettings: Settings = {
       theme_key: (data?.theme_key ?? "warm_brown") as ThemeKey,
       hero_title: data?.hero_title ?? "",
@@ -220,6 +229,7 @@ export default function LandingPageBuilderPage() {
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
       instagram_url: data?.instagram_url ?? "",
+      tiktok_url: data?.tiktok_url ?? "",
       pdf_title: data?.pdf_title ?? tr("Informasi", "Information"),
       pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
@@ -227,6 +237,7 @@ export default function LandingPageBuilderPage() {
       show_about: data?.show_about ?? true,
       show_promo: data?.show_promo ?? true,
       show_instagram: data?.show_instagram ?? true,
+      show_tiktok: data?.show_tiktok ?? true,
       show_pdf: data?.show_pdf ?? true
     };
     const serverDraft: EditorDraft = {
@@ -238,7 +249,7 @@ export default function LandingPageBuilderPage() {
     const restored = readLandingDraft(key, validDraft);
     const value = restored ?? serverDraft;
     setBaseline(JSON.stringify(serverDraft));
-    setSettings(value.settings);
+    setSettings({ ...serverSettings, ...value.settings, tiktok_url: value.settings.tiktok_url ?? serverSettings.tiktok_url, show_tiktok: value.settings.show_tiktok ?? serverSettings.show_tiktok });
     setDisplayName(value.displayName);
     setWhatsapp(value.whatsapp);
     setMapsUrl(value.mapsUrl);
@@ -317,6 +328,10 @@ export default function LandingPageBuilderPage() {
     setMessage("");
 
     try {
+      if (settings.tiktok_url.trim() && (!tikTokAvailable || !safeTikTokUrl(settings.tiktok_url))) {
+        setError(tikTokAvailable ? tr("Gunakan link TikTok HTTPS yang valid.", "Use a valid HTTPS TikTok link.") : tr("Fitur TikTok belum diaktifkan. Hubungi provider.", "TikTok is not enabled yet. Contact the provider."));
+        return;
+      }
       if (!displayName.trim()) {
         setSaving(false);
         setError("Nama Bisnis Publik wajib diisi.");
@@ -443,7 +458,7 @@ export default function LandingPageBuilderPage() {
 
       setWhatsapp(contactData?.whatsapp_number ?? whatsapp);
 
-      const { data, error } = await supabase.rpc("v3_update_landing_page_settings", {
+      const { data, error } = await supabase.rpc(tikTokAvailable ? "v3_update_landing_page_settings_with_tiktok" : "v3_update_landing_page_settings", {
         p_business_id: businessId,
         p_theme_key: settings.theme_key,
         p_hero_title: settings.hero_title,
@@ -461,7 +476,8 @@ export default function LandingPageBuilderPage() {
         p_show_about: settings.show_about,
         p_show_promo: settings.show_promo,
         p_show_instagram: settings.show_instagram,
-        p_show_pdf: settings.show_pdf
+        p_show_pdf: settings.show_pdf,
+        ...(tikTokAvailable ? { p_tiktok_url: settings.tiktok_url, p_show_tiktok: settings.show_tiktok } : {})
       });
 
       if (!stillCurrent()) return;
@@ -501,6 +517,7 @@ export default function LandingPageBuilderPage() {
     ["show_about", tr("Tampilkan Tentang Bisnis")],
     ["show_promo", tr("Tampilkan Promo")],
     ["show_instagram", tr("Tampilkan Instagram")],
+    ...(tikTokAvailable ? [["show_tiktok", tr("Tampilkan TikTok", "Show TikTok")] as [ToggleKey, string]] : []),
     ["show_pdf", tr("Tampilkan File PDF", "Show PDF File")]
   ];
 
@@ -771,7 +788,7 @@ export default function LandingPageBuilderPage() {
               <div>
                 <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Quick Menu")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
-                  {tr("Atur Google Review, WhatsApp, Instagram, serta file PDF dari satu halaman.")}
+                  {tr("Atur Google Review, WhatsApp, Instagram, TikTok, serta file PDF dari satu halaman.")}
                 </div>
               </div>
 
@@ -813,6 +830,16 @@ export default function LandingPageBuilderPage() {
                   value={settings.instagram_url}
                   onChange={(e) => setSettings((s) => ({ ...s, instagram_url: e.target.value }))}
                 />
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label htmlFor="landing-tiktok" style={{ fontSize: 13, fontWeight: 900 }}>TikTok</label>
+                <input id="landing-tiktok" style={inputStyle} placeholder="https://www.tiktok.com/@username"
+                  value={settings.tiktok_url} maxLength={2048} disabled={!tikTokAvailable}
+                  onChange={(e) => setSettings((s) => ({ ...s, tiktok_url: e.target.value }))} />
+                <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
+                  {tikTokAvailable ? tr("Opsional. Kosongkan untuk menyembunyikan tombol TikTok.", "Optional. Leave blank to hide the TikTok button.") : tr("Fitur TikTok belum diaktifkan oleh provider.", "TikTok has not been enabled by the provider yet.")}
+                </div>
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
@@ -885,8 +912,8 @@ export default function LandingPageBuilderPage() {
                 category={selectedBusiness?.category} logoUrl={settings.logo_url} coverUrl={settings.cover_url} coverPosition={settings.cover_position}
                 promoText={settings.promo_text} aboutText={settings.about_text}
                 reviewUrl={mapsUrl.trim() || googleConfigured ? "#review-preview" : null}
-                whatsappUrl={whatsapp.trim() ? "#whatsapp-preview" : null} instagramUrl={settings.instagram_url} pdfUrl={settings.pdf_url} pdfTitle={settings.pdf_title || tr("Informasi", "Information")}
-                showGoogleReview={settings.show_google_review} showWhatsapp={settings.show_whatsapp} showInstagram={settings.show_instagram}
+                whatsappUrl={whatsapp.trim() ? "#whatsapp-preview" : null} instagramUrl={settings.instagram_url} tiktokUrl={settings.tiktok_url} pdfUrl={settings.pdf_url} pdfTitle={settings.pdf_title || tr("Informasi", "Information")}
+                showGoogleReview={settings.show_google_review} showWhatsapp={settings.show_whatsapp} showInstagram={settings.show_instagram} showTikTok={tikTokAvailable && settings.show_tiktok}
                 showPdf={settings.show_pdf} showAbout={settings.show_about} showPromo={settings.show_promo}
                 labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
                 rating={<RatingFlow previewOnly cardCode="preview" businessName={businessName}

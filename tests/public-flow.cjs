@@ -17,12 +17,14 @@ let activation = { success: true, needs_activation: false };
 let card = { google_review: {review_url:'https://search.google.com/local/writereview?placeid=test'}, business: { name: 'Nama Bisnis Asli' }, card: { card_code: 'TEST001' }, blocks: [] };
 let pageCalls = [];
 let capabilities = {private_rating_max:5};
+let tikTokEnabled=false;
 let pageSettings = { success: true, theme_key: 'soft_smoothie', pdf_url: 'https://example.com/menu.pdf', pdf_title: 'Dokumen Bisnis Asli' };
 const originalLoad = Module._load;
 Module._load = function (id, parent, main) {
   if (id === "./PdfViewer") return { __esModule: true, default: () => React.createElement("div", null, "PDF viewer") };
   if (id === '@supabase/supabase-js') return { createClient: () => ({ rpc: async (name, args) => {
     pageCalls.push({ name, args });
+    if (name === 'v3_get_public_landing_page_with_tiktok') return tikTokEnabled?{data:pageSettings,error:null}:{data:null,error:{code:'PGRST202'}};
     if (name === 'v3_resolve_card_code') return { data: args.p_public_id === 'a7c93e10b842' ? 'TEST001' : null, error: null };
     if (name === 'v3_get_feedback_capabilities') return {data:capabilities,error:null};
     if (name === 'v3_submit_feedback') { calls.push(args); return outcome; }
@@ -88,6 +90,14 @@ const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli'
   const unavailableMarkerPage = await PublicPage({ params: Promise.resolve({cardCode:'TEST001'}) });
   assert(renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},unavailableMarkerPage)).includes('href="https://search.google.com/local/writereview?placeid=test"'),'Missing migration must not affect Google access');
   capabilities = {private_rating_max:5};
+  tikTokEnabled=true;
+  pageSettings={...pageSettings,tiktok_url:'https://www.tiktok.com/@business',show_tiktok:true};
+  let tiktokHtml=renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},await PublicPage({params:Promise.resolve({cardCode:'a7c93e10b842'})})));
+  assert(tiktokHtml.includes('href="https://www.tiktok.com/@business"'),'Public random card URLs expose the saved TikTok link');
+  pageSettings={...pageSettings,show_tiktok:false};
+  tiktokHtml=renderToStaticMarkup(React.createElement(LanguageProvider,{initialLanguage:language},await PublicPage({params:Promise.resolve({cardCode:'a7c93e10b842'})})));
+  assert(!tiktokHtml.includes('href="https://www.tiktok.com/@business"'));
+  pageSettings={...pageSettings,tiktok_url:null};
   const originalSettings = pageSettings;
   for (const theme of ['warm_brown', 'soft_smoothie', 'soft_tosca', 'elegant_cream', 'minimal_dark']) {
     pageSettings = { ...originalSettings, theme_key: theme, hero_title: 'Judul dari form', hero_description: 'Deskripsi dari form', promo_text: 'Promo dari form', about_text: 'Tentang dari form', cover_position: 'bottom-right', instagram_url: 'https://instagram.com/business' };

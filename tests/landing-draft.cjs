@@ -3,10 +3,13 @@ for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.tra
 require.extensions['.css']=()=>{};
 const React=require('react'),{act,create}=require('react-test-renderer');global.IS_REACT_ACT_ENVIRONMENT=true;
 let account='owner@example.com',business='business-a',switchBusiness,saveFails=false,googleCalls=0,calls=[],lateResolve,authCallback,lateSaveResolve,delaySave=false,throwSave=false;
+let tikTokEnabled=false,savedTikTok='',savedShowTikTok=true;
 const storage=new Map();global.window={sessionStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)}};
 global.fetch=async()=>{googleCalls++;return {ok:true,json:async()=>({success:true,maps_url:'https://maps.app.goo.gl/draft'})};};
 const supabase={auth:{getSession:async()=>({data:{session:{user:{email:account},access_token:'token'}}}),onAuthStateChange:callback=>{authCallback=callback;return ({data:{subscription:{unsubscribe(){}}}});}},rpc:async(name,args)=>{
  calls.push({name,args});
+ if(name==='v3_get_landing_page_settings_with_tiktok')return tikTokEnabled?{data:{success:true,hero_title:'Server title',tiktok_available:true,tiktok_url:savedTikTok,show_tiktok:savedShowTikTok},error:null}:{data:null,error:{code:'PGRST202'}};
+ if(name==='v3_update_landing_page_settings_with_tiktok'){savedTikTok=args.p_tiktok_url;savedShowTikTok=args.p_show_tiktok;return {data:{success:true},error:null};}
  if(name==='v3_get_business_term')return {data:{success:true,enabled:false},error:null};
  if(name==='v3_update_business_display_name'&&throwSave)throw Error('offline');
  if(name==='v3_update_business_display_name'&&delaySave)return new Promise(resolve=>{lateSaveResolve=resolve;});
@@ -35,6 +38,7 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  const mount=async()=>{await act(async()=>{tree=create(React.createElement(Page));});};
  const input=placeholder=>tree.root.findAll(n=>n.props.placeholder===placeholder)[0];
  await mount();
+ assert.equal(input('https://www.tiktok.com/@username').props.disabled,true,'Before migration the old editor remains usable');
  assert.equal(storage.size,0,'Initial server load must not create a stale draft');
  assert.equal(writeLandingDraft('oversized',{value:'x'.repeat(65536)}),false);
  assert(!storage.has('oversized'),'Cannot report a draft saved if the reader cannot restore it');
@@ -121,6 +125,29 @@ const text=node=>!node?'':typeof node==='string'?node:Array.isArray(node)?node.m
  assert(pdfInput().props.value.includes('/business-upload-next/pdf/'));
  assert(paths.every(path=>path.endsWith('.pdf')));
  await act(async()=>tree.unmount());
+ tikTokEnabled=true;
+ window.sessionStorage.setItem=(k,v)=>storage.set(k,v);
+ storage.clear();
+ await mount();
+ const tiktokInput=()=>input('https://www.tiktok.com/@username');
+ assert.equal(tiktokInput().props.disabled,false);
+ const beforeInvalid=calls.length;
+ await act(async()=>tiktokInput().props.onChange({target:{value:'https://tiktok.com.evil.com/@business'}}));
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert.equal(calls.length,beforeInvalid,'Invalid TikTok must fail before other save steps');
+ await act(async()=>tiktokInput().props.onChange({target:{value:'https://www.tiktok.com/@business'}}));
+ await act(async()=>tree.unmount());await mount();
+ assert.equal(tiktokInput().props.value,'https://www.tiktok.com/@business','TikTok draft survives refresh');
+ const toggle=()=>tree.root.findAllByType('label').find(n=>n.findAllByType('span').some(span=>span.children.join('')==='Tampilkan TikTok')).findByType('input');
+ await act(async()=>toggle().props.onChange({target:{checked:false}}));
+ await act(async()=>tree.root.findByType('form').props.onSubmit({preventDefault(){}}));
+ assert.equal(savedTikTok,'https://www.tiktok.com/@business');
+ assert.equal(savedShowTikTok,false);
+ await act(async()=>tree.unmount());await mount();
+ assert.equal(tiktokInput().props.value,savedTikTok,'Saved TikTok reloads from the server');
+ assert.equal(toggle().props.checked,false);
+ await act(async()=>tree.unmount());
+ console.log('PASS TikTok editor: legacy fallback, early validation, draft restoration, atomic RPC args, server reload and visibility toggle');
  console.log('PASS uploads: thrown network failure unlocks, business change discards late results, new business upload succeeds');
  console.log('PASS editor drafts: refresh restoration of text/contact/Maps/toggles, business/account isolation, failed/successful save, no automatic Google calls, malformed/blocked storage');
 })().catch(error=>{console.error(error);process.exitCode=1;});

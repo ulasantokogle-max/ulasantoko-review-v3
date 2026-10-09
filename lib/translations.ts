@@ -41,7 +41,7 @@ export const englishText: Record<string, string> = {
   "Upload Logo": "Upload Logo", "Upload Cover": "Upload Cover", "PNG / JPG / WebP · maks. 5 MB": "PNG / JPG / WebP · max. 5 MB",
   "Rekomendasi rasio 16:7 · maks. 5 MB": "Recommended ratio 16:7 · max. 5 MB", "Posisi Cover": "Cover Position",
   "Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.": "Choose the cover focus: top, center, bottom, left, right, or a corner.",
-  "Quick Menu": "Quick Menu", "Atur Google Review, WhatsApp, Instagram, serta file PDF dari satu halaman.": "Manage Google Review, WhatsApp, Instagram, and PDF files in one place.",
+  "Quick Menu": "Quick Menu", "Atur Google Review, WhatsApp, Instagram, TikTok, serta file PDF dari satu halaman.": "Manage Google Review, WhatsApp, Instagram, TikTok, and PDF files in one place.",
   "Tempel link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.": "Paste the business Google Maps link. Saving resolves the Place ID and creates a Google Review link automatically. Leave blank to keep the current setup.",
   "WhatsApp Bisnis": "Business WhatsApp", "Contoh: 081234567890": "Example: 081234567890",
   "Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.": "Enter 08..., 628..., or +628.... The number format is normalized automatically.",
