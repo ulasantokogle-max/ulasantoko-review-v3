@@ -1,64 +1,15 @@
+import { landingWithTikTok } from "../../lib/tiktok";
+import { resolveCardCode } from "../../lib/cardPublicId";
+import type { CSSProperties } from "react";
+import "../components/public-landing.css";
 import { createClient } from "@supabase/supabase-js";
 import { notFound, redirect } from "next/navigation";
+import { cookies } from "next/headers";
+import LandingCardContent from "../components/LandingCardContent";
+import { getLandingTheme } from "../../lib/landingThemes";
 import RatingFlow from "./RatingFlow";
 
 type AnyObject = Record<string, any>;
-
-const themeMap: Record<string, {
-  bg: string;
-  card: string;
-  primary: string;
-  secondary: string;
-  soft: string;
-  text: string;
-  muted: string;
-}> = {
-  warm_brown: {
-    bg: "#FFF8F1",
-    card: "#FFFFFF",
-    primary: "#8B5E3C",
-    secondary: "#B9825A",
-    soft: "#F2E5D8",
-    text: "#4B3428",
-    muted: "#7A6659",
-  },
-  soft_smoothie: {
-    bg: "#FBF5EC",
-    card: "#FFFDFC",
-    primary: "#9B6A43",
-    secondary: "#D7B08A",
-    soft: "#F4E7D7",
-    text: "#4A3023",
-    muted: "#8A7567",
-  },
-  soft_tosca: {
-    bg: "#F0FBF9",
-    card: "#FFFFFF",
-    primary: "#2A9D8F",
-    secondary: "#67C9BD",
-    soft: "#DDF4F0",
-    text: "#173E39",
-    muted: "#5F7C78",
-  },
-  elegant_cream: {
-    bg: "#FBF7EF",
-    card: "#FFFDF8",
-    primary: "#9A7B4F",
-    secondary: "#C9B184",
-    soft: "#EFE5D2",
-    text: "#4D4337",
-    muted: "#7D7366",
-  },
-  minimal_dark: {
-    bg: "#161616",
-    card: "#202020",
-    primary: "#E6C59A",
-    secondary: "#BFA17B",
-    soft: "#2B2B2B",
-    text: "#FAF7F2",
-    muted: "#C9C1B8",
-  },
-};
 
 function firstString(...values: unknown[]) {
   for (const value of values) {
@@ -175,12 +126,60 @@ function getWhatsAppUrl(blocks: AnyObject[]) {
   return null;
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ cardCode: string }>;
+}) {
+  let { cardCode } = await params;
+  const routeCode = cardCode;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return {
+      title: "YukReview",
+      description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
+    };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
+    const { data } = await supabase.rpc("v3_get_public_business_name", {
+      p_card_code: cardCode,
+    });
+
+    const name =
+      firstString(data?.display_name, data?.business_name) ?? "YukReview";
+
+    return {
+      title: name + " | YukReview",
+      description: tr("Bagikan pengalaman dan masukan Anda untuk ", "Share your experience and feedback for ") + name + ".",
+    };
+  } catch {
+    return {
+      title: "YukReview",
+      description: tr("Bagikan pengalaman dan masukan Anda.", "Share your experience and feedback."),
+    };
+  }
+}
+
 export default async function PublicCardPage({
   params,
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
-  const { cardCode } = await params;
+  let { cardCode } = await params;
+  const routeCode = cardCode;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -190,6 +189,9 @@ export default async function PublicCardPage({
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
 
   const { data: activationState } = await supabase.rpc(
     "v3_get_card_activation_state",
@@ -197,7 +199,7 @@ export default async function PublicCardPage({
   );
 
   if (activationState?.success && activationState?.needs_activation) {
-    redirect(`/activate/${cardCode}`);
+    redirect(`/activate/${routeCode}`);
   }
 
   if (activationState?.success === false) {
@@ -209,6 +211,7 @@ export default async function PublicCardPage({
     { data: publicNameData },
     { data: publicContactData },
     { data: landingSettingsData },
+    { data: feedbackCapabilities, error: feedbackCapabilitiesError },
   ] = await Promise.all([
     supabase.rpc("v3_get_public_card", {
       p_card_code: cardCode,
@@ -219,9 +222,10 @@ export default async function PublicCardPage({
     supabase.rpc("v3_get_public_business_contact", {
       p_card_code: cardCode,
     }),
-    supabase.rpc("v3_get_public_landing_page", {
+    landingWithTikTok(supabase.rpc("v3_get_public_landing_page_with_youtube", { p_card_code: cardCode }), () => landingWithTikTok(supabase.rpc("v3_get_public_landing_page_with_tiktok", {
       p_card_code: cardCode,
-    }),
+    }), () => supabase.rpc("v3_get_public_landing_page", { p_card_code: cardCode }))),
+    supabase.rpc("v3_get_feedback_capabilities"),
   ]);
 
   if (error || !data) {
@@ -257,7 +261,7 @@ export default async function PublicCardPage({
       business.name,
       business.business_name,
       payload.business_name
-    ) ?? "UlasanToko";
+    ) ?? "YukReview";
 
   const category = firstString(
     business.category,
@@ -296,24 +300,22 @@ export default async function PublicCardPage({
       landingPage.subtitle,
       payload.landing_description
     ) ??
-    "Bagikan pengalaman Anda dan bantu bisnis ini berkembang.";
+    tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.", "Share your experience and help this business grow.");
 
   const themeKey = firstString(landingSettingsData?.theme_key) ?? "warm_brown";
-  const theme = themeMap[themeKey] ?? themeMap.warm_brown;
+  const theme = getLandingTheme(themeKey);
   const isSmoothie = themeKey === "soft_smoothie";
   const logoUrl = firstString(landingSettingsData?.logo_url);
   const coverUrl = firstString(landingSettingsData?.cover_url);
   const coverPosition = firstString(landingSettingsData?.cover_position) ?? "center";
-  const coverBackgroundPosition =
-    coverPosition === "top-left" ? "left top" :
-    coverPosition === "top-right" ? "right top" :
-    coverPosition === "bottom-left" ? "left bottom" :
-    coverPosition === "bottom-right" ? "right bottom" :
-    coverPosition;
   const aboutText = firstString(landingSettingsData?.about_text);
   const promoText = firstString(landingSettingsData?.promo_text);
+  const youtubeUrl = firstString(landingSettingsData?.youtube_url);
+  const showYouTube = landingSettingsData?.show_youtube !== false;
+  const tiktokUrl = firstString(landingSettingsData?.tiktok_url);
+  const showTikTok = landingSettingsData?.show_tiktok !== false;
   const instagramUrl = firstString(landingSettingsData?.instagram_url);
-  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? "Menu & Daftar Harga";
+  const pdfTitle = firstString(landingSettingsData?.pdf_title) ?? tr("Informasi", "Information");
   const pdfUrl = firstString(landingSettingsData?.pdf_url);
   const showGoogleReview = landingSettingsData?.show_google_review !== false;
   const showWhatsapp = landingSettingsData?.show_whatsapp !== false;
@@ -321,15 +323,13 @@ export default async function PublicCardPage({
   const showPromo = landingSettingsData?.show_promo !== false;
   const showInstagram = landingSettingsData?.show_instagram !== false;
   const showPdf = landingSettingsData?.show_pdf !== false;
-  const whatsappAvailable = Boolean(showWhatsapp);
-  const whatsappLinked = Boolean(showWhatsapp && whatsappUrl);
-  const instagramAvailable = Boolean(showInstagram && instagramUrl);
-  const singleSocial = Number(whatsappAvailable) + Number(instagramAvailable) === 1;
 
   return (
     <main
-      className={isSmoothie ? "smoothie-page" : undefined}
+      className={"modern-landing " + (isSmoothie ? "smoothie-page" : "")}
+      data-theme={themeKey}
       style={{
+        ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-secondary": theme.secondary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties),
         minHeight: "100vh",
         background: isSmoothie
           ? "radial-gradient(circle at 50% 0%, #fffaf4 0%, #fbf5ec 38%, #f5eadc 100%)"
@@ -340,66 +340,8 @@ export default async function PublicCardPage({
         color: theme.text,
       }}
     >
-      <style>{`
-        @media (max-width: 520px) {
-          .smoothie-page {
-            padding: 0 !important;
-            overflow-x: hidden !important;
-          }
-          .smoothie-shell {
-            width: 100% !important;
-            max-width: none !important;
-            box-sizing: border-box !important;
-            border-radius: 0 !important;
-            padding: 10px !important;
-            box-shadow: none !important;
-            overflow-x: clip !important;
-          }
-          .smoothie-hero {
-            min-height: 0 !important;
-            max-height: none !important;
-            aspect-ratio: 16 / 7 !important;
-            border-radius: 20px !important;
-          }
-          .smoothie-content {
-            width: 100% !important;
-            box-sizing: border-box !important;
-            padding-left: 10px !important;
-            padding-right: 10px !important;
-          }
-          .smoothie-title {
-            font-size: 29px !important;
-            line-height: 1.08 !important;
-          }
-          .smoothie-promo {
-            font-size: 13px !important;
-            padding: 12px 14px !important;
-          }
-          .smoothie-links {
-            width: 100% !important;
-            box-sizing: border-box !important;
-            grid-template-columns: minmax(0, 1fr) !important;
-            gap: 10px !important;
-            overflow: hidden !important;
-          }
-          .smoothie-link-card {
-            min-height: 78px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            grid-column: 1 / -1 !important;
-          }
-          .smoothie-social-card {
-            min-height: 92px !important;
-          }
-          .smoothie-about {
-            text-align: center !important;
-          }
-        }
-      `}</style>
-
       <section
-        className={isSmoothie ? "smoothie-shell" : undefined}
+        className={"public-shell " + (isSmoothie ? "smoothie-shell" : "")}
         style={{
           maxWidth: 560,
           margin: "0 auto",
@@ -413,369 +355,19 @@ export default async function PublicCardPage({
           overflow: "hidden",
         }}
       >
-        <div
-          className={isSmoothie ? "smoothie-hero" : undefined}
-          style={{
-            aspectRatio: isSmoothie ? "16 / 7" : "16 / 7",
-            minHeight: 150,
-            maxHeight: isSmoothie ? 230 : 230,
-            borderRadius: isSmoothie ? 24 : 24,
-            marginBottom: 0,
-            overflow: "hidden",
-            backgroundImage: coverUrl
-              ? "url(" + coverUrl + ")"
-              : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
-            backgroundSize: "cover",
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: coverBackgroundPosition,
-          }}
+        <LandingCardContent
+          theme={theme} themeKey={themeKey} businessName={businessName} title={pageTitle} description={pageDescription}
+          category={category} logoUrl={logoUrl} coverUrl={coverUrl} coverPosition={coverPosition}
+          promoText={promoText} aboutText={aboutText} reviewUrl={reviewUrl} whatsappUrl={whatsappUrl}
+          instagramUrl={instagramUrl} tiktokUrl={tiktokUrl} youtubeUrl={youtubeUrl} pdfUrl={pdfUrl} pdfHref={`/${routeCode}/menu`} pdfTitle={pdfTitle}
+          showGoogleReview={showGoogleReview} showWhatsapp={showWhatsapp} showInstagram={showInstagram} showTikTok={showTikTok} showYouTube={showYouTube}
+          showPdf={showPdf} showAbout={showAbout} showPromo={showPromo}
+          labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
+          rating={<RatingFlow privateFeedbackAvailable={!feedbackCapabilitiesError && feedbackCapabilities?.private_rating_max === 5} cardCode={cardCode} businessName={businessName} reviewUrl={showGoogleReview ? reviewUrl : null}
+            whatsappUrl={showWhatsapp ? whatsappUrl : null} primaryColor={theme.primary} softColor={theme.soft}
+            textColor={theme.text} mutedColor={theme.muted} smoothMode />}
         />
-
-        <div style={{
-          marginTop: isSmoothie ? -52 : -48,
-          position: "relative",
-          paddingLeft: isSmoothie ? 0 : 14,
-          display: isSmoothie ? "flex" : "block",
-          justifyContent: isSmoothie ? "center" : "initial"
-        }}>
-          {logoUrl ? (
-            <img
-              src={logoUrl}
-              alt={businessName}
-              style={{
-                width: isSmoothie ? 104 : 88,
-                height: isSmoothie ? 104 : 88,
-                objectFit: "cover",
-                borderRadius: isSmoothie ? 24 : 24,
-                border: (isSmoothie ? "6px" : "5px") + " solid " + theme.card,
-                background: theme.card,
-                boxShadow: "0 14px 34px rgba(0,0,0,.14)",
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                width: isSmoothie ? 104 : 88,
-                height: isSmoothie ? 104 : 88,
-                borderRadius: isSmoothie ? 24 : 24,
-                border: (isSmoothie ? "6px" : "5px") + " solid " + theme.card,
-                background: theme.soft,
-                display: "grid",
-                placeItems: "center",
-                color: theme.primary,
-                fontWeight: 900,
-                fontSize: 24,
-                boxShadow: "0 12px 30px rgba(0,0,0,.08)",
-              }}
-            >
-              {businessName.slice(0, 2).toUpperCase()}
-            </div>
-          )}
-        </div>
-
-        <div
-          style={{
-            fontSize: 11,
-            fontWeight: 900,
-            letterSpacing: 0.8,
-            color: theme.muted,
-            textTransform: "uppercase",
-            marginTop: isSmoothie ? 18 : 14,
-            marginBottom: 10,
-            textAlign: isSmoothie ? "center" : "left",
-          }}
-        >
-          UlasanToko Review
-        </div>
-
-        <div className={isSmoothie ? "smoothie-content" : undefined} style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px", textAlign: isSmoothie ? "center" : "left" }}>
-        <h1
-          className={isSmoothie ? "smoothie-title" : undefined}
-          style={{
-            fontSize: isSmoothie ? 34 : 31,
-            lineHeight: 1.12,
-            letterSpacing: "-0.4px",
-            margin: "0 0 10px",
-            fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit",
-            fontWeight: isSmoothie ? 700 : 900,
-          }}
-        >
-          {pageTitle}
-        </h1>
-
-        {category && (
-          <div
-            style={{
-              display: "inline-block",
-              padding: "6px 10px",
-              borderRadius: 999,
-              background: theme.soft,
-              color: theme.text,
-              fontSize: 12,
-              fontWeight: 700,
-              marginBottom: 14,
-              boxShadow: isSmoothie ? "inset 0 1px 0 rgba(255,255,255,.75)" : "none",
-            }}
-          >
-            {category}
-          </div>
-        )}
-
-        <p
-          style={{
-            color: theme.muted,
-            lineHeight: 1.65,
-            margin: "4px auto 20px",
-            maxWidth: isSmoothie ? 430 : "none",
-            fontSize: isSmoothie ? 16 : 14,
-          }}
-        >
-          {pageDescription}
-        </p>
-
-        {showPromo && promoText && (
-          <div
-            className={isSmoothie ? "smoothie-promo" : undefined}
-            style={{
-              margin: "4px 0 18px",
-              padding: "14px 15px",
-              borderRadius: isSmoothie ? 22 : 16,
-              background: isSmoothie
-                ? "linear-gradient(135deg, rgba(255,255,255,.76), rgba(244,231,215,.92))"
-                : theme.soft,
-              color: theme.text,
-              fontWeight: 800,
-              border: "1px solid rgba(0,0,0,.05)",
-            }}
-          >
-            <span style={{ opacity: .8 }}>✦</span> {promoText}
-          </div>
-        )}
-
-        {isSmoothie && (
-          <RatingFlow
-            cardCode={cardCode}
-            businessName={businessName}
-            reviewUrl={showGoogleReview ? reviewUrl : null}
-            whatsappUrl={showWhatsapp ? whatsappUrl : null}
-            primaryColor={theme.primary}
-            softColor={theme.soft}
-            textColor={theme.text}
-            mutedColor={theme.muted}
-            smoothMode
-          />
-        )}
-
-        <div
-          className={isSmoothie ? "smoothie-links" : undefined}
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-            gap: isSmoothie ? 12 : 10,
-            marginTop: isSmoothie ? 18 : 0,
-            marginBottom: 8,
-          }}
-        >
-          {!isSmoothie && showGoogleReview && reviewUrl && (
-            <a
-              href={reviewUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                textDecoration: "none",
-                textAlign: "center",
-                padding: "13px 14px",
-                borderRadius: 14,
-                background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
-                color: "#fff",
-                fontWeight: 900,
-                boxShadow: "0 8px 20px rgba(0,0,0,.09)",
-              }}
-            >
-              ★&nbsp; Beri Ulasan
-            </a>
-          )}
-
-          {whatsappAvailable && (
-            whatsappLinked ? (
-              <a
-                className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-                href={whatsappUrl ?? "#"}
-                target="_blank"
-                rel="noreferrer"
-                style={{
-                  textDecoration: "none",
-                  textAlign: "center",
-                  borderRadius: isSmoothie ? 24 : 14,
-                  background: isSmoothie
-                    ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                    : theme.soft,
-                  color: theme.text,
-                  fontWeight: 900,
-                  border: "1px solid rgba(0,0,0,.06)",
-                  minHeight: isSmoothie ? 116 : "auto",
-                  display: isSmoothie ? "grid" : "block",
-                  placeItems: isSmoothie ? "center" : "initial",
-                  fontSize: isSmoothie ? 17 : 14,
-                  boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                  order: isSmoothie ? 2 : "initial",
-                  gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-                }}
-              >
-                {isSmoothie ? (
-                  <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                    <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
-                    <span>WhatsApp</span>
-                  </span>
-                ) : (
-                  <>◉&nbsp; WhatsApp</>
-                )}
-              </a>
-            ) : (
-              <div
-                className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-                style={{
-                  textAlign: "center",
-                  borderRadius: isSmoothie ? 24 : 14,
-                  background: isSmoothie
-                    ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                    : theme.soft,
-                  color: theme.text,
-                  fontWeight: 900,
-                  border: "1px solid rgba(0,0,0,.06)",
-                  minHeight: isSmoothie ? 116 : "auto",
-                  display: isSmoothie ? "grid" : "block",
-                  placeItems: isSmoothie ? "center" : "initial",
-                  fontSize: isSmoothie ? 17 : 14,
-                  boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                  order: isSmoothie ? 2 : "initial",
-                  gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-                  opacity: .92,
-                }}
-              >
-                {isSmoothie ? (
-                  <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                    <IconBubble bg="#E6F4E8"><span style={{ transform: "scale(1.35)", display: "grid" }}><WhatsAppIcon /></span></IconBubble>
-                    <span>WhatsApp</span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: theme.muted }}>62 812-XXXX-XXXX</span>
-                  </span>
-                ) : (
-                  <>◉&nbsp; WhatsApp · 62 812-XXXX-XXXX</>
-                )}
-              </div>
-            )
-          )}
-
-          {instagramAvailable && (
-            <a
-              className={isSmoothie ? "smoothie-link-card smoothie-social-card" : undefined}
-              href={instagramUrl ?? "#"}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                textDecoration: "none",
-                textAlign: "center",
-                padding: isSmoothie ? "18px 14px" : "13px 14px",
-                borderRadius: isSmoothie ? 24 : 14,
-                background: isSmoothie
-                  ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                  : theme.soft,
-                color: theme.text,
-                fontWeight: 900,
-                border: "1px solid rgba(0,0,0,.06)",
-                minHeight: isSmoothie ? 116 : "auto",
-                display: isSmoothie ? "grid" : "block",
-                placeItems: isSmoothie ? "center" : "initial",
-                fontSize: isSmoothie ? 17 : 14,
-                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                order: isSmoothie ? 3 : "initial",
-                gridColumn: isSmoothie && singleSocial ? "1 / -1" : "auto",
-              }}
-            >
-              {isSmoothie ? (
-                <span style={{ display: "grid", gap: 8, placeItems: "center" }}>
-                  <IconBubble bg="#F7E7E4"><span style={{ transform: "scale(1.4)", display: "grid" }}><InstagramIcon /></span></IconBubble>
-                  <span>Instagram</span>
-                </span>
-              ) : (
-                <>◎&nbsp; Instagram</>
-              )}
-            </a>
-          )}
-
-          {showPdf && pdfUrl && (
-            <a
-              className={isSmoothie ? "smoothie-link-card" : undefined}
-              href={"/" + cardCode + "/menu"}
-              style={{
-                textDecoration: "none",
-                textAlign: "center",
-                borderRadius: isSmoothie ? 24 : 14,
-                background: isSmoothie
-                  ? "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.82))"
-                  : theme.soft,
-                color: theme.text,
-                fontWeight: 900,
-                border: "1px solid rgba(0,0,0,.06)",
-                gridColumn: isSmoothie ? "1 / -1" : "auto",
-                position: isSmoothie ? "relative" : "static",
-                minHeight: isSmoothie ? 86 : "auto",
-                display: isSmoothie ? "flex" : "block",
-                alignItems: isSmoothie ? "center" : "initial",
-                justifyContent: isSmoothie ? "center" : "initial",
-                gap: isSmoothie ? 16 : 0,
-                padding: isSmoothie ? "18px 22px" : "13px 14px",
-                fontSize: isSmoothie ? 18 : 14,
-                boxShadow: isSmoothie ? "0 14px 34px rgba(103,73,48,.10), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-                order: isSmoothie ? 1 : "initial",
-              }}
-            >
-              {isSmoothie ? (
-                <span style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 14, width: "100%" }}>
-                  <IconBubble><span style={{ transform: "scale(1.45)", display: "grid" }}><PdfIcon /></span></IconBubble>
-                  <span>{pdfTitle}</span>
-                </span>
-              ) : (
-                <span>▤&nbsp; {pdfTitle}</span>
-              )}
-              {isSmoothie && <span style={{ fontSize: 30, lineHeight: 1, position: "absolute", right: 22 }}>›</span>}
-            </a>
-          )}
-        </div>
-
-        {showAbout && aboutText && (
-          <div
-            className={isSmoothie ? "smoothie-about" : undefined}
-            style={{
-              marginTop: isSmoothie ? 22 : 20,
-              padding: isSmoothie ? 20 : 18,
-              borderRadius: isSmoothie ? 24 : 18,
-              background: isSmoothie ? "linear-gradient(145deg, rgba(255,255,255,.72), rgba(244,231,215,.78))" : theme.soft,
-              border: "1px solid rgba(0,0,0,.05)",
-              boxShadow: isSmoothie ? "0 12px 30px rgba(103,73,48,.07), inset 0 1px 0 rgba(255,255,255,.8)" : "none",
-            }}
-          >
-            <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
-            <div style={{ color: theme.muted, lineHeight: 1.6, fontSize: 14 }}>
-              {aboutText}
-            </div>
-          </div>
-        )}
-
-        </div>
-
-        <div style={{ padding: isSmoothie ? "0 18px 12px" : "0 10px 10px" }}>
-        {!isSmoothie && <RatingFlow
-          cardCode={cardCode}
-          businessName={businessName}
-          reviewUrl={showGoogleReview ? reviewUrl : null}
-          whatsappUrl={showWhatsapp ? whatsappUrl : null}
-          primaryColor={theme.primary}
-          softColor={theme.soft}
-          textColor={theme.text}
-          mutedColor={theme.muted}
-        />}
-
+        <div style={{ padding: "0 16px 16px" }}>
         {mapsUrl && (
           <a
             href={mapsUrl}
@@ -794,7 +386,7 @@ export default async function PublicCardPage({
               border: "1px solid rgba(0,0,0,.12)",
             }}
           >
-            Lihat di Google Maps
+            {tr("Lihat di Google Maps", "View on Google Maps")}
           </a>
         )}
 
@@ -869,22 +461,9 @@ export default async function PublicCardPage({
 
         </div>
 
-        {isSmoothie && (
-          <div
-            style={{
-              textAlign: "center",
-              color: theme.muted,
-              fontSize: 13,
-              lineHeight: 1.6,
-              padding: "18px 14px 4px",
-            }}
-          >
-            <div style={{ marginBottom: 6, color: theme.primary, fontSize: 18 }}>⌁</div>
-            Terima kasih sudah mendukung {businessName}.
-          </div>
-        )}
 
         <div
+          className="public-footer"
           style={{
             marginTop: isSmoothie ? 16 : 18,
             paddingTop: 18,
@@ -896,8 +475,8 @@ export default async function PublicCardPage({
             fontSize: 12,
           }}
         >
-          <span>Card: {card.card_code ?? cardCode}</span>
-          <span>Powered by UlasanToko</span>
+          <span>{tr("Kartu", "Card")}: {card.card_code ?? cardCode}</span>
+          <span>Powered by YukReview</span>
         </div>
       </section>
     </main>

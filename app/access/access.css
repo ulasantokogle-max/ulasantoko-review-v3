@@ -1,0 +1,27 @@
+.access-page { box-sizing: border-box; }
+.access-header h1 { letter-spacing: -1px; }
+.access-toolbar { align-items: center; gap: 12px; flex-wrap: wrap; }
+.access-toolbar > a { color: #475569; font-size: 14px; font-weight: 700; text-decoration: none; padding: 8px 0; }
+.access-toolbar > a:hover { color: #111827; }
+.access-card-input { border-left: 4px solid #334155 !important; padding: 22px !important; }
+.access-menu-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.access-tile { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; padding: 24px !important; }
+.access-step { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 12px; background: #f1f5f9; color: #475569; font-size: 14px; font-weight: 800; margin-bottom: 12px; }
+.access-tile h2 { font-size: 23px; letter-spacing: -.5px; }
+.access-tile > p { margin: 8px 0 22px; flex: 1; min-height: 0 !important; max-width: 440px; }
+.access-tile a { box-sizing: border-box; }
+.access-actions { width: 100%; }
+.access-empty { width: 100%; box-sizing: border-box; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px; color: #64748b !important; font-weight: 500 !important; }
+.access-checklist h2 { font-size: 20px; margin-bottom: 16px; }
+.access-checklist ol { margin: 0; padding-left: 24px; display: grid; gap: 10px; color: #475569; font-size: 14px; line-height: 1.6; }
+.access-checklist li { padding-left: 5px; }
+.access-page a:focus-visible, .access-page input:focus-visible { outline: 3px solid #94a3b8; outline-offset: 3px; }
+@media (max-width: 620px) {
+  .access-page { padding: 20px 14px 32px !important; }
+  .access-toolbar { justify-content: flex-start !important; gap: 14px; margin-bottom: 20px !important; }
+  .access-header h1 { font-size: 28px !important; }
+  .access-menu-grid { grid-template-columns: minmax(0, 1fr); gap: 14px; }
+  .access-card-input, .access-tile { padding: 20px !important; }
+  .access-card-input input { max-width: none !important; }
+  .access-actions a { flex: 1; text-align: center; }
+}

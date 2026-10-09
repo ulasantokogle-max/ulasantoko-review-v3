@@ -1,0 +1,76 @@
+.modern-landing { font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif !important; }
+main.modern-landing {
+  padding: 20px 14px 44px !important;
+  background: var(--landing-bg) !important;
+  background: radial-gradient(ellipse at 10% 0%, var(--landing-soft), transparent 60%), var(--landing-bg) !important;
+}
+.modern-landing .public-shell {
+  border-radius: 32px !important; background: var(--landing-card) !important;
+  border: 1px solid color-mix(in srgb, var(--landing-primary) 12%, transparent) !important;
+  box-shadow: 0 22px 70px color-mix(in srgb, var(--landing-text) 9%, transparent) !important;
+  padding: 12px !important; box-sizing: border-box;
+}
+.modern-landing .public-hero { border-radius: 22px !important; position: relative; }
+.modern-landing .public-category { display: inline-block; border-radius: 999px; padding: 6px 10px; font-size: 12px; font-weight: 700; background: var(--landing-soft); color: var(--landing-text); }
+.modern-landing .public-profile { display: flex !important; justify-content: center !important; padding-left: 0 !important; margin-top: -46px !important; }
+.modern-landing .public-profile > img, .modern-landing .public-profile > div {
+  width: 92px !important; height: 92px !important; border-radius: 26px !important;
+  border: 5px solid var(--landing-card) !important; box-shadow: 0 8px 26px #00000016 !important;
+}
+.modern-landing .public-brand { text-align: center !important; font-size: 10px !important; letter-spacing: 1.8px !important; margin: 18px 0 12px !important; }
+.modern-landing .public-content { text-align: center !important; padding: 0 16px 16px !important; box-sizing: border-box; }
+.modern-landing .public-content > h1 { font-family: inherit !important; font-weight: 800 !important; letter-spacing: -1px !important; line-height: 1.2 !important; color: var(--landing-text); }
+.modern-landing .public-description { font-size: 15px !important; line-height: 1.75 !important; color: var(--landing-muted) !important; max-width: 400px !important; margin: 10px auto 24px !important; }
+.modern-landing .public-promo { border-radius: 16px !important; padding: 13px 16px !important; background: var(--landing-soft) !important; color: var(--landing-text) !important; border: none !important; font-size: 13px !important; line-height: 1.6; }
+.modern-landing .public-rating {
+  border-radius: 24px !important; padding: 24px 16px !important; margin-top: 22px !important;
+  background: var(--landing-soft) !important;
+  background: linear-gradient(145deg, var(--landing-card), var(--landing-soft)) !important;
+  border: 1px solid color-mix(in srgb, var(--landing-primary) 14%, transparent) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--landing-text) 6%, transparent) !important;
+}
+.modern-landing .public-rating button { min-height: 44px; touch-action: manipulation; }
+.modern-landing .smoothie-stars button { background: var(--landing-card) !important; border: 1px solid color-mix(in srgb, var(--landing-primary) 15%, transparent) !important; box-shadow: none !important; border-radius: 14px !important; }
+.modern-landing .public-links { gap: 12px !important; margin-top: 20px !important; }
+.modern-landing .public-link {
+  border-radius: 18px !important; background: var(--landing-soft) !important; color: var(--landing-text) !important;
+  border: 1px solid color-mix(in srgb, var(--landing-primary) 10%, transparent) !important;
+  padding: 18px 14px !important; box-shadow: none !important; box-sizing: border-box; min-width: 0; overflow-wrap: anywhere;
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.modern-landing a.public-link:hover { transform: translateY(-2px); box-shadow: 0 8px 22px #0000000d !important; }
+.modern-landing .public-review-link { background: linear-gradient(135deg, var(--landing-primary), var(--landing-secondary)) !important; color: #fff !important; }
+.modern-landing[data-theme="minimal_dark"] .public-review-link { color: #202020 !important; }
+.modern-landing .public-rating button:disabled { cursor: default; opacity: 1; }
+.modern-landing a:focus-visible, .modern-landing button:focus-visible, .modern-landing input:focus-visible, .modern-landing textarea:focus-visible { outline: 3px solid var(--landing-primary); outline-offset: 3px; }
+.modern-landing .public-about { text-align: left !important; background: var(--landing-soft) !important; padding: 20px !important; border-radius: 20px !important; box-shadow: none !important; border: none !important; }
+.modern-landing .public-footer { color: var(--landing-muted) !important; padding: 18px 8px 6px; font-size: 11px !important; }
+.modern-landing .preview-logo { position: relative; display: grid; margin: -46px auto 0 !important; width: 92px !important; height: 92px !important; border-radius: 26px !important; border: 5px solid var(--landing-card) !important; box-sizing: content-box; }
+.landing-preview .public-hero { min-height: 0 !important; }
+@media (max-width: 520px) {
+  main.modern-landing { padding: 12px 10px 30px !important; }
+  .modern-landing .public-shell { width: 100% !important; border-radius: 26px !important; padding: 10px !important; }
+  .modern-landing .public-content { padding: 0 10px 12px !important; }
+  .modern-landing .public-description { font-size: 14px !important; }
+  .modern-landing .public-hero { min-height: 0 !important; aspect-ratio: 16 / 7; }
+  .modern-landing .public-rating { padding: 22px 12px !important; }
+}
+@media (prefers-reduced-motion: reduce) { .modern-landing .public-link { transition: none; } .modern-landing a.public-link:hover { transform: none; } }
+
+.modern-landing .public-link { text-decoration: none; font-weight: 800; text-align: center; }
+.modern-landing .public-pdf-wide { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 16px; position: relative; min-height: 78px; padding-left: 42px !important; padding-right: 42px !important; }
+.modern-landing .public-link-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.modern-landing .public-link-arrow { position: absolute; right: 20px; font-size: 28px; line-height: 1; }
+.modern-landing .public-social-link { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; min-height: 112px; }
+.modern-landing .public-social-link .public-link-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--landing-card); }
+.modern-landing .public-thanks { margin-top: 32px; padding: 18px 0 4px; font-size: 13px; line-height: 1.6; color: var(--landing-muted); }
+.modern-landing .public-thanks > div { margin-bottom: 6px; color: var(--landing-primary); font-size: 18px; }
+
+.modern-landing .public-feedback-actions { display: grid; gap: 10px; margin-top: 18px; }
+.modern-landing .public-feedback-actions .public-link { display: block; width: 100%; font: inherit; font-weight: 800; cursor: pointer; }
+.modern-landing .public-private-fields { display: grid; gap: 12px; border: 0; margin: 0; padding: 0; min-width: 0; }
+.modern-landing .public-private-fields label { font-size: 13px; line-height: 1.6; }
+.modern-landing .public-private-fields input:not([type="checkbox"]), .modern-landing .public-private-fields textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 12px; border-radius: 12px; border: 1px solid var(--landing-muted); background: var(--landing-card); color: var(--landing-text); font: inherit; }
+.modern-landing .public-private-fields textarea { resize: vertical; }
+.modern-landing .public-private-fields input[type="checkbox"] { flex-shrink: 0; margin-top: 4px; accent-color: var(--landing-primary); }
+.modern-landing .public-private-fields button:disabled { opacity: .65; }

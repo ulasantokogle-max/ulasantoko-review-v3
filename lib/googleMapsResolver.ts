@@ -31,6 +31,8 @@ function parseAndValidateMapsUrl(input: string) {
     throw new Error("HTTPS_REQUIRED");
   }
 
+  if (parsed.port && parsed.port !== "443") throw new Error("UNSAFE_PORT");
+
   if (parsed.username || parsed.password) {
     throw new Error("URL_CREDENTIALS_NOT_ALLOWED");
   }
@@ -53,6 +55,7 @@ async function resolveAllowedRedirects(initialUrl: URL) {
         "User-Agent": "Mozilla/5.0",
       },
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     });
 
     if (response.status >= 300 && response.status < 400) {
@@ -62,6 +65,7 @@ async function resolveAllowedRedirects(initialUrl: URL) {
 
       const next = new URL(location, current);
 
+      if (next.port && next.port !== "443") throw new Error("UNSAFE_REDIRECT_PORT");
       if (next.protocol !== "https:") throw new Error("UNSAFE_REDIRECT_PROTOCOL");
       if (next.username || next.password) throw new Error("UNSAFE_REDIRECT_CREDENTIALS");
       if (!isAllowedGoogleMapsHost(next.hostname)) throw new Error("UNSAFE_REDIRECT_DOMAIN");
@@ -96,7 +100,7 @@ function getMapsData(url: string) {
   }
 }
 
-export async function resolveGoogleMapsUrl(mapsUrl: string) {
+export async function resolveGoogleMapsUrl(mapsUrl: string, beforePlacesRequest?: () => Promise<void>) {
   const validatedMapsUrl = parseAndValidateMapsUrl(mapsUrl);
 
   const apiKey = process.env.GOOGLE_MAPS_API_KEY;
@@ -126,6 +130,8 @@ export async function resolveGoogleMapsUrl(mapsUrl: string) {
     };
   }
 
+  // Reserve before dispatch; failures/timeouts keep the slot to avoid undercounting.
+  if (beforePlacesRequest) await beforePlacesRequest();
   const googleResponse = await fetch(
     "https://places.googleapis.com/v1/places:searchText",
     {
@@ -138,6 +144,7 @@ export async function resolveGoogleMapsUrl(mapsUrl: string) {
       },
       body: JSON.stringify(requestBody),
       cache: "no-store",
+      signal: AbortSignal.timeout(8000),
     }
   );
 

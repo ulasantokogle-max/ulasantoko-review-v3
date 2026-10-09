@@ -5,18 +5,37 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:language": "node tests/language.cjs",
+    "test:public": "node tests/public-flow.cjs",
+    "test:security": "node tests/security-db.cjs && node tests/security-api.cjs",
+    "test:qr": "node tests/card-qr.cjs",
+    "test:mfa": "node tests/provider-mfa.cjs",
+    "test:nfc": "node tests/card-nfc.cjs",
+    "test:theme": "node tests/dashboard-theme.cjs",
+    "test:captcha": "node tests/provider-captcha.cjs && node tests/provider-captcha-ui.cjs",
+    "test:all": "node tests/run-all.cjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.57.4",
-    "next": "15.5.7",
+    "next": "15.5.27",
+    "pdfjs-dist": "6.4.299",
+    "qrcode": "1.5.4",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@electric-sql/pglite": "0.5.8",
     "@types/node": "^22",
+    "@types/qrcode": "1.5.6",
     "@types/react": "^19",
-    "@types/react-dom": "^19"
+    "@types/react-dom": "^19",
+    "jsqr": "1.4.0",
+    "react-test-renderer": "19.1.1",
+    "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "8.5.28",
+    "sharp": "0.35.5"
   }
 }

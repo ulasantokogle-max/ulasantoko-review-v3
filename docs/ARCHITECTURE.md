@@ -21,9 +21,9 @@ QR/NFC configuration is not exposed in the customer landing editor.
 
 Card view -> rating interaction.
 
-Ratings 4–5 can continue to Google Review.
+Google Review is an independent option available before and after every rating.
 
-Ratings 1–3 are stored privately as feedback and are not posted as public Google reviews.
+Private feedback accepts 1–5 stars as an optional, separate form. It never blocks or redirects the Google Review option. Internal ratings are not Google ratings.
 
 ## Analytics
 
@@ -32,3 +32,5 @@ Raw interaction events store `occurred_at` and `timezone`. Dashboard aggregation
 ## Privacy
 
 Feedback containing name/phone is private and protected by RLS. Public card access exposes only published landing content.
+
+Google Places quota reservations are server-only after migration 0046. Business access and throttling use the caller's JWT; the secret server client only reserves the global quota. It never reads or writes customer content.
