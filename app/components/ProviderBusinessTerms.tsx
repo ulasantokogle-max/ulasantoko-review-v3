@@ -6,6 +6,7 @@ import { useLanguage } from '../../lib/i18n';
 type Row = { business_id: string; business_name: string; expires_on: string | null; revision: number; days_remaining: number | null };
 type TermStatus = 'active' | 'soon' | 'expired' | 'unset';
 const statusOf = (row: Row): TermStatus => !row.expires_on ? 'unset' : row.days_remaining !== null && row.days_remaining < 0 ? 'expired' : row.days_remaining !== null && row.days_remaining <= 30 ? 'soon' : 'active';
+const PAGE_SIZE = 10;
 const date = (value: string | null) => value ? value.split('-').reverse().join('/') : '—';
 export default function ProviderBusinessTerms() {
   const { tr } = useLanguage();
@@ -17,6 +18,7 @@ export default function ProviderBusinessTerms() {
   const [busy, setBusy] = useState(false);
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<TermStatus | 'all'>('all');
+  const [page, setPage] = useState(1);
   const requests = useRef(new Map<string, string>());
   const mounted = useRef(true);
   const lock = useRef(false);
@@ -57,6 +59,11 @@ export default function ProviderBusinessTerms() {
     expired: tr('Kedaluwarsa', 'Expired'), unset: tr('Belum Diatur', 'Not Configured'),
   };
   const visible = rows.filter(row => row.business_name.toLowerCase().includes(search.trim().toLowerCase()) && (filter === 'all' || statusOf(row) === filter));
+  const pageCount = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const pageRows = visible.slice(start, start + PAGE_SIZE);
+  useEffect(() => { setPage(previous => Math.min(previous, pageCount)); }, [pageCount]);
   return <section className="provider-terms" aria-labelledby="provider-terms-title">
     <style>{`
       .provider-terms{background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:24px;margin-bottom:24px;color:#172033}
@@ -104,6 +111,9 @@ export default function ProviderBusinessTerms() {
       .provider-terms .pt-alert{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;background:#fff1f2;color:#be123c}
       .provider-terms .pt-success{background:#ecfdf5;color:#047857}
       .provider-terms .pt-empty{text-align:center;padding:32px 16px;color:#64748b;font-size:14px}
+      .provider-terms .pt-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding-top:16px;border-top:1px solid #edf0f4}
+      .provider-terms .pt-pagination span{font-size:13px;color:#64748b}
+      .provider-terms .pt-page-actions{display:flex;gap:8px;flex-wrap:wrap}
       .provider-terms .pt-mobile-label{display:none}
       @media(max-width:900px){
         .provider-terms .pt-table-head{display:none}
@@ -139,11 +149,11 @@ export default function ProviderBusinessTerms() {
     <div className="pt-toolbar">
       <div className="pt-search">
         <label htmlFor="pt-search">{tr('Cari Bisnis', 'Search Businesses')}</label>
-        <input id="pt-search" aria-label={tr('Cari bisnis untuk perpanjangan', 'Search businesses for renewal')} placeholder={tr('Ketik nama bisnis…', 'Enter a business name…')} value={search} onChange={e => setSearch(e.target.value)} />
+        <input id="pt-search" aria-label={tr('Cari bisnis untuk perpanjangan', 'Search businesses for renewal')} placeholder={tr('Ketik nama bisnis…', 'Enter a business name…')} value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
       </div>
       <div className="pt-filter">
         <label htmlFor="pt-filter">{tr('Status Masa Aktif', 'Term Status')}</label>
-        <select id="pt-filter" value={filter} onChange={e => setFilter(e.target.value as TermStatus | 'all')}>
+        <select id="pt-filter" value={filter} onChange={e => { setFilter(e.target.value as TermStatus | 'all'); setPage(1); }}>
           <option value="all">{tr('Semua Status', 'All Statuses')}</option>
           {(['active', 'soon', 'expired', 'unset'] as TermStatus[]).map(status => <option key={status} value={status}>{labels[status]}</option>)}
         </select>
@@ -160,10 +170,10 @@ export default function ProviderBusinessTerms() {
         <button disabled={busy} onClick={() => setPending(null)}>{tr('Batal', 'Cancel')}</button>
       </div>
     </div>}
-    <p className="pt-count" aria-live="polite">{loading ? tr('Memuat daftar bisnis…', 'Loading businesses…') : tr('Menampilkan ', 'Showing ') + visible.length + tr(' dari ', ' of ') + rows.length + tr(' bisnis', ' businesses')}</p>
+    <p className="pt-count" aria-live="polite">{loading ? tr('Memuat daftar bisnis…', 'Loading businesses…') : tr('Menampilkan ', 'Showing ') + (visible.length ? start + 1 : 0) + '–' + (start + pageRows.length) + tr(' dari ', ' of ') + visible.length + tr(' bisnis', ' businesses')}</p>
     <div aria-busy={loading}>
       <div className="pt-table-head" aria-hidden="true"><span>{tr('BISNIS', 'BUSINESS')}</span><span>{tr('STATUS', 'STATUS')}</span><span>{tr('BERLAKU SAMPAI', 'VALID THROUGH')}</span><span>{tr('PERPANJANGAN', 'RENEWAL')}</span></div>
-      {visible.map(row => {
+      {pageRows.map(row => {
         const status = statusOf(row);
         return <article className="pt-row" key={row.business_id} aria-label={row.business_name}>
           <strong className="pt-business">{row.business_name}</strong>
@@ -178,6 +188,13 @@ export default function ProviderBusinessTerms() {
       })}
       {!loading && !error && visible.length === 0 && <p className="pt-empty">{rows.length === 0 ? tr('Belum ada bisnis untuk dikelola.', 'No businesses to manage yet.') : tr('Tidak ada bisnis yang cocok. Coba nama atau status lain.', 'No matching businesses. Try another name or status.')}</p>}
     </div>
+    {visible.length > PAGE_SIZE && <nav className="pt-pagination" aria-label={tr('Halaman masa aktif', 'Term pages')}>
+      <span aria-live="polite">{tr('Halaman ', 'Page ') + currentPage + tr(' dari ', ' of ') + pageCount}</span>
+      <div className="pt-page-actions">
+        <button disabled={currentPage === 1 || loading || busy} onClick={() => setPage(currentPage - 1)}>{tr('Sebelumnya', 'Previous')}</button>
+        <button disabled={currentPage === pageCount || loading || busy} onClick={() => setPage(currentPage + 1)}>{tr('Berikutnya', 'Next')}</button>
+      </div>
+    </nav>}
     <p className="pt-note"><strong>{tr('QR & NFC tetap aktif.', 'QR & NFC remain active.')}</strong>{' '}{tr('Saat masa aktif kedaluwarsa, dashboard tetap bisa dilihat. Pengelolaan dibuka kembali setelah diperpanjang. Bisnis yang masa aktifnya belum diatur tetap berjalan.', 'After expiry, the dashboard remains readable. Management resumes after renewal. Businesses without a configured term remain operational.')}</p>
   </section>;
 }
