@@ -4,7 +4,8 @@ import { LanguageProvider } from "../lib/i18n";
 
 export const metadata = {
   title: "YukReview",
-  description: "Platform kartu QR & NFC untuk ulasan dan feedback pelanggan.",
+  description: "Platform kartu Google Review QR & NFC untuk ulasan dan masukan pelanggan.",
+  metadataBase: new URL("https://yukreview.id"),
 };
 
 export default async function RootLayout({

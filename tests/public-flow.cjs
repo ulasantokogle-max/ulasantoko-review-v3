@@ -134,7 +134,7 @@ const valid = { card_code: 'TEST001', rating: 2, message: 'Pesan pelanggan asli'
   await assert.rejects(PublicPage({ params: Promise.resolve({ cardCode: 'TEST001' }) }), /REDIRECT:\/activate\/TEST001/);
   activation = { success: false };
   await assert.rejects(PublicPage({ params: Promise.resolve({ cardCode: 'TEST001' }) }), /NOT_FOUND/);
-  assert.throws(() => require('../app/page.tsx').default(), /REDIRECT:\/dashboard/);
+  assert(renderToStaticMarkup(require('../app/page.tsx').default()).includes('Kartu Google Review.'));
   assert.throws(() => require('../app/test-login/page.tsx').default(), /REDIRECT:\/dashboard/);
   console.log('PASS public ID/EN rendering, original business name, activation, unavailable cards and legacy redirects');
 })().catch(error => { console.error(error); process.exitCode = 1; });
