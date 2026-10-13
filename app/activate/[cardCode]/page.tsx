@@ -366,6 +366,7 @@ export default function ActivateCardPage() {
               </button>
             </form>
 
+            {mode === "login" && <a href="/forgot-password" style={{display:"block",textAlign:"right",marginTop:10,color:"#2563eb",fontSize:14,fontWeight:700,textDecoration:"none"}}>{tr("Lupa Password?", "Forgot Password?")}</a>}
             {authError && <p style={{ color: "#b91c1c" }}>{tr(authError)}</p>}
             {authMessage && (
               <div style={{ display: "grid", gap: 8 }}>

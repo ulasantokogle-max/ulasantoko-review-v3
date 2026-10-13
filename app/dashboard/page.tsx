@@ -250,6 +250,7 @@ export default function DashboardHomePage() {
             <button style={buttonStyle} type="submit" disabled={loadingLogin}>
               {loadingLogin ? tr("Masuk...") : tr("Masuk")}
             </button>
+            <Link href="/forgot-password" style={{fontSize:14,color:"#2563eb",fontWeight:700,textDecoration:"none",justifySelf:"end"}}>{tr("Lupa Password?", "Forgot Password?")}</Link>
             {loginError && <div style={{ color: "#991b1b" }}>{tr(loginError)}</div>}
           </form>
         ) : (
