@@ -245,6 +245,7 @@ export default function DashboardHomePage() {
             <button style={buttonStyle} type="submit" disabled={loadingLogin}>
               {loadingLogin ? "Login..." : "Login"}
             </button>
+            <Link href="/forgot-password" style={{fontSize:14,color:"#1d4ed8"}}>Lupa Password?</Link>
             {loginError && <div style={{ color: "#991b1b" }}>{loginError}</div>}
           </form>
         ) : (
