@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
     setErrorMessage("");
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: "https://yukreview.id/reset-password",
+      redirectTo: `${window.location.origin}/reset-password`,
     });
     setLoading(false);
     if (error) {
