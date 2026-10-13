@@ -6,7 +6,7 @@ export const PROVIDER_CAPTCHA_TTL = 15 * 60;
 
 export function providerCaptchaConfig() {
   const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || "";
-  const secret = (process.env.VERCEL_ENV === "preview" ? process.env.TURNSTILE_PREVIEW_SECRET_KEY?.trim() : "") || process.env.TURNSTILE_SECRET_KEY?.trim() || "";
+  const secret = process.env.TURNSTILE_SECRET_KEY?.trim() || "";
   // Staged rollout: no keys preserves existing MFA. Partial configuration blocks entry.
   return { siteKey, secret, enabled: Boolean(siteKey || secret), ready: Boolean(siteKey && secret) };
 }
