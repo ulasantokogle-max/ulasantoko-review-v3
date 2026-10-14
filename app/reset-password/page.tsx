@@ -28,7 +28,9 @@ export default function ResetPasswordPage() {
       const code = url.searchParams.get("code");
       const hash = new URLSearchParams(url.hash.slice(1));
       const recovery = hash.get("type") === "recovery";
-      if (code) {
+      const recoveryCode = url.searchParams.get("type") === "recovery";
+      const hasRecoveryTokens = Boolean(hash.get("access_token") && hash.get("refresh_token"));
+      if (code && recoveryCode) {
         const {error} = await supabase.auth.exchangeCodeForSession(code);
         if (!alive) return;
         if (error) {
@@ -37,14 +39,14 @@ export default function ResetPasswordPage() {
           return;
         }
         setReady(true);
-      } else if (recovery) {
+      } else if (recovery && hasRecoveryTokens) {
         // Supabase client automatically processes URL fragments when detectSessionInUrl is enabled.
         const {data:{session}} = await supabase.auth.getSession();
         if (!alive) return;
         setReady(Boolean(session));
         if (!session) setErrorMessage("Tautan reset password tidak valid atau sudah kedaluwarsa.");
       } else {
-        setErrorMessage("Buka halaman ini melalui tautan reset password yang dikirim ke email Anda.");
+        setErrorMessage("Buka halaman ini melalui tautan pemulihan password yang valid dari email Anda.");
       }
       if (alive) setChecking(false);
     }
