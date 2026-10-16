@@ -28,7 +28,7 @@ const steps = [
 const siteSchema = {
   "@context": "https://schema.org", "@graph": [
     { "@type": "WebSite", "@id": YUKREVIEW_SITE_URL + "/#website", name: "YukReview", alternateName: "YukReview Kartu Google Review", url: YUKREVIEW_SITE_URL, description: YUKREVIEW_SEARCH_DESCRIPTION, inLanguage: "id" },
-    { "@type": "Organization", "@id": YUKREVIEW_SITE_URL + "/#organization", name: "YukReview", url: YUKREVIEW_SITE_URL, description: "Platform kartu Google Review dengan QR dan NFC untuk bisnis." },
+    { "@type": "Organization", "@id": YUKREVIEW_SITE_URL + "/#organization", name: "YukReview", url: YUKREVIEW_SITE_URL, description: "Platform kartu Google Review dengan QR dan NFC untuk bisnis.", email: "kontak@yukreview.id", contactPoint: { "@type": "ContactPoint", telephone: "+6285822487018", email: "kontak@yukreview.id", contactType: "customer service", availableLanguage: "Indonesian" } },
   ],
 };
 
@@ -37,7 +37,7 @@ export default function Home() {
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema).replace(/</g, "\\u003c") }} />
     <header className="yr-nav">
       <a className="yr-brand" href="/" aria-label="YukReview beranda"><span className="yr-mark" aria-hidden="true">Y</span>YukReview<span className="yr-brand-dot">.</span></a>
-      <nav aria-label="Navigasi utama"><a className="yr-nav-detail" href="#fitur">Fitur</a><a className="yr-nav-detail" href="#cara-kerja">Cara Kerja</a><a className="yr-button yr-small" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></nav>
+      <nav aria-label="Navigasi utama"><a className="yr-nav-detail" href="#fitur">Fitur</a><a className="yr-nav-detail" href="#cara-kerja">Cara Kerja</a><a className="yr-nav-detail" href="#kontak">Kontak</a><a className="yr-button yr-small" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></nav>
     </header>
     <section className="yr-hero" aria-labelledby="yr-title">
       <div className="yr-hero-copy">
@@ -74,7 +74,18 @@ export default function Home() {
       <details><summary>Apakah satu bisnis bisa menggunakan banyak kartu?</summary><p>Bisa. Beberapa kartu dapat diaktifkan dalam bisnis yang sama dan dikelola melalui satu dashboard bisnis.</p></details>
       <details><summary>Apakah YukReview menjamin rating tertentu?</summary><p>Tidak. Ulasan dan rating berasal dari pengalaman pelanggan. Tombol Google Review tersedia tanpa penyaringan berdasarkan rating; masukan privat merupakan pilihan terpisah.</p></details>
     </section>
+    <section className="yr-contact yr-section" id="kontak" aria-labelledby="yr-contact-title">
+      <div className="yr-section-head"><span className="yr-eyebrow">CUSTOMER SERVICE YUKREVIEW</span><h2 id="yr-contact-title">Butuh bantuan? Hubungi kami.</h2><p className="yr-contact-intro">Tanyakan kartu, aktivasi, atau pengelolaan halaman bisnis kepada tim YukReview.</p></div>
+      <div className="yr-contact-grid">
+        <a className="yr-contact-card" href="https://wa.me/6285822487018" target="_blank" rel="noopener noreferrer">
+          <span className="yr-eyebrow">WHATSAPP CUSTOMER SERVICE</span><strong>+62 858-2248-7018</strong><span className="yr-contact-action">Chat via WhatsApp <span aria-hidden="true">↗</span></span>
+        </a>
+        <a className="yr-contact-card" href="mailto:kontak@yukreview.id">
+          <span className="yr-eyebrow">EMAIL CUSTOMER SERVICE</span><strong>kontak@yukreview.id</strong><span className="yr-contact-action">Kirim Email <span aria-hidden="true">↗</span></span>
+        </a>
+      </div>
+    </section>
     <section className="yr-cta"><div><span className="yr-eyebrow">SUDAH PUNYA KARTU YUKREVIEW?</span><h2>Halaman bisnis Anda,<br />kelola dari satu dashboard.</h2></div><a className="yr-button yr-button-light" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></section>
-    <footer className="yr-footer"><span className="yr-brand">YukReview<span className="yr-brand-dot">.</span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><a href="/dashboard">Masuk akun</a></footer>
+    <footer className="yr-footer"><span className="yr-brand">YukReview<span className="yr-brand-dot">.</span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><div className="yr-footer-contact"><a href="https://wa.me/6285822487018" target="_blank" rel="noopener noreferrer">+62 858-2248-7018</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a></div><a href="/dashboard">Masuk akun</a></footer>
   </main>;
 }
