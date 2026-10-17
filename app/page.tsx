@@ -28,7 +28,7 @@ const steps = [
 const siteSchema = {
   "@context": "https://schema.org", "@graph": [
     { "@type": "WebSite", "@id": YUKREVIEW_SITE_URL + "/#website", name: "YukReview", alternateName: "YukReview Kartu Google Review", url: YUKREVIEW_SITE_URL, description: YUKREVIEW_SEARCH_DESCRIPTION, inLanguage: "id" },
-    { "@type": "Organization", "@id": YUKREVIEW_SITE_URL + "/#organization", name: "YukReview", url: YUKREVIEW_SITE_URL, description: "Platform kartu Google Review dengan QR dan NFC untuk bisnis.", email: "kontak@yukreview.id", contactPoint: { "@type": "ContactPoint", telephone: "+6285822487018", email: "kontak@yukreview.id", contactType: "customer service", availableLanguage: "Indonesian" } },
+    { "@type": "Organization", "@id": YUKREVIEW_SITE_URL + "/#organization", name: "YukReview", url: YUKREVIEW_SITE_URL, description: "Platform kartu Google Review dengan QR dan NFC untuk bisnis.", email: "kontak@yukreview.id", contactPoint: { "@type": "ContactPoint", telephone: "+6281382189991", email: "kontak@yukreview.id", contactType: "customer service", availableLanguage: "Indonesian" } },
   ],
 };
 
@@ -77,8 +77,8 @@ export default function Home() {
     <section className="yr-contact yr-section" id="kontak" aria-labelledby="yr-contact-title">
       <div className="yr-section-head"><span className="yr-eyebrow">CUSTOMER SERVICE YUKREVIEW</span><h2 id="yr-contact-title">Butuh bantuan? Hubungi kami.</h2><p className="yr-contact-intro">Tanyakan kartu, aktivasi, atau pengelolaan halaman bisnis kepada tim YukReview.</p></div>
       <div className="yr-contact-grid">
-        <a className="yr-contact-card" href="https://wa.me/6285822487018" target="_blank" rel="noopener noreferrer">
-          <span className="yr-eyebrow">WHATSAPP CUSTOMER SERVICE</span><strong>+62 858-2248-7018</strong><span className="yr-contact-action">Chat via WhatsApp <span aria-hidden="true">↗</span></span>
+        <a className="yr-contact-card" href="https://wa.me/6281382189991" target="_blank" rel="noopener noreferrer">
+          <span className="yr-eyebrow">WHATSAPP CUSTOMER SERVICE</span><strong>+62 813-8218-9991</strong><span className="yr-contact-action">Chat via WhatsApp <span aria-hidden="true">↗</span></span>
         </a>
         <a className="yr-contact-card" href="mailto:kontak@yukreview.id">
           <span className="yr-eyebrow">EMAIL CUSTOMER SERVICE</span><strong>kontak@yukreview.id</strong><span className="yr-contact-action">Kirim Email <span aria-hidden="true">↗</span></span>
@@ -86,6 +86,6 @@ export default function Home() {
       </div>
     </section>
     <section className="yr-cta"><div><span className="yr-eyebrow">SUDAH PUNYA KARTU YUKREVIEW?</span><h2>Halaman bisnis Anda,<br />kelola dari satu dashboard.</h2></div><a className="yr-button yr-button-light" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></section>
-    <footer className="yr-footer"><span className="yr-brand">YukReview<span className="yr-brand-dot">.</span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><div className="yr-footer-contact"><a href="https://wa.me/6285822487018" target="_blank" rel="noopener noreferrer">+62 858-2248-7018</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a></div><a href="/dashboard">Masuk akun</a></footer>
+    <footer className="yr-footer"><span className="yr-brand">YukReview<span className="yr-brand-dot">.</span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><div className="yr-footer-contact"><a href="https://wa.me/6281382189991" target="_blank" rel="noopener noreferrer">+62 813-8218-9991</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a></div><a href="/dashboard">Masuk akun</a></footer>
   </main>;
 }
