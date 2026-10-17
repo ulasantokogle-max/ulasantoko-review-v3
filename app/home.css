@@ -20,9 +20,9 @@
 /* YukReview approved red/blue identity — scoped to header/footer logo only. */
 .yr-home .yr-brand{display:inline-flex;align-items:center;gap:0;letter-spacing:normal;line-height:1;text-decoration:none;flex-shrink:0}
 .yr-brand-art{display:inline-flex;align-items:center;position:relative;white-space:nowrap;line-height:1;gap:0}
-.yr-brand-symbol{width:32px;height:37px;display:block;margin-right:1px;flex-shrink:0}
+.yr-brand-symbol{width:34px;height:34px;display:block;margin-right:1px;flex-shrink:0}
 .yr-brand-word{font-family:Arial,Helvetica,sans-serif;font-size:25px;letter-spacing:-1.45px;font-weight:900;line-height:1}
 .yr-brand-yuk{color:#F2162F}.yr-brand-review{color:#1155D9}
 .yr-brand-spark{width:11px;height:11px;align-self:flex-start;margin-left:2px;margin-top:-4px;flex-shrink:0}
-.yr-footer .yr-brand-word{font-size:22px}.yr-footer .yr-brand-symbol{width:28px;height:32px}
-@media(max-width:680px){.yr-home .yr-brand-word{font-size:20px}.yr-home .yr-brand-symbol{width:25px;height:29px}.yr-home .yr-brand-spark{width:9px;height:9px}.yr-footer .yr-brand-word{font-size:20px}}
+.yr-footer .yr-brand-word{font-size:22px}.yr-footer .yr-brand-symbol{width:30px;height:30px}
+@media(max-width:680px){.yr-home .yr-brand-word{font-size:20px}.yr-home .yr-brand-symbol{width:28px;height:28px}.yr-home .yr-brand-spark{width:9px;height:9px}.yr-footer .yr-brand-word{font-size:20px}}
