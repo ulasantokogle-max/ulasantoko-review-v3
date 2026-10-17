@@ -15,3 +15,14 @@
 @media(prefers-reduced-motion:reduce){.yr-home{scroll-behavior:auto}}
 
 .yr-contact-intro{font-size:14px;color:var(--yr-muted);margin:15px 0 0;max-width:560px}.yr-contact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.yr-home .yr-contact-card{display:flex;flex-direction:column;gap:14px;min-width:0;padding:26px;background:#fff;border:1px solid #e5e8df;border-radius:16px}.yr-home .yr-contact-card:hover{border-color:#85a78f;background:#f4f7ee}.yr-contact-card strong{font-size:clamp(18px,2vw,24px);letter-spacing:-.5px;overflow-wrap:anywhere}.yr-contact-action{display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:700;color:#527063}.yr-footer-contact{display:flex;flex-direction:column;gap:3px}.yr-footer-contact a:hover{text-decoration:underline}.yr-footer{flex-wrap:wrap}@media(max-width:680px){.yr-contact-grid{grid-template-columns:1fr;gap:12px}.yr-home .yr-contact-card{padding:20px}.yr-footer-contact{width:100%;order:2}.yr-footer p{order:3}}
+
+
+/* YukReview approved red/blue identity — scoped to header/footer logo only. */
+.yr-home .yr-brand{display:inline-flex;align-items:center;gap:0;letter-spacing:normal;line-height:1;text-decoration:none;flex-shrink:0}
+.yr-brand-art{display:inline-flex;align-items:center;position:relative;white-space:nowrap;line-height:1;gap:0}
+.yr-brand-symbol{width:34px;height:34px;display:block;margin-right:1px;flex-shrink:0}
+.yr-brand-word{font-family:Arial,Helvetica,sans-serif;font-size:25px;letter-spacing:-1.45px;font-weight:900;line-height:1}
+.yr-brand-yuk{color:#F2162F}.yr-brand-review{color:#1155D9}
+.yr-brand-spark{width:11px;height:11px;align-self:flex-start;margin-left:2px;margin-top:-4px;flex-shrink:0}
+.yr-footer .yr-brand-word{font-size:22px}.yr-footer .yr-brand-symbol{width:30px;height:30px}
+@media(max-width:680px){.yr-home .yr-brand-word{font-size:20px}.yr-home .yr-brand-symbol{width:28px;height:28px}.yr-home .yr-brand-spark{width:9px;height:9px}.yr-footer .yr-brand-word{font-size:20px}}
