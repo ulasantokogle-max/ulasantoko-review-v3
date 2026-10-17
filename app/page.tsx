@@ -36,35 +36,38 @@ export default function Home() {
   return <main className="yr-home" lang="id">
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema).replace(/</g, "\\u003c") }} />
     <header className="yr-nav">
-      <a className="yr-brand" href="/" aria-label="YukReview beranda"><span className="yr-brand-art" aria-hidden="true"><svg className="yr-brand-symbol" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14H34L47 28L61 14H83L58 43L73 78H49L40 56L29 78H7L30 43L8 14Z" fill="#F32032"/><path d="M32 14L47 28L40 40L22 20L32 14Z" fill="#FF5A62"/><path d="M61 14L47 28L54 40L72 20L61 14Z" fill="#D90F26"/></svg><span className="yr-brand-word"><span className="yr-brand-yuk">Yuk</span><span className="yr-brand-review">Review</span></span><svg className="yr-brand-spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2162F" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg></span></a>
+      <a className="yr-brand" href="/" aria-label="YukReview beranda"><span className="yr-brand-art" aria-hidden="true"><span className="yr-logo-y">Y</span><span className="yr-brand-word"><span className="yr-brand-yuk">Yuk</span><span className="yr-brand-review">Review</span></span><svg className="yr-brand-spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2162F" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg></span></a>
       <nav aria-label="Navigasi utama"><a className="yr-nav-detail" href="#fitur">Fitur</a><a className="yr-nav-detail" href="#cara-kerja">Cara Kerja</a><a className="yr-nav-detail" href="#kontak">Kontak</a><a className="yr-button yr-small" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></nav>
     </header>
     <section className="yr-hero" aria-labelledby="yr-title">
       <div className="yr-hero-copy">
-        <div className="yr-eyebrow"><span aria-hidden="true">✦</span> KARTU GOOGLE REVIEW · QR & NFC</div>
-        <h1 id="yr-title">Kartu Google Review.<br /><span>Satu tap, lebih dekat.</span></h1>
-        <p className="yr-lead">YukReview membantu pelanggan membuka ulasan Google dan informasi bisnis melalui kartu QR & NFC. Praktis untuk restoran, kafe, toko, hotel, dan bisnis layanan.</p>
-        <div className="yr-hero-actions"><a className="yr-button" href="#cara-kerja">Kenali Cara Kerjanya <span aria-hidden="true">↓</span></a><a className="yr-link" href="/dashboard">Kelola Kartu Saya <span aria-hidden="true">↗</span></a></div>
+        <div className="yr-eyebrow"><span aria-hidden="true">✦</span> PLATFORM KARTU GOOGLE REVIEW BERBASIS QR & NFC</div>
+        <h1 id="yr-title">Ulasan pelanggan,<br /><span>peluang bisnis berkembang.</span></h1>
+        <p className="yr-lead">Beri pelanggan cara yang lebih praktis untuk mengulas bisnis Anda di Google. Cukup scan QR atau tap NFC—semua informasi bisnis terhubung dalam satu halaman premium.</p>
+        <div className="yr-hero-actions"><a className="yr-button" href="#cara-kerja">Lihat Cara Kerja <span aria-hidden="true">↗</span></a><a className="yr-link" href="/dashboard">Kelola Kartu Saya <span aria-hidden="true">↗</span></a></div>
         <p className="yr-helper">Sudah punya kartu? Scan QR atau tap NFC kartu untuk memulai aktivasi.</p>
       </div>
-      <div className="yr-illustration" aria-label="Ilustrasi kartu Google Review YukReview">
+      <div className="yr-illustration" aria-label="Ilustrasi kartu QR dan NFC YukReview">
         <div className="yr-orbit" aria-hidden="true" />
+        <div className="yr-hero-halo" aria-hidden="true" />
         <div className="yr-product-card">
-          <div className="yr-card-top"><strong>YukReview<span>.</span></strong><svg aria-hidden="true" width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 11a7 7 0 0 1 0 8M16 7a12 12 0 0 1 0 16M21 3a17 17 0 0 1 0 24" /></svg></div>
-          <div className="yr-stars" aria-hidden="true">★ ★ ★ ★ ★</div>
-          <h2>Pengalaman Anda<br />berarti bagi kami.</h2>
-          <div className="yr-card-bottom"><span>Scan QR atau tap NFC<br /><strong>Bagikan ulasan di Google</strong></span><span className="yr-card-arrow" aria-hidden="true">↗</span></div>
+          <div className="yr-card-top"><strong><span className="yr-card-brand-red">Yuk</span>Review<span className="yr-card-star">✦</span></strong><span className="yr-card-nfc" aria-label="NFC">◉ NFC</span></div>
+          <div className="yr-card-kicker">YOUR BUSINESS · YOUR REPUTATION</div>
+          <h2>Setiap ulasan<br /><em>punya arti.</em></h2>
+          <div className="yr-stars" aria-label="Ilustrasi lima bintang">★★★★★</div>
+          <div className="yr-card-bottom"><span>Scan QR atau Tap NFC<br /><strong>Berikan ulasan sesuai pengalaman Anda</strong></span><span className="yr-card-arrow" aria-hidden="true">↗</span></div>
         </div>
-        <div className="yr-floating-note"><span aria-hidden="true">✦</span><div><strong>QR & NFC</strong><span>Terhubung ke halaman bisnis</span></div></div>
+        <div className="yr-floating-note"><span aria-hidden="true">✦</span><div><strong>Terhubung dalam satu tap</strong><span>Google Review · WhatsApp · Menu</span></div></div>
+        <div className="yr-float-badge" aria-hidden="true">QR + NFC <span>●</span> READY</div>
       </div>
     </section>
     <div className="yr-benefits" aria-label="Manfaat kartu"><span>Tanpa aplikasi khusus untuk pengunjung</span><span>Satu bisnis, banyak kartu</span><span>Tautan dan tampilan bisa diperbarui</span></div>
     <section className="yr-section" id="fitur" aria-labelledby="yr-features-title">
-      <div className="yr-section-head"><span className="yr-eyebrow">LEBIH DARI SEKADAR KARTU</span><h2 id="yr-features-title">Ulasan, informasi, dan koneksi.<br />Dalam satu halaman bisnis.</h2></div>
+      <div className="yr-section-head"><span className="yr-eyebrow">SATU KARTU, BANYAK MANFAAT</span><h2 id="yr-features-title">Pengalaman lebih mudah.<br />Hubungan pelanggan lebih dekat.</h2></div>
       <div className="yr-feature-grid">{features.map(([number, title, description]) => <article className="yr-feature" key={number}><span className="yr-number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}</div>
     </section>
     <section className="yr-how" id="cara-kerja" aria-labelledby="yr-how-title">
-      <div className="yr-section-head"><span className="yr-eyebrow">DARI KARTU KE PELANGGAN</span><h2 id="yr-how-title">Mulai dengan tiga langkah.</h2></div>
+      <div className="yr-section-head"><span className="yr-eyebrow">SIMPLE, CEPAT, PROFESIONAL</span><h2 id="yr-how-title">Tiga langkah menuju bisnis yang lebih terhubung.</h2></div>
       <ol className="yr-step-grid">{steps.map(([title, description], index) => <li key={title}><span className="yr-step-number">{index + 1}</span><h3>{title}</h3><p>{description}</p></li>)}</ol>
     </section>
     <section className="yr-faq yr-section" aria-labelledby="yr-faq-title">
@@ -85,7 +88,7 @@ export default function Home() {
         </a>
       </div>
     </section>
-    <section className="yr-cta"><div><span className="yr-eyebrow">SUDAH PUNYA KARTU YUKREVIEW?</span><h2>Halaman bisnis Anda,<br />kelola dari satu dashboard.</h2></div><a className="yr-button yr-button-light" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></section>
-    <footer className="yr-footer"><span className="yr-brand"><span className="yr-brand-art" aria-hidden="true"><svg className="yr-brand-symbol" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14H34L47 28L61 14H83L58 43L73 78H49L40 56L29 78H7L30 43L8 14Z" fill="#F32032"/><path d="M32 14L47 28L40 40L22 20L32 14Z" fill="#FF5A62"/><path d="M61 14L47 28L54 40L72 20L61 14Z" fill="#D90F26"/></svg><span className="yr-brand-word"><span className="yr-brand-yuk">Yuk</span><span className="yr-brand-review">Review</span></span><svg className="yr-brand-spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2162F" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg></span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><div className="yr-footer-contact"><a href="https://wa.me/6281382189991" target="_blank" rel="noopener noreferrer">+62 813-8218-9991</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a></div><a href="/dashboard">Masuk akun</a></footer>
+    <section className="yr-cta"><div><span className="yr-eyebrow">MULAI KELOLA KARTU YUKREVIEW</span><h2>Halaman bisnis Anda,<br />kelola dari satu dashboard.</h2></div><a className="yr-button yr-button-light" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></section>
+    <footer className="yr-footer"><span className="yr-brand"><span className="yr-brand-art" aria-hidden="true"><span className="yr-logo-y">Y</span><span className="yr-brand-word"><span className="yr-brand-yuk">Yuk</span><span className="yr-brand-review">Review</span></span><svg className="yr-brand-spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2162F" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg></span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><div className="yr-footer-contact"><a href="https://wa.me/6281382189991" target="_blank" rel="noopener noreferrer">+62 813-8218-9991</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a></div><a href="/dashboard">Masuk akun</a></footer>
   </main>;
 }
