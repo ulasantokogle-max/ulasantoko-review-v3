@@ -26,3 +26,65 @@
 .yr-brand-spark{width:11px;height:11px;align-self:flex-start;margin-left:2px;margin-top:-4px;flex-shrink:0}
 .yr-footer .yr-brand-word{font-size:22px}.yr-footer .yr-brand-symbol{width:30px;height:30px}
 @media(max-width:680px){.yr-home .yr-brand-word{font-size:20px}.yr-home .yr-brand-symbol{width:28px;height:28px}.yr-home .yr-brand-spark{width:9px;height:9px}.yr-footer .yr-brand-word{font-size:20px}}
+
+
+/* Premium YukReview home redesign, isolated to .yr-home */
+.yr-home{--yr-ink:#111e38;--yr-muted:#58667b;--yr-accent:#1755d5;--yr-red:#e71e39;background:#fcfdff;color:var(--yr-ink);font-family:Arial,Helvetica,sans-serif}
+.yr-home a:focus-visible,.yr-home summary:focus-visible{outline-color:#1459e8}
+.yr-home .yr-nav,.yr-home .yr-hero,.yr-home .yr-benefits,.yr-home .yr-section,.yr-home .yr-how,.yr-home .yr-cta,.yr-home .yr-footer{max-width:1190px}
+.yr-nav{padding:23px 0;border-color:#e5eaf5}
+.yr-home .yr-brand{align-self:center;display:inline-flex;align-items:center;max-width:max-content;min-width:0;line-height:1}
+.yr-brand-art{display:inline-flex;align-items:center!important;flex-direction:row!important;gap:0!important;white-space:nowrap!important}
+.yr-logo-y{font-family:Arial,Helvetica,sans-serif;font-size:35px;font-weight:900;font-style:italic;line-height:1;color:#ed1737;letter-spacing:-5px;display:inline-block;margin-right:8px;transform:skew(-8deg)}
+.yr-brand-word{display:inline-flex!important;flex-direction:row!important;align-items:baseline!important;font-size:26px!important;letter-spacing:-1.3px!important;line-height:1!important}
+.yr-brand-yuk{color:#ec1d37!important}.yr-brand-review{color:#1657d8!important}
+.yr-brand-spark{display:block;width:10px;height:10px;margin:0 0 19px 2px;align-self:center;flex-shrink:0}
+.yr-home .yr-button{background:#1454d6;border-radius:12px;box-shadow:0 7px 18px #1755d51c}
+.yr-home .yr-button:hover{background:#093cb4}
+.yr-nav nav{gap:25px}
+.yr-hero{grid-template-columns:1.1fr 1fr;gap:55px;min-height:590px;padding:74px 0 75px}
+.yr-eyebrow{color:#265cc4;letter-spacing:1.6px}
+.yr-hero h1{font-size:clamp(42px,5vw,66px);font-weight:850;line-height:1.085;letter-spacing:-2.8px;margin:23px 0 24px}
+.yr-hero h1>span{color:#1857d4}
+.yr-lead{font-size:16px;line-height:1.85;color:#53627b}
+.yr-helper{color:#718098}
+.yr-home .yr-link{color:#1848a1;border-color:#d3dded}
+.yr-illustration{min-height:465px;padding:35px 26px 45px;isolation:isolate}
+.yr-orbit{width:94%;max-width:500px;background:radial-gradient(circle at 30% 30%,#eff5ff,#d7e5ff 70%,#f8faff);border:1px solid #e1eafa;max-height:none;filter:blur(1px)}
+.yr-hero-halo{position:absolute;inset:8% 8%;border:1px solid #c7d8fa;border-radius:50%;transform:rotate(-22deg);z-index:-1}
+.yr-product-card{width:100%;max-width:395px;padding:28px 30px 27px;min-height:290px;background:linear-gradient(135deg,#111d3a,#09152e 60%,#092f75);border:1px solid #3b568b;border-radius:22px;box-shadow:0 35px 65px #09245b44,0 8px 0 #e12e4814;transform:rotate(-7deg);color:#fff}
+.yr-card-top{font-size:23px}
+.yr-card-brand-red{color:#ff3657}.yr-card-star{color:#ff3657;margin-left:3px}
+.yr-card-nfc{font-size:12px;letter-spacing:.6px;color:#e5edff}
+.yr-card-kicker{font-size:10px;font-weight:700;letter-spacing:2px;color:#aabfe6;margin-top:26px}
+.yr-product-card h2{font-size:33px;font-weight:750;line-height:1.2;letter-spacing:-1px;margin:14px 0}
+.yr-product-card h2 em{font-style:normal;color:#a9c4ff}
+.yr-stars{margin:16px 0 23px;color:#ffc547;font-size:26px;letter-spacing:7px}
+.yr-card-bottom{border-color:#ffffff32;color:#a9bddb;font-size:11px}
+.yr-card-bottom strong{font-size:11px;color:#fff}
+.yr-card-arrow{color:#ffc547}
+.yr-floating-note{right:3%;bottom:3%;border:1px solid #dce5f6;border-radius:14px;padding:15px 20px;box-shadow:0 22px 50px #15387821}
+.yr-floating-note>span{color:#1b5bdb}.yr-floating-note div span{color:#64748b}
+.yr-float-badge{position:absolute;top:10%;right:3%;font-size:11px;letter-spacing:1.1px;font-weight:800;padding:10px 13px;background:#fff;border-radius:12px;box-shadow:0 14px 35px #143c7f1c;color:#16356f}
+.yr-float-badge span{color:#ed2843}
+.yr-benefits{border-color:#e3eafa;color:#5b6e8a;padding:26px 0}
+.yr-benefits span::before{color:#1d67db}
+.yr-section{padding:90px 0}
+.yr-section-head h2{font-size:clamp(30px,3.4vw,42px);letter-spacing:-1.6px}
+.yr-feature-grid{gap:16px}
+.yr-feature{border-color:#e1e8f5;border-radius:19px;padding:28px;box-shadow:0 8px 28px #183a6910}
+.yr-number{color:#145bd1;border-color:#d9e4fc;background:#f0f5ff}
+.yr-feature h3{color:#152748}
+.yr-how{background:linear-gradient(125deg,#e8f0ff,#f5f8ff);border:1px solid #dfe9fc;border-radius:25px}
+.yr-step-number{background:#185adb;color:#fff}
+.yr-faq details{border-color:#dde6f5}
+.yr-cta{background:linear-gradient(115deg,#101e3c,#1644a4);border-radius:24px}
+.yr-cta .yr-eyebrow{color:#afcaff}
+.yr-home .yr-button-light{color:#12327c;background:#fff}
+.yr-home .yr-contact-card{border-color:#e1e8f6;box-shadow:0 9px 30px #1537780c}
+.yr-home .yr-contact-card:hover{border-color:#aac3f7;background:#f3f7ff}
+.yr-contact-action{color:#1757cf}
+.yr-footer{border-top:1px solid #e7edf7;margin-top:65px}
+.yr-footer .yr-logo-y{font-size:31px}
+@media(max-width:950px){.yr-hero{gap:24px;min-height:0}.yr-hero h1{font-size:clamp(38px,5vw,55px)}.yr-product-card{max-width:340px}.yr-product-card h2{font-size:28px}}
+@media(max-width:680px){.yr-nav{padding:17px 0}.yr-logo-y{font-size:29px;margin-right:7px}.yr-home .yr-brand-word{font-size:20px!important}.yr-brand-spark{width:8px;height:8px;margin-bottom:16px}.yr-nav nav{gap:9px}.yr-home .yr-small{font-size:11px}.yr-hero{padding:48px 0 45px;gap:20px}.yr-hero h1{font-size:clamp(37px,9.2vw,49px);letter-spacing:-1.7px}.yr-illustration{min-height:360px;max-width:390px;padding:25px 12px 40px}.yr-orbit{max-width:330px}.yr-product-card{max-width:320px;min-height:0;padding:23px}.yr-product-card h2{font-size:25px}.yr-card-kicker{margin-top:18px}.yr-stars{font-size:21px}.yr-floating-note{bottom:0;right:1%;padding:10px 12px}.yr-float-badge{right:0;top:2%;font-size:9px}.yr-section{padding:55px 0}.yr-section-head h2{letter-spacing:-.9px}.yr-feature{padding:20px}.yr-how{padding:27px 22px}.yr-footer .yr-logo-y{font-size:27px}}
