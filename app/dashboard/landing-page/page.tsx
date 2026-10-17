@@ -1,19 +1,22 @@
 "use client";
+import { safeYouTubeUrl } from "../../../lib/youtube";
+import { landingWithTikTok, safeTikTokUrl } from "../../../lib/tiktok";
+import BusinessManagementGate from "../../components/BusinessManagementGate";
 
-import { FormEvent, useEffect, useState } from "react";
+import "../../components/public-landing.css";
+import LandingCardContent from "../../components/LandingCardContent";
+import RatingFlow from "../../[cardCode]/RatingFlow";
+import { landingThemes as themes } from "../../../lib/landingThemes";
+import type { CSSProperties } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
+import { landingDraftKey, readLandingDraft, writeLandingDraft, clearLandingDraft } from "../../../lib/landingDraft";
 
-const themes = {
-  warm_brown: { label: "Warm Brown", bg: "#FFF8F1", card: "#FFFFFF", primary: "#8B5E3C", secondary: "#B9825A", soft: "#F2E5D8", text: "#4B3428", muted: "#7A6659" },
-  soft_smoothie: { label: "Soft Smoothie", bg: "#FBF5EC", card: "#FFFDFC", primary: "#9B6A43", secondary: "#D7B08A", soft: "#F4E7D7", text: "#4A3023", muted: "#8A7567" },
-  soft_tosca: { label: "Soft Tosca", bg: "#F0FBF9", card: "#FFFFFF", primary: "#2A9D8F", secondary: "#67C9BD", soft: "#DDF4F0", text: "#173E39", muted: "#5F7C78" },
-  elegant_cream: { label: "Elegant Cream", bg: "#FBF7EF", card: "#FFFDF8", primary: "#9A7B4F", secondary: "#C9B184", soft: "#EFE5D2", text: "#4D4337", muted: "#7D7366" },
-  minimal_dark: { label: "Minimal Dark", bg: "#161616", card: "#202020", primary: "#E6C59A", secondary: "#BFA17B", soft: "#2B2B2B", text: "#FAF7F2", muted: "#C9C1B8" }
-} as const;
 
 type ThemeKey = keyof typeof themes;
-type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_pdf";
+type ToggleKey = "show_google_review" | "show_whatsapp" | "show_about" | "show_promo" | "show_instagram" | "show_tiktok" | "show_youtube" | "show_pdf";
 
 type Settings = {
   theme_key: ThemeKey;
@@ -25,6 +28,8 @@ type Settings = {
   cover_url: string;
   cover_position: "center" | "top" | "bottom" | "left" | "right" | "top-left" | "top-right" | "bottom-left" | "bottom-right";
   instagram_url: string;
+  tiktok_url: string;
+  youtube_url: string;
   pdf_title: string;
   pdf_url: string;
   show_google_review: boolean;
@@ -32,10 +37,30 @@ type Settings = {
   show_about: boolean;
   show_promo: boolean;
   show_instagram: boolean;
+  show_tiktok: boolean;
+  show_youtube: boolean;
   show_pdf: boolean;
 };
 
+type EditorDraft = { settings: Settings; displayName: string; whatsapp: string; mapsUrl: string };
+function validDraft(value: unknown): value is EditorDraft {
+  if (!value || typeof value !== "object") return false;
+  const draft = value as EditorDraft;
+  if (![draft.displayName, draft.whatsapp, draft.mapsUrl].every(field => typeof field === "string" && field.length <= 10000)) return false;
+  if (!draft.settings || !Object.hasOwn(themes, draft.settings.theme_key)) return false;
+  const strings = ["hero_title", "hero_description", "about_text", "promo_text", "logo_url", "cover_url", "instagram_url", "pdf_title", "pdf_url"] as const;
+  const toggles = ["show_google_review", "show_whatsapp", "show_about", "show_promo", "show_instagram", "show_pdf"] as const;
+  if (draft.settings.tiktok_url !== undefined && (typeof draft.settings.tiktok_url !== "string" || draft.settings.tiktok_url.length > 2048)) return false;
+  if (draft.settings.show_tiktok !== undefined && typeof draft.settings.show_tiktok !== "boolean") return false;
+  if (draft.settings.youtube_url !== undefined && (typeof draft.settings.youtube_url !== "string" || draft.settings.youtube_url.length > 2048)) return false;
+  if (draft.settings.show_youtube !== undefined && typeof draft.settings.show_youtube !== "boolean") return false;
+  return strings.every(key => typeof draft.settings[key] === "string" && draft.settings[key].length <= 10000)
+    && toggles.every(key => typeof draft.settings[key] === "boolean")
+    && ["center", "top", "bottom", "left", "right", "top-left", "top-right", "bottom-left", "bottom-right"].includes(draft.settings.cover_position);
+}
+
 export default function LandingPageBuilderPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [email, setEmail] = useState("");
@@ -52,15 +77,21 @@ export default function LandingPageBuilderPage() {
     cover_url: "",
     cover_position: "center",
     instagram_url: "",
-    pdf_title: "Menu & Daftar Harga",
+    tiktok_url: "",
+    youtube_url: "",
+    pdf_title: tr("Informasi", "Information"),
     pdf_url: "",
     show_google_review: true,
     show_whatsapp: true,
     show_about: true,
     show_promo: true,
     show_instagram: true,
+    show_tiktok: true,
+    show_youtube: true,
     show_pdf: true
   });
+  const [youTubeAvailable, setYouTubeAvailable] = useState(false);
+  const [tikTokAvailable, setTikTokAvailable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -72,26 +103,58 @@ export default function LandingPageBuilderPage() {
   const [loadingWhatsapp, setLoadingWhatsapp] = useState(false);
   const [mapsUrl, setMapsUrl] = useState("");
   const [loadingGoogleReview, setLoadingGoogleReview] = useState(false);
+  const [googleConfigured, setGoogleConfigured] = useState(false);
   const [displayName, setDisplayName] = useState("");
 
-  const { businesses, businessId, setBusinessId, businessLoading, businessError } =
-    useBusinessContext(userEmail);
+  const { businesses, businessId, setBusinessId, businessLoading, businessError, reloadBusinesses } =
+    useBusinessContext(userEmail, true);
+  const draftKey = userEmail && businessId ? landingDraftKey(userEmail, businessId) : "";
+  const activeDraftKey = useRef(draftKey);
+  const loadSequence = useRef(0);
+  const uploadSequence = useRef({ logo: 0, cover: 0, pdf: 0 });
+  const uploadBusy = useRef({ logo: false, cover: false, pdf: false });
+  activeDraftKey.current = draftKey;
+  const [loadedDraftKey, setLoadedDraftKey] = useState("");
+  const [baseline, setBaseline] = useState("");
+  const [draftNotice, setDraftNotice] = useState<"" | "restored" | "saved" | "unavailable">("");
 
   useEffect(() => {
+    let active = true;
+    let authEventReceived = false;
     supabase.auth.getSession().then(({ data }) => {
+      if (!active || authEventReceived) return;
       setUserEmail(data.session?.user?.email ?? null);
       setAuthChecked(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      authEventReceived = true;
+      if (!active) return;
       setUserEmail(session?.user?.email ?? null);
       setAuthChecked(true);
     });
-    return () => subscription.unsubscribe();
+    return () => { active = false; subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => {
-    if (businessId) loadSettings();
-  }, [businessId]);
+    for (const kind of ["logo", "cover", "pdf"] as const) { uploadSequence.current[kind]++; uploadBusy.current[kind] = false; }
+    setUploadingLogo(false); setUploadingCover(false); setUploadingPdf(false);
+    const sequence = ++loadSequence.current;
+    setLoadedDraftKey("");
+    setDraftNotice("");
+    if (businessId && draftKey) loadSettings(draftKey, sequence);
+    return () => { if (loadSequence.current === sequence) loadSequence.current++; for (const kind of ["logo", "cover", "pdf"] as const) uploadSequence.current[kind]++; };
+  }, [businessId, draftKey]);
+
+  useEffect(() => {
+    if (!draftKey || loadedDraftKey !== draftKey) return;
+    const value = { settings, displayName, whatsapp, mapsUrl };
+    if (JSON.stringify(value) === baseline) {
+      clearLandingDraft(draftKey);
+      setDraftNotice("");
+    } else {
+      setDraftNotice(writeLandingDraft(draftKey, value) ? "saved" : "unavailable");
+    }
+  }, [settings, displayName, whatsapp, mapsUrl, draftKey, loadedDraftKey, baseline]);
 
   async function handleLogin(event: FormEvent) {
     event.preventDefault();
@@ -106,7 +169,8 @@ export default function LandingPageBuilderPage() {
     setLoadingLogin(false);
 
     if (error) {
-      setLoginError(error.message);
+      console.error("Page editor login failed", error);
+      setLoginError("Email atau password tidak sesuai.");
       return;
     }
 
@@ -114,47 +178,57 @@ export default function LandingPageBuilderPage() {
     setPassword("");
   }
 
-  async function loadSettings() {
+  async function loadSettings(key: string, sequence: number) {
     setLoading(true);
     setLoadingWhatsapp(true);
     setError("");
 
+    try {
+
     const [
       { data, error },
       { data: contactData, error: contactError },
-      { data: profileData, error: profileError }
+      { data: profileData, error: profileError },
+      { data: setupData }
     ] = await Promise.all([
-      supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId }),
+      landingWithTikTok(supabase.rpc("v3_get_landing_page_settings_with_youtube", { p_business_id: businessId }), () => landingWithTikTok(supabase.rpc("v3_get_landing_page_settings_with_tiktok", { p_business_id: businessId }), () => supabase.rpc("v3_get_landing_page_settings", { p_business_id: businessId }))),
       supabase.rpc("v3_get_business_contact_settings", { p_business_id: businessId }),
-      supabase.rpc("v3_get_business_profile", { p_business_id: businessId })
+      supabase.rpc("v3_get_business_profile", { p_business_id: businessId }),
+      supabase.rpc("v3_get_business_setup_status", { p_business_id: businessId })
     ]);
+
+    if (activeDraftKey.current !== key || loadSequence.current !== sequence) return;
 
     setLoading(false);
     setLoadingWhatsapp(false);
 
     if (error) {
-      setError(error.message);
+      console.error("Landing settings load failed", error);
+      setError("Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (contactError) {
-      setError(contactError.message);
+      console.error("Business contact load failed", contactError);
+      setError("Kontak bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (profileError) {
-      setError(profileError.message);
+      console.error("Business profile load failed", profileError);
+      setError("Profil bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
     if (profileData?.success === false) {
-      setError(profileData?.message ?? "Gagal memuat profil bisnis.");
+      console.error("Business profile returned unsuccessful result", profileData);
+      setError("Profil bisnis belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
-    setDisplayName(profileData?.display_name ?? profileData?.internal_name ?? "");
-    setWhatsapp(contactData?.whatsapp_number ?? "");
-    setSettings({
+    setYouTubeAvailable(data?.youtube_available === true);
+    setTikTokAvailable(data?.tiktok_available === true);
+    const serverSettings: Settings = {
       theme_key: (data?.theme_key ?? "warm_brown") as ThemeKey,
       hero_title: data?.hero_title ?? "",
       hero_description: data?.hero_description ?? "",
@@ -164,277 +238,284 @@ export default function LandingPageBuilderPage() {
       cover_url: data?.cover_url ?? "",
       cover_position: data?.cover_position ?? "center",
       instagram_url: data?.instagram_url ?? "",
-      pdf_title: data?.pdf_title ?? "Menu & Daftar Harga",
+      tiktok_url: data?.tiktok_url ?? "",
+      youtube_url: data?.youtube_url ?? "",
+      pdf_title: data?.pdf_title ?? tr("Informasi", "Information"),
       pdf_url: data?.pdf_url ?? "",
       show_google_review: data?.show_google_review ?? true,
       show_whatsapp: data?.show_whatsapp ?? true,
       show_about: data?.show_about ?? true,
       show_promo: data?.show_promo ?? true,
       show_instagram: data?.show_instagram ?? true,
+      show_tiktok: data?.show_tiktok ?? true,
+      show_youtube: data?.show_youtube ?? true,
       show_pdf: data?.show_pdf ?? true
-    });
+    };
+    const serverDraft: EditorDraft = {
+      settings: serverSettings,
+      displayName: profileData?.display_name ?? profileData?.internal_name ?? "",
+      whatsapp: contactData?.whatsapp_number ?? "",
+      mapsUrl: "",
+    };
+    const restored = readLandingDraft(key, validDraft);
+    const value = restored ?? serverDraft;
+    setBaseline(JSON.stringify(serverDraft));
+    setSettings({ ...serverSettings, ...value.settings, tiktok_url: value.settings.tiktok_url ?? serverSettings.tiktok_url, show_tiktok: value.settings.show_tiktok ?? serverSettings.show_tiktok, youtube_url: value.settings.youtube_url ?? serverSettings.youtube_url, show_youtube: value.settings.show_youtube ?? serverSettings.show_youtube });
+    setDisplayName(value.displayName);
+    setWhatsapp(value.whatsapp);
+    setMapsUrl(value.mapsUrl);
+    setGoogleConfigured(setupData?.google_review_configured === true);
+    setLoadedDraftKey(key);
+    if (restored) setDraftNotice("restored");
+    } catch {
+      if (activeDraftKey.current === key && loadSequence.current === sequence) {
+        setLoading(false);
+        setLoadingWhatsapp(false);
+        setError("Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi.");
+      }
+    }
   }
 
   async function uploadMedia(file: File, kind: "logo" | "cover") {
-    if (!userEmail) return;
-
-    const isImage = file.type.startsWith("image/");
-    if (!isImage) {
-      setError("File harus berupa gambar.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      setError("Ukuran gambar maksimal 5 MB.");
-      return;
-    }
-
-    const setUploading = kind === "logo" ? setUploadingLogo : setUploadingCover;
-    setUploading(true);
-    setError("");
-    setMessage("");
-
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-
-    if (!uid) {
-      setUploading(false);
-      setError("Sesi login tidak ditemukan.");
-      return;
-    }
-
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const safeExt = ext.replace(/[^a-z0-9]/g, "") || "jpg";
-    const path = uid + "/" + kind + "-" + Date.now() + "." + safeExt;
-
-    const { error: uploadError } = await supabase.storage
-      .from("landing-media")
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type
-      });
-
-    if (uploadError) {
-      setUploading(false);
-      setError(uploadError.message);
-      return;
-    }
-
-    const { data: publicData } = supabase.storage
-      .from("landing-media")
-      .getPublicUrl(path);
-
-    if (kind === "logo") {
-      setSettings((s) => ({ ...s, logo_url: publicData.publicUrl }));
-    } else {
-      setSettings((s) => ({ ...s, cover_url: publicData.publicUrl }));
-    }
-
-    setUploading(false);
-    setMessage((kind === "logo" ? "Logo" : "Cover") + " berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
+    if (!["image/jpeg", "image/png", "image/webp", "image/gif"].includes(file.type)) { setError("File harus berupa gambar."); return; }
+    if (file.size > 5 * 1024 * 1024) { setError("Ukuran gambar maksimal 5 MB."); return; }
+    await uploadLandingFile(file, kind);
   }
 
   async function uploadPdf(file: File) {
-    if (!userEmail) return;
+    if (file.type !== "application/pdf") { setError("File harus berupa PDF."); return; }
+    if (file.size > 10 * 1024 * 1024) { setError("Ukuran PDF maksimal 10 MB."); return; }
+    await uploadLandingFile(file, "pdf");
+  }
 
-    if (file.type !== "application/pdf") {
-      setError("File harus berupa PDF.");
-      return;
+  async function uploadLandingFile(file: File, kind: "logo" | "cover" | "pdf") {
+    const capturedKey = draftKey;
+    const capturedBusiness = businessId;
+    if (!userEmail || !capturedBusiness || !capturedKey || loadedDraftKey !== capturedKey || uploadBusy.current[kind]) return;
+    const request = ++uploadSequence.current[kind];
+    uploadBusy.current[kind] = true;
+    const current = () => activeDraftKey.current === capturedKey && uploadSequence.current[kind] === request;
+    const setUploading = kind === "logo" ? setUploadingLogo : kind === "cover" ? setUploadingCover : setUploadingPdf;
+    setUploading(true); setError(""); setMessage("");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const result = await Promise.race([
+        (async () => {
+          const { data, error: authError } = await supabase.auth.getUser();
+          if (!current()) return null;
+          if (authError || !data.user?.id) throw new Error("AUTH_REQUIRED");
+          const uid = data.user.id;
+          const ext = kind === "pdf" ? "pdf" : ({ "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" } as Record<string, string>)[file.type];
+          const path = `${uid}/${capturedBusiness}/${kind === "pdf" ? "pdf/menu" : kind}-${Date.now()}-${crypto.randomUUID()}.${ext}`;
+          const { error: uploadError } = await supabase.storage.from("landing-media").upload(path, file, { cacheControl: "3600", upsert: false, contentType: file.type });
+          if (!current()) return null;
+          if (uploadError) throw new Error("UPLOAD_FAILED");
+          return supabase.storage.from("landing-media").getPublicUrl(path).data.publicUrl;
+        })(),
+        new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("UPLOAD_TIMEOUT")), 60000); }),
+      ]);
+      if (!current() || !result) return;
+      setSettings(settings => kind === "pdf"
+        ? { ...settings, pdf_url: result, pdf_title: settings.pdf_title || file.name.replace(/\.pdf$/i, "") }
+        : { ...settings, [kind === "logo" ? "logo_url" : "cover_url"]: result });
+      setMessage(kind === "pdf" ? "PDF berhasil diunggah. Klik Simpan Perubahan untuk menyimpan perubahan."
+        : (kind === "logo" ? "Logo" : tr("Cover")) + tr(" berhasil diupload. Klik Simpan Perubahan untuk menyimpan perubahan."));
+    } catch {
+      if (current()) setError(kind === "pdf" ? "Unggah PDF belum berhasil. Silakan coba lagi." : "Upload gambar belum berhasil. Silakan coba lagi.");
+    } finally {
+      clearTimeout(timer);
+      if (current()) { uploadBusy.current[kind] = false; setUploading(false); uploadSequence.current[kind]++; }
     }
-
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Ukuran PDF maksimal 10 MB.");
-      return;
-    }
-
-    setUploadingPdf(true);
-    setError("");
-    setMessage("");
-
-    const { data: userData } = await supabase.auth.getUser();
-    const uid = userData.user?.id;
-
-    if (!uid) {
-      setUploadingPdf(false);
-      setError("Sesi login tidak ditemukan.");
-      return;
-    }
-
-    const path = uid + "/pdf/menu-" + Date.now() + ".pdf";
-
-    const { error: uploadError } = await supabase.storage
-      .from("landing-media")
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: "application/pdf"
-      });
-
-    if (uploadError) {
-      setUploadingPdf(false);
-      setError(uploadError.message);
-      return;
-    }
-
-    const { data: publicData } = supabase.storage
-      .from("landing-media")
-      .getPublicUrl(path);
-
-    setSettings((s) => ({
-      ...s,
-      pdf_url: publicData.publicUrl,
-      pdf_title: s.pdf_title || file.name.replace(/\.pdf$/i, "")
-    }));
-
-    setUploadingPdf(false);
-    setMessage("PDF berhasil diupload. Klik Simpan Landing Page untuk menyimpan perubahan.");
   }
 
   async function saveSettings(event: FormEvent) {
     event.preventDefault();
+    if (saving || !businessId || loadedDraftKey !== draftKey) return;
+    const savingKey = draftKey;
+    const stillCurrent = () => activeDraftKey.current === savingKey;
+    let savedMapsUrl = mapsUrl;
     setSaving(true);
     setError("");
     setMessage("");
 
-    if (!displayName.trim()) {
-      setSaving(false);
-      setError("Nama Bisnis Publik wajib diisi.");
-      return;
-    }
-
-    const { data: nameData, error: nameError } = await supabase.rpc(
-      "v3_update_business_display_name",
-      {
-        p_business_id: businessId,
-        p_display_name: displayName.trim()
+    try {
+      if (settings.youtube_url.trim() && (!youTubeAvailable || !safeYouTubeUrl(settings.youtube_url))) {
+        setError(youTubeAvailable ? tr("Gunakan link YouTube HTTPS yang valid.", "Use a valid HTTPS YouTube link.") : tr("Fitur YouTube belum diaktifkan. Hubungi provider.", "YouTube is not enabled yet. Contact the provider."));
+        return;
       }
-    );
-
-    if (nameError) {
-      setSaving(false);
-      setError(nameError.message);
-      return;
-    }
-
-    if (nameData?.success === false) {
-      setSaving(false);
-      setError(nameData?.message ?? "Gagal menyimpan Nama Bisnis Publik.");
-      return;
-    }
-
-    setDisplayName(nameData?.display_name ?? displayName.trim());
-
-    if (mapsUrl.trim()) {
-      setLoadingGoogleReview(true);
-
-      const {
-        data: { session },
-        error: sessionError
-      } = await supabase.auth.getSession();
-
-      if (sessionError || !session?.access_token) {
-        setLoadingGoogleReview(false);
+      if (settings.tiktok_url.trim() && (!tikTokAvailable || !safeTikTokUrl(settings.tiktok_url))) {
+        setError(tikTokAvailable ? tr("Gunakan link TikTok HTTPS yang valid.", "Use a valid HTTPS TikTok link.") : tr("Fitur TikTok belum diaktifkan. Hubungi provider.", "TikTok is not enabled yet. Contact the provider."));
+        return;
+      }
+      if (!displayName.trim()) {
         setSaving(false);
-        setError("Session login tidak ditemukan. Silakan login ulang.");
+        setError("Nama Bisnis Publik wajib diisi.");
         return;
       }
 
-      try {
-        const response = await fetch("/api/google-review/setup", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`
-          },
-          body: JSON.stringify({
-            business_id: businessId,
-            maps_url: mapsUrl.trim()
-          })
-        });
+      const { data: nameData, error: nameError } = await supabase.rpc(
+        "v3_update_business_display_name",
+        {
+          p_business_id: businessId,
+          p_display_name: displayName.trim()
+        }
+      );
 
-        const googleData = await response.json();
+      if (!stillCurrent()) return;
+      if (nameError) {
+        console.error("Public business name update failed", nameError);
+        setSaving(false);
+        setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
 
-        if (!response.ok || !googleData?.success) {
+      if (nameData?.success === false) {
+        console.error("Public business name update returned unsuccessful result", nameData);
+        setSaving(false);
+        setError("Nama Bisnis Publik belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+
+      setDisplayName(nameData?.display_name ?? displayName.trim());
+
+      if (mapsUrl.trim()) {
+        setLoadingGoogleReview(true);
+
+        const {
+          data: { session },
+          error: sessionError
+        } = await supabase.auth.getSession();
+
+        if (!stillCurrent()) return;
+        if (sessionError || !session?.access_token) {
           setLoadingGoogleReview(false);
           setSaving(false);
-          setError(
-            googleData?.message ??
-              (googleData?.step
-                ? `Google Review gagal di tahap: ${googleData.step}`
-                : "Gagal menyimpan Google Maps URL.")
-          );
+          setError("Sesi tidak ditemukan. Silakan masuk kembali.");
           return;
         }
 
-        setMapsUrl(googleData?.maps_url ?? mapsUrl.trim());
-      } catch (googleError) {
+        try {
+          const response = await fetch("/api/google-review/setup", {
+            method: "POST",
+            signal: AbortSignal.timeout(60000),
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+              business_id: businessId,
+              maps_url: mapsUrl.trim()
+            })
+          });
+
+          const googleData = await response.json();
+          if (!stillCurrent()) return;
+
+          if (!response.ok || !googleData?.success) {
+            console.error("Google Review setup failed", {
+              status: response.status,
+              data: googleData
+            });
+            setLoadingGoogleReview(false);
+            setSaving(false);
+
+            if (response.status === 401) {
+              setError("Sesi sudah berakhir. Silakan masuk kembali.");
+            } else if (response.status === 429) {
+              setError("Terlalu banyak percobaan. Silakan tunggu beberapa saat lalu coba lagi.");
+            } else if (googleData?.code === "GOOGLE_TEMPORARILY_UNAVAILABLE") {
+              setError("Pengaturan Google Maps sementara belum tersedia. Silakan coba lagi nanti.");
+            } else if (googleData?.step === "resolve") {
+              setError("Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.");
+            } else {
+              setError("Google Review belum dapat disimpan. Silakan coba lagi.");
+            }
+            return;
+          }
+
+          savedMapsUrl = googleData?.maps_url ?? mapsUrl.trim();
+          setMapsUrl(savedMapsUrl);
+          setGoogleConfigured(true);
+        } catch (googleError) {
+          if (!stillCurrent()) return;
+          console.error("Google Review request failed", googleError);
+          setLoadingGoogleReview(false);
+          setSaving(false);
+          setError("Google Review belum dapat diproses. Periksa koneksi lalu coba lagi.");
+          return;
+        }
+
         setLoadingGoogleReview(false);
+      }
+
+      const { data: contactData, error: contactError } = await supabase.rpc(
+        "v3_update_business_contact_settings",
+        {
+          p_business_id: businessId,
+          p_whatsapp_number: whatsapp
+        }
+      );
+
+      if (!stillCurrent()) return;
+      if (contactError) {
+        console.error("Business contact update failed", contactError);
         setSaving(false);
-        setError(
-          googleError instanceof Error
-            ? googleError.message
-            : "Gagal memproses Google Maps URL."
-        );
+        setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
         return;
       }
 
+      if (contactData?.success === false) {
+        console.error("Business contact update returned unsuccessful result", contactData);
+        setSaving(false);
+        setError("Nomor WhatsApp belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+
+      setWhatsapp(contactData?.whatsapp_number ?? whatsapp);
+
+      const { data, error } = await supabase.rpc(youTubeAvailable ? "v3_update_landing_page_settings_with_youtube" : tikTokAvailable ? "v3_update_landing_page_settings_with_tiktok" : "v3_update_landing_page_settings", {
+        p_business_id: businessId,
+        p_theme_key: settings.theme_key,
+        p_hero_title: settings.hero_title,
+        p_hero_description: settings.hero_description,
+        p_about_text: settings.about_text,
+        p_promo_text: settings.promo_text,
+        p_logo_url: settings.logo_url,
+        p_cover_url: settings.cover_url,
+        p_cover_position: settings.cover_position,
+        p_instagram_url: settings.instagram_url,
+        p_pdf_title: settings.pdf_title,
+        p_pdf_url: settings.pdf_url,
+        p_show_google_review: settings.show_google_review,
+        p_show_whatsapp: settings.show_whatsapp,
+        p_show_about: settings.show_about,
+        p_show_promo: settings.show_promo,
+        p_show_instagram: settings.show_instagram,
+        p_show_pdf: settings.show_pdf,
+        ...(tikTokAvailable ? { p_tiktok_url: settings.tiktok_url, p_show_tiktok: settings.show_tiktok } : {}),
+        ...(youTubeAvailable ? { p_youtube_url: settings.youtube_url, p_show_youtube: settings.show_youtube } : {})
+      });
+
+      if (!stillCurrent()) return;
+      setSaving(false);
+      if (error) {
+        console.error("Landing page update failed", error);
+        setError("Landing page belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+      if (data?.success === false) {
+        console.error("Landing page update returned unsuccessful result", data);
+        setError("Landing page belum dapat disimpan. Silakan coba lagi.");
+        return;
+      }
+      setMessage("Landing page berhasil disimpan.");
+      setBaseline(JSON.stringify({ settings, displayName: nameData?.display_name ?? displayName.trim(), whatsapp: contactData?.whatsapp_number ?? whatsapp, mapsUrl: savedMapsUrl }));
+    } catch {
+      if (stillCurrent()) setError("Landing page belum dapat disimpan. Periksa koneksi lalu coba lagi.");
+    } finally {
+      setSaving(false);
       setLoadingGoogleReview(false);
     }
-
-    const { data: contactData, error: contactError } = await supabase.rpc(
-      "v3_update_business_contact_settings",
-      {
-        p_business_id: businessId,
-        p_whatsapp_number: whatsapp
-      }
-    );
-
-    if (contactError) {
-      setSaving(false);
-      setError(contactError.message);
-      return;
-    }
-
-    if (contactData?.success === false) {
-      setSaving(false);
-      setError(contactData?.message ?? "Gagal menyimpan nomor WhatsApp.");
-      return;
-    }
-
-    setWhatsapp(contactData?.whatsapp_number ?? whatsapp);
-
-    const { data, error } = await supabase.rpc("v3_update_landing_page_settings", {
-      p_business_id: businessId,
-      p_theme_key: settings.theme_key,
-      p_hero_title: settings.hero_title,
-      p_hero_description: settings.hero_description,
-      p_about_text: settings.about_text,
-      p_promo_text: settings.promo_text,
-      p_logo_url: settings.logo_url,
-      p_cover_url: settings.cover_url,
-      p_cover_position: settings.cover_position,
-      p_instagram_url: settings.instagram_url,
-      p_pdf_title: settings.pdf_title,
-      p_pdf_url: settings.pdf_url,
-      p_show_google_review: settings.show_google_review,
-      p_show_whatsapp: settings.show_whatsapp,
-      p_show_about: settings.show_about,
-      p_show_promo: settings.show_promo,
-      p_show_instagram: settings.show_instagram,
-      p_show_pdf: settings.show_pdf
-    });
-
-    setSaving(false);
-    if (error) {
-      setError(error.message);
-      return;
-    }
-    if (data?.success === false) {
-      setError(data?.message ?? "Gagal menyimpan landing page.");
-      return;
-    }
-    setMessage("Landing page berhasil disimpan.");
   }
 
   const theme = themes[settings.theme_key] ?? themes.warm_brown;
@@ -444,15 +525,17 @@ export default function LandingPageBuilderPage() {
     displayName ||
     selectedBusiness?.display_name ||
     selectedBusiness?.business_name ||
-    "Nama Bisnis";
+    tr("Nama Bisnis");
 
   const toggles: Array<[ToggleKey, string]> = [
-    ["show_google_review", "Tampilkan Google Review"],
-    ["show_whatsapp", "Tampilkan WhatsApp"],
-    ["show_about", "Tampilkan Tentang Bisnis"],
-    ["show_promo", "Tampilkan Promo"],
-    ["show_instagram", "Tampilkan Instagram"],
-    ["show_pdf", "Tampilkan Menu PDF"]
+    ["show_google_review", tr("Tampilkan Google Review", "Show Google Review")],
+    ["show_whatsapp", tr("Tampilkan WhatsApp")],
+    ["show_about", tr("Tampilkan Tentang Bisnis")],
+    ["show_promo", tr("Tampilkan Promo")],
+    ["show_instagram", tr("Tampilkan Instagram")],
+    ...(tikTokAvailable ? [["show_tiktok", tr("Tampilkan TikTok", "Show TikTok")] as [ToggleKey, string]] : []),
+    ...(youTubeAvailable ? [["show_youtube", tr("Tampilkan YouTube", "Show YouTube")] as [ToggleKey, string]] : []),
+    ["show_pdf", tr("Tampilkan File PDF", "Show PDF File")]
   ];
 
   const inputStyle = {
@@ -469,9 +552,9 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ marginBottom: 8 }}>Landing Page Builder</h1>
-          <p style={{ color: "#6b7280" }}>Memeriksa sesi login...</p>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>YUKREVIEW</div>
+          <h1 style={{ marginBottom: 8 }}>{tr("Pengeditan Halaman")}</h1>
+          <p style={{ color: "#6b7280" }}>{tr("Memeriksa sesi...")}</p>
         </div>
       </main>
     );
@@ -481,10 +564,10 @@ export default function LandingPageBuilderPage() {
     return (
       <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
         <div style={{ maxWidth: 520, margin: "0 auto", background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 22 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ margin: "6px 0 8px" }}>Landing Page Builder</h1>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>YUKREVIEW</div>
+          <h1 style={{ margin: "6px 0 8px" }}>{tr("Pengeditan Halaman")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Login customer untuk mengatur landing page bisnis.
+            {tr("Masuk untuk mengatur halaman bisnis Anda.")}
           </p>
           <form onSubmit={handleLogin} style={{ display: "grid", gap: 10, marginTop: 16 }}>
             <input
@@ -497,7 +580,7 @@ export default function LandingPageBuilderPage() {
             />
             <input
               type="password"
-              placeholder="Password"
+              placeholder={tr("Password")}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -508,26 +591,43 @@ export default function LandingPageBuilderPage() {
               disabled={loadingLogin}
               style={{ border: 0, borderRadius: 10, padding: "11px 12px", background: "#8B5E3C", color: "#fff", fontWeight: 900, cursor: "pointer" }}
             >
-              {loadingLogin ? "Login..." : "Login"}
+              {loadingLogin ? tr("Masuk...") : tr("Masuk")}
             </button>
           </form>
-          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{loginError}</div>}
+          {loginError && <div style={{ marginTop: 12, color: "#991b1b" }}>{tr(loginError)}</div>}
         </div>
       </main>
     );
   }
 
+  if (businessLoading || !businessId || loadedDraftKey !== draftKey) {
+    return <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: 24 }}>
+      <section style={{ maxWidth: 520, margin: "0 auto", background: "white", borderRadius: 18, padding: 24 }}>
+        <h1>{tr("Pengeditan Halaman")}</h1>
+        <p role={error || businessError ? "alert" : "status"}>
+          {tr(error || businessError || (businessLoading || loading ? "Memuat bisnis..." : !businessId ? "Belum ada bisnis aktif untuk akun ini." : "Pengaturan halaman publik belum dapat dimuat. Silakan coba lagi."))}
+        </p>
+        {!businessLoading && !loading && <button type="button" onClick={() => {
+          if (!businessId) reloadBusinesses();
+          else loadSettings(draftKey, ++loadSequence.current);
+        }}>{tr("Coba lagi", "Try again")}</button>}
+        {!businessLoading && !businessId && !businessError && <p><a href="/dashboard/onboarding">{tr("Atur Bisnis", "Set Up Business")}</a></p>}
+      </section>
+    </main>;
+  }
+
   return (
+    <BusinessManagementGate businessId={businessId} userEmail={userEmail} businesses={businesses} setBusinessId={setBusinessId}>
     <main style={{ minHeight: "100vh", background: "#f5f7fb", padding: "32px 20px", color: "#111827" }}>
       <div style={{ maxWidth: 1180, margin: "0 auto" }}>
         <div style={{ marginBottom: 20 }}>
-          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>ULASANTOKO REVIEW V3</div>
-          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Landing Page Builder</h1>
-          <p style={{ margin: 0, color: "#6b7280" }}>Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.</p>
+          <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>YUKREVIEW</div>
+          <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Pengeditan Halaman")}</h1>
+          <p style={{ margin: 0, color: "#6b7280" }}>{tr("Atur halaman publik bisnis dengan preset yang simpel, premium, dan mudah digunakan.")}</p>
         </div>
 
         {businesses.length > 1 && (
-          <select value={businessId ?? ""} onChange={(e) => setBusinessId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
+          <select value={businessId ?? ""} disabled={saving || uploadingLogo || uploadingCover || uploadingPdf} onChange={(e) => setBusinessId(e.target.value)} style={{ ...inputStyle, marginBottom: 16 }}>
             {businesses.map((business) => (
               <option key={business.business_id} value={business.business_id}>
                 {business.display_name || business.business_name}
@@ -538,14 +638,21 @@ export default function LandingPageBuilderPage() {
 
         {(businessLoading || businessError) && (
           <div style={{ marginBottom: 14, color: businessError ? "#991b1b" : "#6b7280" }}>
-            {businessError || "Memuat bisnis..."}
+            {tr(businessError) || tr("Memuat bisnis...")}
           </div>
         )}
 
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 18, alignItems: "start" }}>
+        {draftNotice && <p role="status" style={{ color: draftNotice === "unavailable" ? "#9a3412" : "#166534", fontSize: 14 }}>
+          {draftNotice === "unavailable"
+            ? tr("Browser tidak dapat menyimpan draft. Simpan perubahan sebelum menutup halaman.", "Your browser cannot store drafts. Save your changes before closing this page.")
+            : tr("Draft tersimpan otomatis di tab ini dan dipulihkan setelah refresh. Klik Simpan Perubahan untuk menerapkannya ke halaman publik.", "Your draft is saved automatically in this tab and restored after refresh. Click Save Changes to apply it to your public page.")}
+        </p>}
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 320px), 1fr))", gap: 18, alignItems: "start" }}>
           <form onSubmit={saveSettings} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 18, padding: 20, display: "grid", gap: 18 }}>
+            <fieldset disabled={loading || saving || loadedDraftKey !== draftKey} style={{ display: "contents", border: 0, padding: 0, margin: 0 }}>
             <section>
-              <h2 style={{ marginTop: 0, fontSize: 18 }}>Pilih Tema</h2>
+              <h2 style={{ marginTop: 0, fontSize: 18 }}>{tr("Pilih Tema")}</h2>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }}>
                 {(Object.keys(themes) as ThemeKey[]).map((key) => {
                   const item = themes[key];
@@ -563,9 +670,9 @@ export default function LandingPageBuilderPage() {
                         marginBottom: 9,
                         boxShadow: key === "soft_smoothie" ? "inset 0 1px 0 rgba(255,255,255,.8), 0 6px 14px rgba(155,106,67,.10)" : "none"
                       }} />
-                      <strong>{item.label}</strong>
+                      <strong>{tr(item.label)}</strong>
                       {key === "soft_smoothie" && (
-                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>Creamy · rounded · premium</div>
+                        <div style={{ marginTop: 4, fontSize: 10, opacity: .72 }}>{tr("Modern · lembut · elegan", "Modern · soft · elegant")}</div>
                       )}
                     </button>
                   );
@@ -574,39 +681,39 @@ export default function LandingPageBuilderPage() {
             </section>
 
             <section style={{ display: "grid", gap: 10 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Konten Utama</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Konten Utama")}</h2>
               <div style={{ display: "grid", gap: 6 }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Nama Bisnis Publik</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Nama Bisnis Publik")}</label>
                 <input
                   style={inputStyle}
-                  placeholder="Nama yang tampil ke customer"
+                  placeholder={tr("Nama yang tampil ke pelanggan", "Name shown to customers")}
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   maxLength={160}
                   required
                 />
                 <div style={{ color: "#6b7280", fontSize: 11, lineHeight: 1.5 }}>
-                  Nama ini dipakai di halaman publik customer. Mengubahnya tidak mengubah Business ID, kartu, atau link Google Review.
+                  {tr("Nama ini tampil di halaman publik pelanggan. Perubahan nama tidak memengaruhi kartu atau link Google Review.")}
                 </div>
               </div>
-              <input style={inputStyle} placeholder="Judul utama" value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder="Deskripsi singkat" value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
-              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder="Tentang bisnis" value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
-              <input style={inputStyle} placeholder="Promo singkat" value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
+              <input style={inputStyle} placeholder={tr("Judul utama")} value={settings.hero_title} onChange={(e) => setSettings((s) => ({ ...s, hero_title: e.target.value }))} maxLength={120} />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={3} placeholder={tr("Deskripsi singkat")} value={settings.hero_description} onChange={(e) => setSettings((s) => ({ ...s, hero_description: e.target.value }))} maxLength={300} />
+              <textarea style={{ ...inputStyle, resize: "vertical" }} rows={4} placeholder={tr("Tentang bisnis")} value={settings.about_text} onChange={(e) => setSettings((s) => ({ ...s, about_text: e.target.value }))} maxLength={700} />
+              <input style={inputStyle} placeholder={tr("Promo singkat")} value={settings.promo_text} onChange={(e) => setSettings((s) => ({ ...s, promo_text: e.target.value }))} maxLength={180} />
             </section>
 
             <section style={{ display: "grid", gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18 }}>Logo & Cover</h2>
+                <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Logo & Cover")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12, lineHeight: 1.5 }}>
-                  Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.
+                  {tr("Supaya hasil paling rapi: logo 1:1 dan cover sekitar 16:7.")}
                 </div>
               </div>
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Logo Bisnis</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Logo Bisnis")}</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingLogo ? "Mengupload logo..." : settings.logo_url ? "Ganti Logo" : "Upload Logo"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PNG / JPG / WebP · maks. 5 MB</span>
+                  {uploadingLogo ? tr("Mengupload logo...") : settings.logo_url ? tr("Ganti Logo") : tr("Upload Logo")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("PNG / JPG / WebP · maks. 5 MB")}</span>
                   <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -620,17 +727,17 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste Logo URL (HTTPS)"
+                  placeholder={tr("Atau tempel URL logo (HTTPS)", "Or paste logo URL (HTTPS)")}
                   value={settings.logo_url}
                   onChange={(e) => setSettings((s) => ({ ...s, logo_url: e.target.value }))}
                 />
               </div>
 
               <div style={{ display: "grid", gap: 8, marginTop: 2, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Cover Landing Page</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("Cover Halaman")}</label>
                 <label style={{ display: "grid", placeItems: "center", minHeight: 92, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingCover ? "Mengupload cover..." : settings.cover_url ? "Ganti Cover" : "Upload Cover"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>Rekomendasi rasio 16:7 · maks. 5 MB</span>
+                  {uploadingCover ? tr("Mengupload cover...") : settings.cover_url ? tr("Ganti Cover") : tr("Upload Cover")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("Rekomendasi rasio 16:7 · maks. 5 MB")}</span>
                   <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp"
@@ -644,14 +751,14 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste Cover URL (HTTPS)"
+                  placeholder={tr("Atau tempel URL cover (HTTPS)", "Or paste cover URL (HTTPS)")}
                   value={settings.cover_url}
                   onChange={(e) => setSettings((s) => ({ ...s, cover_url: e.target.value }))}
                 />
 
                 <div style={{ marginTop: 4 }}>
                   <div style={{ fontSize: 12, fontWeight: 900, marginBottom: 8, color: "#6b5849" }}>
-                    Posisi Cover
+                    {tr("Posisi Cover")}
                   </div>
                   <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 7 }}>
                     {[
@@ -664,7 +771,7 @@ export default function LandingPageBuilderPage() {
                         <button
                           key={value}
                           type="button"
-                          aria-label={"Posisi cover " + value}
+                          aria-label={tr("Posisi cover ") + value}
                           title={value}
                           onClick={() =>
                             setSettings((s) => ({
@@ -688,7 +795,7 @@ export default function LandingPageBuilderPage() {
                     })}
                   </div>
                   <div style={{ marginTop: 7, fontSize: 11, color: "#8b7a6d" }}>
-                    Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.
+                    {tr("Pilih fokus cover: atas, tengah, bawah, kiri, kanan, atau sudut.")}
                   </div>
                 </div>
               </div>
@@ -696,9 +803,9 @@ export default function LandingPageBuilderPage() {
 
             <section style={{ display: "grid", gap: 12 }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: 18 }}>Quick Menu</h2>
+                <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Quick Menu")}</h2>
                 <div style={{ marginTop: 5, color: "#6b7280", fontSize: 12 }}>
-                  Atur Google Review, WhatsApp, Instagram, dan PDF menu/katalog langsung dari satu halaman.
+                  {tr("Atur Google Review, WhatsApp, Instagram, TikTok, YouTube, serta file PDF dari satu halaman.")}
                 </div>
               </div>
 
@@ -713,22 +820,22 @@ export default function LandingPageBuilderPage() {
                   disabled={loadingGoogleReview}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Paste link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.
+                  {tr("Tempel link Google Maps bisnis. Saat disimpan, sistem akan mencari Place ID dan membuat link Google Review otomatis. Kosongkan jika tidak ingin mengubah setup Google Review yang sudah ada.")}
                 </div>
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>WhatsApp Bisnis</label>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("WhatsApp Bisnis")}</label>
                 <input
                   style={inputStyle}
                   inputMode="tel"
-                  placeholder="Contoh: 081234567890"
+                  placeholder={tr("Contoh: 081234567890")}
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
                   disabled={loadingWhatsapp}
                 />
                 <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
-                  Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.
+                  {tr("Bisa ditulis 08..., 628..., atau +628.... Sistem akan merapikan format nomor otomatis.")}
                 </div>
               </div>
 
@@ -743,17 +850,37 @@ export default function LandingPageBuilderPage() {
               </div>
 
               <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
-                <label style={{ fontSize: 13, fontWeight: 900 }}>Menu / Katalog PDF</label>
+                <label htmlFor="landing-tiktok" style={{ fontSize: 13, fontWeight: 900 }}>TikTok</label>
+                <input id="landing-tiktok" style={inputStyle} placeholder="https://www.tiktok.com/@username"
+                  value={settings.tiktok_url} maxLength={2048} disabled={!tikTokAvailable}
+                  onChange={(e) => setSettings((s) => ({ ...s, tiktok_url: e.target.value }))} />
+                <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
+                  {tikTokAvailable ? tr("Opsional. Kosongkan untuk menyembunyikan tombol TikTok.", "Optional. Leave blank to hide the TikTok button.") : tr("Fitur TikTok belum diaktifkan oleh provider.", "TikTok has not been enabled by the provider yet.")}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label htmlFor="landing-youtube" style={{ fontSize: 13, fontWeight: 900 }}>YouTube</label>
+                <input id="landing-youtube" style={inputStyle} placeholder="https://www.youtube.com/@username"
+                  value={settings.youtube_url} maxLength={2048} disabled={!youTubeAvailable}
+                  onChange={(e) => setSettings((s) => ({ ...s, youtube_url: e.target.value }))} />
+                <div style={{ color: "#8b7a6d", fontSize: 11, lineHeight: 1.5 }}>
+                  {youTubeAvailable ? tr("Opsional. Isi link channel atau video YouTube.", "Optional. Enter a YouTube channel or video link.") : tr("Fitur YouTube belum diaktifkan oleh provider.", "YouTube has not been enabled by the provider yet.")}
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gap: 8, padding: 14, borderRadius: 14, background: "#faf7f2", border: "1px solid #eadfd4" }}>
+                <label style={{ fontSize: 13, fontWeight: 900 }}>{tr("File PDF")}</label>
                 <input
                   style={inputStyle}
-                  placeholder="Judul PDF, contoh: Menu & Daftar Harga"
+                  placeholder={tr("Judul PDF, contoh: Menu, Daftar Layanan, Paket Travel, Brosur")}
                   value={settings.pdf_title}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_title: e.target.value }))}
                   maxLength={80}
                 />
                 <label style={{ display: "grid", placeItems: "center", minHeight: 82, borderRadius: 12, border: "1px dashed #c9b8a7", background: "#fff", cursor: "pointer", color: "#6b5849", fontSize: 13, fontWeight: 800, textAlign: "center", padding: 12 }}>
-                  {uploadingPdf ? "Mengupload PDF..." : settings.pdf_url ? "Ganti PDF" : "Upload PDF"}
-                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>PDF · maksimal 10 MB</span>
+                  {uploadingPdf ? tr("Mengunggah PDF...", "Uploading PDF...") : settings.pdf_url ? tr("Ganti PDF", "Replace PDF") : tr("Unggah PDF", "Upload PDF")}
+                  <span style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#8b7a6d", marginTop: 4 }}>{tr("PDF · maksimal 10 MB")}</span>
                   <input
                     type="file"
                     accept="application/pdf"
@@ -767,7 +894,7 @@ export default function LandingPageBuilderPage() {
                 </label>
                 <input
                   style={inputStyle}
-                  placeholder="Atau paste PDF URL (HTTPS)"
+                  placeholder={tr("Atau tempel URL PDF (HTTPS)", "Or paste PDF URL (HTTPS)")}
                   value={settings.pdf_url}
                   onChange={(e) => setSettings((s) => ({ ...s, pdf_url: e.target.value }))}
                 />
@@ -775,7 +902,7 @@ export default function LandingPageBuilderPage() {
             </section>
 
             <section style={{ display: "grid", gap: 8 }}>
-              <h2 style={{ margin: 0, fontSize: 18 }}>Tampilkan Section</h2>
+              <h2 style={{ margin: 0, fontSize: 18 }}>{tr("Tampilkan Section")}</h2>
               {toggles.map(([key, label]) => (
                 <label key={key} style={{ display: "flex", gap: 9, alignItems: "center", padding: "9px 0" }}>
                   <input
@@ -788,90 +915,47 @@ export default function LandingPageBuilderPage() {
               ))}
             </section>
 
-            {error && <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b" }}>{error}</div>}
-            {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{message}</div>}
+            {error && <div style={{ padding: 12, borderRadius: 10, background: "#fef2f2", color: "#991b1b" }}>{tr(error)}</div>}
+            {message && <div style={{ padding: 12, borderRadius: 10, background: "#f0fdf4", color: "#166534" }}>{tr(message)}</div>}
 
             <button type="submit" disabled={saving || loading || !businessId}
-              style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "#111827", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
+              style={{ border: 0, borderRadius: 12, padding: "13px 16px", background: "var(--dashboard-accent, #111827)", color: "#fff", fontWeight: 900, cursor: "pointer" }}>
               {saving
                 ? loadingGoogleReview
-                  ? "Memproses Google Review..."
-                  : "Menyimpan..."
-                : "Simpan Landing Page"}
+                  ? tr("Memproses Google Review...")
+                  : tr("Menyimpan...")
+                : tr("Simpan Perubahan", "Save Changes")}
             </button>
+            </fieldset>
           </form>
 
-          <aside style={{ position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid #e5e7eb", boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
-            <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>LIVE PREVIEW</div>
-            <div style={{ borderRadius: isSmoothie ? 30 : 24, overflow: "hidden", background: theme.card, color: theme.text, boxShadow: isSmoothie ? "0 24px 60px rgba(103,73,48,.14)" : "0 20px 52px rgba(0,0,0,.09)" }}>
-              <div
-                style={{
-                  aspectRatio: "16 / 7",
-                  minHeight: 120,
-                  maxHeight: isSmoothie ? 230 : 230,
-                  borderRadius: isSmoothie ? 24 : 24,
-                  backgroundImage: settings.cover_url
-                    ? "url(" + settings.cover_url + ")"
-                    : "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")",
-                  backgroundSize: "cover",
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition:
-                    settings.cover_position === "top-left" ? "left top" :
-                    settings.cover_position === "top-right" ? "right top" :
-                    settings.cover_position === "bottom-left" ? "left bottom" :
-                    settings.cover_position === "bottom-right" ? "right bottom" :
-                    settings.cover_position
-                }}
+          <aside className="modern-landing landing-preview" data-theme={settings.theme_key} style={{ ...({ "--landing-bg": theme.bg, "--landing-card": theme.card, "--landing-primary": theme.primary, "--landing-secondary": theme.secondary, "--landing-soft": theme.soft, "--landing-text": theme.text, "--landing-muted": theme.muted } as CSSProperties), position: "sticky", top: 20, background: theme.bg, borderRadius: isSmoothie ? 30 : 26, padding: 14, border: "1px solid " + theme.soft, boxShadow: "0 18px 45px rgba(15,23,42,.06)" }}>
+            <div style={{ fontSize: 12, fontWeight: 900, color: theme.muted, marginBottom: 8 }}>{tr("LIVE PREVIEW")}</div>
+            <section className="public-shell" style={{ overflow: "hidden", color: theme.text }}>
+              <LandingCardContent
+                preview theme={theme} themeKey={settings.theme_key} businessName={businessName}
+                title={settings.hero_title || businessName}
+                description={settings.hero_description || tr("Bagikan pengalaman Anda dan bantu bisnis ini berkembang.")}
+                category={selectedBusiness?.category} logoUrl={settings.logo_url} coverUrl={settings.cover_url} coverPosition={settings.cover_position}
+                promoText={settings.promo_text} aboutText={settings.about_text}
+                reviewUrl={mapsUrl.trim() || googleConfigured ? "#review-preview" : null}
+                whatsappUrl={whatsapp.trim() ? "#whatsapp-preview" : null} instagramUrl={settings.instagram_url} tiktokUrl={settings.tiktok_url} youtubeUrl={settings.youtube_url} pdfUrl={settings.pdf_url} pdfTitle={settings.pdf_title || tr("Informasi", "Information")}
+                showGoogleReview={settings.show_google_review} showWhatsapp={settings.show_whatsapp} showInstagram={settings.show_instagram} showTikTok={tikTokAvailable && settings.show_tiktok} showYouTube={youTubeAvailable && settings.show_youtube}
+                showPdf={settings.show_pdf} showAbout={settings.show_about} showPromo={settings.show_promo}
+                labels={{ review: tr("★ Beri Ulasan", "★ Leave a Review"), about: tr("Tentang Kami", "About Us"), thanks: tr("Terima kasih sudah mendukung", "Thank you for supporting") }}
+                rating={<RatingFlow previewOnly cardCode="preview" businessName={businessName}
+                  reviewUrl={mapsUrl.trim() || googleConfigured ? "#review-preview" : null}
+                  primaryColor={theme.primary} softColor={theme.soft} textColor={theme.text} mutedColor={theme.muted}
+                  smoothMode />}
               />
-              <div style={{ padding: isSmoothie ? "0 20px 22px" : 20, textAlign: isSmoothie ? "center" : "left" }}>
-                {settings.logo_url ? (
-                  <img src={settings.logo_url} alt="" style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, objectFit: "cover", borderRadius: isSmoothie ? 24 : 20, marginTop: isSmoothie ? -52 : -54, border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.card, boxShadow: "0 12px 28px rgba(0,0,0,.12)" }} />
-                ) : (
-                  <div style={{ width: isSmoothie ? 104 : 76, height: isSmoothie ? 104 : 76, borderRadius: isSmoothie ? 24 : 20, margin: isSmoothie ? "-52px auto 0" : "-54px 0 0", border: (isSmoothie ? "6px" : "4px") + " solid " + theme.card, background: theme.soft, display: "grid", placeItems: "center", fontWeight: 900, color: theme.primary, boxShadow: "0 10px 26px rgba(0,0,0,.08)" }}>
-                    {businessName.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-
-                <h2 style={{ margin: "14px 0 6px", fontSize: isSmoothie ? 29 : 26, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{settings.hero_title || businessName}</h2>
-                <p style={{ color: theme.muted, lineHeight: 1.6, marginTop: 0 }}>{settings.hero_description || "Bagikan pengalaman Anda dan bantu bisnis ini berkembang."}</p>
-
-                {settings.show_promo && settings.promo_text && (
-                  <div style={{ margin: "14px 0", padding: 12, borderRadius: 12, background: theme.soft, color: theme.text, fontWeight: 800 }}>✦ {settings.promo_text}</div>
-                )}
-
-                {isSmoothie && settings.show_google_review && (
-                  <div style={{ marginTop: 18, padding: 16, borderRadius: 22, background: "linear-gradient(145deg, rgba(255,255,255,.88), rgba(244,231,215,.86))", boxShadow: "0 14px 34px rgba(103,73,48,.10)" }}>
-                    <div style={{ fontWeight: 900, marginBottom: 4 }}>Beri kami ulasan Google</div>
-                    <div style={{ fontSize: 11, color: theme.muted, marginBottom: 12 }}>Hanya 10 detik, sangat berarti bagi kami</div>
-                    <div style={{ display: "flex", justifyContent: "center", gap: 7 }}>
-                      {[1,2,3,4,5].map((n) => <span key={n} style={{ width: 30, height: 30, borderRadius: 10, background: "rgba(255,255,255,.78)", display: "grid", placeItems: "center", color: "#e5a323" }}>☆</span>)}
-                    </div>
-                  </div>
-                )}
-
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: isSmoothie ? 10 : 9, marginTop: 16 }}>
-                  {!isSmoothie && settings.show_google_review && <div style={{ padding: "12px 10px", borderRadius: 14, background: "linear-gradient(135deg, " + theme.primary + ", " + theme.secondary + ")", color: "#fff", textAlign: "center", fontWeight: 900, boxShadow: "0 8px 18px rgba(0,0,0,.08)" }}>★ Beri Ulasan</div>}
-                  {settings.show_pdf && settings.pdf_url && <div style={{ gridColumn: isSmoothie ? "1 / -1" : "auto", padding: isSmoothie ? "15px 14px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: isSmoothie ? "left" : "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>▤ {settings.pdf_title || "Menu PDF"} {isSmoothie ? "›" : ""}</div>}
-                  {settings.show_whatsapp && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>
-                    <div>◉ WhatsApp</div>
-                    <div style={{ marginTop: 4, fontSize: 10, fontWeight: 700, opacity: .72 }}>
-                      {whatsapp || "62 812-XXXX-XXXX"}
-                    </div>
-                  </div>}
-                  {settings.show_instagram && settings.instagram_url && <div style={{ padding: isSmoothie ? "18px 10px" : "12px 10px", borderRadius: isSmoothie ? 20 : 14, background: theme.soft, color: theme.text, textAlign: "center", fontWeight: 900, border: "1px solid rgba(0,0,0,.05)", boxShadow: isSmoothie ? "0 10px 24px rgba(103,73,48,.08)" : "none" }}>◎ Instagram</div>}
-                </div>
-
-                {settings.show_about && settings.about_text && (
-                  <div style={{ marginTop: 18 }}>
-                    <div style={{ fontWeight: 900, marginBottom: 6 }}>Tentang Kami</div>
-                    <div style={{ color: theme.muted, lineHeight: 1.55, fontSize: 14 }}>{settings.about_text}</div>
-                  </div>
-                )}
+              <div className="public-footer" style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
+                <span>{tr("Preview")}</span><span>Powered by YukReview</span>
               </div>
-            </div>
+            </section>
           </aside>
         </div>
       </div>
     </main>
+    </BusinessManagementGate>
   );
 }

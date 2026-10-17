@@ -1,6 +1,9 @@
+import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
+import { reserveGoogleRequest, GOOGLE_TEMPORARY_MESSAGE } from "../../../../lib/googleQuota";
+import { hasGoogleBusinessAccess } from "../../../../lib/googleBusinessAccess";
 
 export async function POST(request: Request) {
   try {
@@ -8,20 +11,20 @@ export async function POST(request: Request) {
 
     if (!authorization?.startsWith("Bearer ")) {
       return NextResponse.json(
-        { success: false, message: "Authentication required" },
+        { success: false, message: "Sesi login diperlukan." },
         { status: 401 }
       );
     }
 
-    const body = await request.json();
+    const body = await readApiJson(request);
     const businessId = body?.business_id;
     const mapsUrl = body?.maps_url;
 
-    if (!businessId || !mapsUrl) {
+    if (typeof businessId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessId) || typeof mapsUrl !== "string" || !mapsUrl.trim() || mapsUrl.length > 2048) {
       return NextResponse.json(
         {
           success: false,
-          message: "business_id and maps_url are required",
+          message: "Data Google Review belum lengkap.",
         },
         { status: 400 }
       );
@@ -32,7 +35,7 @@ export async function POST(request: Request) {
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { success: false, message: "Supabase environment variables are missing" },
+        { success: false, message: "Layanan sedang mengalami kendala." },
         { status: 500 }
       );
     }
@@ -43,7 +46,7 @@ export async function POST(request: Request) {
 
     if (userError || !userData.user) {
       return NextResponse.json(
-        { success: false, message: "Invalid or expired session" },
+        { success: false, message: "Sesi login sudah berakhir." },
         { status: 401 }
       );
     }
@@ -52,33 +55,55 @@ export async function POST(request: Request) {
       global: { headers: { Authorization: authorization } },
     });
 
+    if (!await hasGoogleBusinessAccess(scopedClient, businessId)) {
+      return NextResponse.json({ success: false, message: "Bisnis tidak tersedia untuk akun ini." }, { status: 403 });
+    }
+
     const { data: limitData, error: limitError } = await scopedClient.rpc(
       "v3_check_google_maps_resolver_rate_limit"
     );
 
     if (limitError) {
       return NextResponse.json(
-        { success: false, message: "Unable to verify request limit" },
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi." },
         { status: 400 }
       );
     }
 
-    if (limitData?.success === false) {
-      return NextResponse.json(limitData, { status: 429 });
+    if (limitData?.success !== true) {
+      return NextResponse.json(
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi nanti." },
+        { status: limitData?.success === false ? 429 : 503 }
+      );
+    }
+
+    // Reuse the account-scoped saved profile when the Maps link is unchanged.
+    const { data: saved, error: savedError } = await scopedClient
+      .from("google_review_profiles")
+      .select("maps_url,place_id,business_name")
+      .eq("business_id", businessId).eq("status", "active").maybeSingle();
+    if (savedError) {
+      return NextResponse.json({ success: false, message: "Google Review belum dapat diperiksa. Silakan coba lagi." }, { status: 503 });
+    }
+    if (saved?.maps_url === mapsUrl.trim() && typeof saved.place_id === "string" && /^[A-Za-z0-9_-]{1,256}$/.test(saved.place_id)) {
+      const reviewUrl = `https://search.google.com/local/writereview?placeid=${saved.place_id}`;
+      return NextResponse.json({ success: true, business_id: businessId, maps_url: saved.maps_url,
+        place_id: saved.place_id, business_name: saved.business_name, formatted_address: null,
+        review_url: reviewUrl, profile: { success: true, business_id: businessId, ...saved, review_url: reviewUrl } });
     }
 
     let resolved;
     try {
-      resolved = await resolveGoogleMapsUrl(mapsUrl);
+      resolved = await resolveGoogleMapsUrl(mapsUrl, reserveGoogleRequest);
     } catch (error) {
-      const typed = error as Error & { status?: number; details?: unknown };
+      const typed = error as Error & { status?: number; code?: string; details?: unknown };
 
       return NextResponse.json(
         {
           success: false,
           step: "resolve",
-          message: typed.message || "Gagal memproses Google Maps URL.",
-          details: typed.details,
+          code: typed.code,
+          message: typed.code === "GOOGLE_TEMPORARILY_UNAVAILABLE" ? GOOGLE_TEMPORARY_MESSAGE : "Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.",
         },
         { status: typed.status ?? 400 }
       );
@@ -93,12 +118,12 @@ export async function POST(request: Request) {
       }
     );
 
-    if (saveError) {
+    if (saveError || !profile || profile.success === false) {
       return NextResponse.json(
         {
           success: false,
           step: "save",
-          message: saveError.message,
+          message: "Google Review belum dapat disimpan. Silakan coba lagi.",
         },
         { status: 400 }
       );
@@ -118,10 +143,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Google Review setup failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Google Review belum dapat diproses. Silakan coba lagi.",
       },
-      { status: 500 }
+      { status: error instanceof ApiInputError ? error.status : 500 }
     );
   }
 }

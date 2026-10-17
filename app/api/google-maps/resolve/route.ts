@@ -1,6 +1,9 @@
+import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { resolveGoogleMapsUrl } from "../../../../lib/googleMapsResolver";
+import { reserveGoogleRequest, GOOGLE_TEMPORARY_MESSAGE } from "../../../../lib/googleQuota";
+import { hasGoogleBusinessAccess } from "../../../../lib/googleBusinessAccess";
 
 export async function GET() {
   return NextResponse.json({
@@ -15,7 +18,7 @@ export async function POST(request: Request) {
 
     if (!authorization?.startsWith("Bearer ")) {
       return NextResponse.json(
-        { success: false, message: "Authentication required" },
+        { success: false, message: "Sesi login diperlukan." },
         { status: 401 }
       );
     }
@@ -25,7 +28,7 @@ export async function POST(request: Request) {
 
     if (!supabaseUrl || !supabaseKey) {
       return NextResponse.json(
-        { success: false, message: "Supabase environment variables are missing" },
+        { success: false, message: "Layanan sedang mengalami kendala." },
         { status: 500 }
       );
     }
@@ -36,7 +39,7 @@ export async function POST(request: Request) {
 
     if (userError || !userData.user) {
       return NextResponse.json(
-        { success: false, message: "Invalid or expired session" },
+        { success: false, message: "Sesi login sudah berakhir." },
         { status: 401 }
       );
     }
@@ -45,42 +48,49 @@ export async function POST(request: Request) {
       global: { headers: { Authorization: authorization } },
     });
 
+    if (!await hasGoogleBusinessAccess(scopedClient)) {
+      return NextResponse.json({ success: false, message: "Aktifkan kartu dan bisnis terlebih dahulu." }, { status: 403 });
+    }
+
     const { data: limitData, error: limitError } = await scopedClient.rpc(
       "v3_check_google_maps_resolver_rate_limit"
     );
 
     if (limitError) {
       return NextResponse.json(
-        { success: false, message: "Unable to verify request limit" },
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi." },
         { status: 400 }
       );
     }
 
-    if (limitData?.success === false) {
-      return NextResponse.json(limitData, { status: 429 });
+    if (limitData?.success !== true) {
+      return NextResponse.json(
+        { success: false, message: "Permintaan belum dapat diproses. Silakan coba lagi nanti." },
+        { status: limitData?.success === false ? 429 : 503 }
+      );
     }
 
-    const body = await request.json();
+    const body = await readApiJson(request);
     const mapsUrl = body?.maps_url;
 
-    if (!mapsUrl) {
+    if (typeof mapsUrl !== "string" || !mapsUrl.trim() || mapsUrl.length > 2048) {
       return NextResponse.json(
-        { success: false, message: "maps_url is required" },
+        { success: false, message: "Link Google Maps wajib diisi." },
         { status: 400 }
       );
     }
 
     try {
-      const data = await resolveGoogleMapsUrl(mapsUrl);
+      const data = await resolveGoogleMapsUrl(mapsUrl, reserveGoogleRequest);
       return NextResponse.json({ success: true, ...data });
     } catch (error) {
-      const typed = error as Error & { status?: number; details?: unknown };
+      const typed = error as Error & { status?: number; code?: string; details?: unknown };
 
       return NextResponse.json(
         {
           success: false,
-          message: typed.message || "Resolver failed",
-          details: typed.details,
+          code: typed.code,
+          message: typed.code === "GOOGLE_TEMPORARILY_UNAVAILABLE" ? GOOGLE_TEMPORARY_MESSAGE : "Link Google Maps belum dapat diproses. Pastikan link benar lalu coba lagi.",
         },
         { status: typed.status ?? 400 }
       );
@@ -89,10 +99,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Resolver failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Link Google Maps belum dapat diproses. Silakan coba lagi.",
       },
-      { status: 500 }
+      { status: error instanceof ApiInputError ? error.status : 500 }
     );
   }
 }

@@ -1,5 +1,9 @@
+import PdfViewer from "./PdfViewer";
+import { isHostedMenuPdf } from "../../../lib/publicPdf";
+import { resolveCardCode } from "../../../lib/cardPublicId";
 import { createClient } from "@supabase/supabase-js";
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 
 function firstString(...values: unknown[]) {
   for (const value of values) {
@@ -8,12 +12,60 @@ function firstString(...values: unknown[]) {
   return null;
 }
 
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ cardCode: string }>;
+}) {
+  let { cardCode } = await params;
+  const routeCode = cardCode;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return {
+      title: tr("Dokumen | YukReview", "Document | YukReview"),
+      description: tr("Dokumen publik bisnis.", "Public business document."),
+    };
+  }
+
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
+    const { data } = await supabase.rpc("v3_get_public_landing_page", {
+      p_card_code: cardCode,
+    });
+
+    const businessName = firstString(data?.business_name) ?? "YukReview";
+    const title = firstString(data?.pdf_title) ?? tr("Informasi", "Information");
+
+    return {
+      title: title + " | " + businessName,
+      description: tr("Dokumen publik ", "Public document for ") + businessName + tr(" melalui YukReview.", " via YukReview."),
+    };
+  } catch {
+    return {
+      title: tr("Dokumen | YukReview", "Document | YukReview"),
+      description: tr("Dokumen publik bisnis.", "Public business document."),
+    };
+  }
+}
+
 export default async function PublicPdfMenuPage({
   params,
 }: {
   params: Promise<{ cardCode: string }>;
 }) {
-  const { cardCode } = await params;
+  let { cardCode } = await params;
+  const routeCode = cardCode;
+  const cookieStore = await cookies();
+  const language = cookieStore.get("reputasipro-language")?.value === "en" ? "en" : "id";
+  const tr = (idText: string, enText: string) => language === "en" ? enText : idText;
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -23,6 +75,9 @@ export default async function PublicPdfMenuPage({
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
+    const resolvedCode = await resolveCardCode(supabase, routeCode);
+    if (!resolvedCode) notFound();
+    cardCode = resolvedCode;
   const { data } = await supabase.rpc("v3_get_public_landing_page", {
     p_card_code: cardCode,
   });
@@ -36,11 +91,12 @@ export default async function PublicPdfMenuPage({
     notFound();
   }
 
-  const title = firstString(data?.pdf_title) ?? "Menu & Daftar Harga";
-  const businessName = firstString(data?.business_name) ?? "UlasanToko";
+  const title = firstString(data?.pdf_title) ?? tr("Informasi", "Information");
+  const businessName = firstString(data?.business_name) ?? "YukReview";
   const themeKey = firstString(data?.theme_key) ?? "warm_brown";
   const isSmoothie = themeKey === "soft_smoothie";
-  const mobileViewerUrl = pdfUrl + "#view=FitH&zoom=page-width";
+  const documentSource = isHostedMenuPdf(pdfUrl, supabaseUrl)
+    ? `/${encodeURIComponent(routeCode)}/menu/file` : pdfUrl;
 
   return (
     <main
@@ -80,7 +136,7 @@ export default async function PublicPdfMenuPage({
           }}
         >
           <div>
-            <div style={{ fontSize: 12, fontWeight: 900, color: "#8B5E3C" }}>
+            <div style={{ marginTop: 10, fontSize: 12, fontWeight: 900, color: "#8B5E3C" }}>
               {businessName}
             </div>
             <h1 style={{ margin: "4px 0 0", fontSize: isSmoothie ? 24 : 22, fontFamily: isSmoothie ? "Georgia, Times New Roman, serif" : "inherit" }}>{title}</h1>
@@ -88,7 +144,7 @@ export default async function PublicPdfMenuPage({
 
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
             <a
-              href={"/" + cardCode}
+              href={"/" + routeCode}
               style={{
                 textDecoration: "none",
                 padding: "10px 12px",
@@ -98,12 +154,11 @@ export default async function PublicPdfMenuPage({
                 fontWeight: 800,
               }}
             >
-              Kembali
+              {tr("Kembali", "Back")}
             </a>
             <a
-              href={pdfUrl}
-              target="_blank"
-              rel="noreferrer"
+              href={documentSource}
+              download="menu.pdf"
               style={{
                 textDecoration: "none",
                 padding: "10px 12px",
@@ -113,38 +168,12 @@ export default async function PublicPdfMenuPage({
                 fontWeight: 800,
               }}
             >
-              Buka PDF
+              {tr("Unduh PDF", "Download PDF")}
             </a>
           </div>
         </div>
 
-        <iframe
-          className="pdf-viewer-desktop"
-          src={pdfUrl}
-          title={title}
-          style={{
-            width: "100%",
-            height: "78vh",
-            minHeight: 620,
-            border: 0,
-            display: "block",
-            background: "#f7f3ef",
-          }}
-        />
-
-        <iframe
-          className="pdf-viewer-mobile"
-          src={mobileViewerUrl}
-          title={title + " mobile"}
-          style={{
-            width: "100%",
-            height: "calc(100vh - 112px)",
-            minHeight: 620,
-            border: 0,
-            display: "none",
-            background: "#fff",
-          }}
-        />
+        <PdfViewer source={documentSource} title={title} language={language} />
       </section>
 
       <style>{`
@@ -158,18 +187,7 @@ export default async function PublicPdfMenuPage({
             border-radius: 0 !important;
             box-shadow: none !important;
           }
-          .pdf-viewer-desktop {
-            display: none !important;
-          }
-          .pdf-viewer-mobile {
-            display: block !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            min-height: calc(100vh - 112px) !important;
-            height: calc(100vh - 112px) !important;
-            border: 0 !important;
-            background: #fff !important;
-          }
+
         }
       `}</style>
     </main>

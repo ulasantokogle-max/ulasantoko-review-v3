@@ -1,13 +1,28 @@
-import DashboardNav from "./DashboardNav";
-import "./dashboard.css";
+export const metadata = {
+  title: "Dashboard | YukReview",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
-export default function DashboardLayout({
+import LocalizedText from "../components/LocalizedText";
+import DashboardNav from "./DashboardNav";
+import LanguageSwitcher from "../components/LanguageSwitcher";
+import ProviderMfaGate from "../components/ProviderMfaGate";
+import "./dashboard.css";
+import { cookies } from "next/headers";
+import { DashboardThemeShell, DashboardThemePicker } from "./DashboardTheme";
+
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const savedTheme = (await cookies()).get("reputasipro-dashboard-theme")?.value;
+  const initialTheme = savedTheme === "smoothie" || savedTheme === "ocean" ? savedTheme : "modern";
   return (
-    <div className="dashboard-shell">
+    <ProviderMfaGate allowCustomers><DashboardThemeShell initialTheme={initialTheme}>
       <div className="dashboard-grid">
         <aside className="dashboard-sidebar">
           <div
@@ -21,7 +36,7 @@ export default function DashboardLayout({
               marginBottom: 6,
             }}
           >
-            UlasanToko Review V3
+            YukReview
           </div>
 
           <div
@@ -33,14 +48,17 @@ export default function DashboardLayout({
               marginBottom: 16,
             }}
           >
-            Dashboard
+            <LocalizedText text="Dashboard" />
           </div>
+
+          <div style={{ marginBottom: 14 }}><LanguageSwitcher /></div>
+          <DashboardThemePicker />
 
           <DashboardNav />
         </aside>
 
         <div className="dashboard-content">{children}</div>
       </div>
-    </div>
+    </DashboardThemeShell></ProviderMfaGate>
   );
 }

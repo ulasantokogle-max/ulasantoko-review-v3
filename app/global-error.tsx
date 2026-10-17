@@ -34,13 +34,13 @@ export default function GlobalError({
             }}
           >
             <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-              ULASANTOKO REVIEW
+              YUKREVIEW
             </div>
             <h1 style={{ margin: "8px 0 10px", fontSize: 26 }}>
               Layanan sedang mengalami kendala
             </h1>
             <p style={{ margin: 0, color: "#6b7280", lineHeight: 1.65 }}>
-              Silakan coba kembali. Data Anda tetap aman.
+              Silakan coba kembali beberapa saat lagi.
             </p>
             <button
               type="button"

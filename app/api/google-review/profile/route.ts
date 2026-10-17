@@ -1,3 +1,4 @@
+import { ApiInputError, readApiJson } from "../../../../lib/apiInput";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
@@ -9,23 +10,23 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Authentication required",
+          message: "Sesi login diperlukan.",
         },
         { status: 401 }
       );
     }
 
-    const body = await request.json();
+    const body = await readApiJson(request);
 
     const businessId = body?.business_id;
     const mapsUrl = body?.maps_url;
     const placeId = body?.place_id;
 
-    if (!businessId || !mapsUrl || !placeId) {
+    if (typeof businessId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(businessId) || typeof mapsUrl !== "string" || !/^https:\/\//i.test(mapsUrl) || mapsUrl.length > 2048 || typeof placeId !== "string" || !placeId.trim() || placeId.length > 256) {
       return NextResponse.json(
         {
           success: false,
-          message: "business_id, maps_url and place_id are required",
+          message: "Data Google Review belum lengkap.",
         },
         { status: 400 }
       );
@@ -38,10 +39,18 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Supabase environment variables are missing",
+          message: "Layanan sedang mengalami kendala.",
         },
         { status: 500 }
       );
+    }
+
+    const authClient = createClient(supabaseUrl, supabaseKey);
+    const { data: userData, error: authError } = await authClient.auth.getUser(
+      authorization.slice("Bearer ".length).trim()
+    );
+    if (authError || !userData.user) {
+      return NextResponse.json({ success: false, message: "Sesi login sudah berakhir." }, { status: 401 });
     }
 
     const supabase = createClient(
@@ -65,11 +74,11 @@ export async function POST(request: Request) {
       }
     );
 
-    if (error) {
+    if (error || !data || data.success === false) {
       return NextResponse.json(
         {
           success: false,
-          message: error.message,
+          message: "Profil Google Review belum dapat disimpan. Silakan coba lagi.",
         },
         { status: 400 }
       );
@@ -83,13 +92,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to save Google Review profile",
-        error:
-          error instanceof Error
-            ? error.message
-            : "Unknown error",
+        message: "Profil Google Review belum dapat disimpan. Silakan coba lagi.",
       },
-      { status: 500 }
+      { status: error instanceof ApiInputError ? error.status : 500 }
     );
   }
 }

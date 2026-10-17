@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import { useBusinessContext } from "../../../lib/useBusinessContext";
+import { useLanguage } from "../../../lib/i18n";
 
 type SetupStatus = {
   display_name?: string;
@@ -18,6 +19,7 @@ type AnalyticsData = {
 };
 
 export default function CustomerOnboardingPage() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
   const [setup, setSetup] = useState<SetupStatus>({});
@@ -71,7 +73,8 @@ export default function CustomerOnboardingPage() {
 
     const firstError = setupResult.error || analyticsResult.error;
     if (firstError) {
-      setError(firstError.message);
+      console.error("Onboarding status load failed", firstError);
+      setError("Status setup belum dapat dimuat. Silakan coba lagi.");
       return;
     }
 
@@ -88,32 +91,32 @@ export default function CustomerOnboardingPage() {
       {
         number: 1,
         title: "Google Review",
-        description: "Hubungkan lokasi Google Maps agar rating 4–5 bisa diarahkan ke Google Review.",
+        description: tr("Hubungkan lokasi Google Maps agar semua pelanggan dapat menulis ulasan langsung di Google.", "Connect Google Maps so every customer can write a review directly on Google."),
         done: Boolean(setup.google_review_configured),
         href: "/dashboard/landing-page",
-        action: setup.google_review_configured ? "Sudah terhubung" : "Atur di Landing Page",
+        action: setup.google_review_configured ? tr("Sudah terhubung", "Connected") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),
       },
       {
         number: 2,
-        title: "WhatsApp Bisnis",
-        description: "Tambahkan nomor WhatsApp agar customer bisa menghubungi bisnis setelah memberi feedback privat.",
+        title: tr("WhatsApp Bisnis"),
+        description: tr("Tambahkan nomor WhatsApp agar customer bisa menghubungi bisnis setelah memberi feedback privat."),
         done: Boolean(setup.whatsapp_number),
         href: "/dashboard/landing-page",
-        action: setup.whatsapp_number ? "Sudah tersimpan" : "Atur di Landing Page",
+        action: setup.whatsapp_number ? tr("Sudah tersimpan", "Saved") : tr("Atur di Pengeditan Halaman", "Set in Page Editor"),
       },
       {
         number: 3,
-        title: "Cek Kartu",
-        description: "Pastikan kartu sudah aktif dan siap dipakai melalui QR maupun NFC.",
+        title: tr("Cek Kartu"),
+        description: tr("Pastikan kartu sudah aktif dan siap dipakai melalui QR maupun NFC."),
         done: Number(analytics?.cards?.activated ?? 0) > 0,
         href: "/dashboard/cards",
         action:
           Number(analytics?.cards?.activated ?? 0) > 0
-            ? "Kartu aktif"
-            : "Cek Card Management",
+            ? tr("Kartu aktif")
+            : tr("Kelola Kartu"),
       },
     ],
-    [setup, analytics]
+    [setup, analytics, tr]
   );
 
   const completed = steps.filter((item) => item.done).length;
@@ -143,11 +146,11 @@ export default function CustomerOnboardingPage() {
       <main style={pageStyle}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            ULASANTOKO REVIEW V3
+            YUKREVIEW
           </div>
-          <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
+          <h1 style={{ marginBottom: 8 }}>{tr("Onboarding Bisnis")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Memeriksa sesi login...
+            {tr("Memeriksa sesi...")}
           </p>
         </section>
       </main>
@@ -159,11 +162,11 @@ export default function CustomerOnboardingPage() {
       <main style={pageStyle}>
         <section style={cardStyle}>
           <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-            ULASANTOKO REVIEW V3
+            YUKREVIEW
           </div>
-          <h1 style={{ marginBottom: 8 }}>Onboarding Bisnis</h1>
+          <h1 style={{ marginBottom: 8 }}>{tr("Onboarding Bisnis")}</h1>
           <p style={{ color: "#6b7280", lineHeight: 1.6 }}>
-            Silakan login kembali dari dashboard untuk melanjutkan setup bisnis.
+            {tr("Silakan masuk kembali dari dashboard untuk melanjutkan pengaturan bisnis.")}
           </p>
           <Link
             href="/dashboard"
@@ -172,13 +175,13 @@ export default function CustomerOnboardingPage() {
               marginTop: 10,
               padding: "12px 16px",
               borderRadius: 10,
-              background: "#111827",
+              background: "var(--dashboard-accent, #111827)",
               color: "#fff",
               textDecoration: "none",
               fontWeight: 800,
             }}
           >
-            Buka Dashboard
+            {tr("Buka Dashboard")}
           </Link>
         </section>
       </main>
@@ -189,11 +192,11 @@ export default function CustomerOnboardingPage() {
     <main style={pageStyle}>
       <section style={cardStyle}>
         <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280" }}>
-          ULASANTOKO REVIEW V3
+          YUKREVIEW
         </div>
-        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>Setup Bisnis Anda</h1>
+        <h1 style={{ margin: "6px 0 8px", fontSize: 30 }}>{tr("Siapkan Bisnis Anda")}</h1>
         <p style={{ color: "#6b7280", lineHeight: 1.6, marginTop: 0 }}>
-          Kartu sudah aktif. Selesaikan beberapa langkah ini supaya UlasanToko siap dipakai customer.
+          {tr("Kartu sudah aktif. Selesaikan beberapa langkah ini agar YukReview siap digunakan pelanggan.")}
         </p>
 
         <div
@@ -205,13 +208,13 @@ export default function CustomerOnboardingPage() {
           }}
         >
           <div style={{ fontSize: 13, color: "#6b7280" }}>
-            Login sebagai <strong>{userEmail}</strong>
+            {tr("Akun:")} <strong>{userEmail}</strong>
           </div>
           <div style={{ fontWeight: 900, marginTop: 3 }}>
             {selectedBusiness?.display_name ||
               selectedBusiness?.business_name ||
               setup.display_name ||
-              "Bisnis"}
+              tr("Bisnis")}
           </div>
         </div>
 
@@ -243,7 +246,7 @@ export default function CustomerOnboardingPage() {
               color: businessError ? "#991b1b" : "#6b7280",
             }}
           >
-            {businessError || "Memuat bisnis..."}
+            {tr(businessError) || tr("Memuat bisnis...")}
           </div>
         )}
 
@@ -257,12 +260,12 @@ export default function CustomerOnboardingPage() {
               borderRadius: 10,
             }}
           >
-            {error}
+            {tr(error)}
           </div>
         )}
 
         {loading ? (
-          <p>Memuat status setup...</p>
+          <p>{tr("Memuat status setup...")}</p>
         ) : (
           <>
             <div
@@ -274,7 +277,7 @@ export default function CustomerOnboardingPage() {
                 marginBottom: 8,
               }}
             >
-              <strong>Progress setup</strong>
+              <strong>{tr("Progress setup")}</strong>
               <strong>{progress}%</strong>
             </div>
 
@@ -291,7 +294,7 @@ export default function CustomerOnboardingPage() {
                 style={{
                   width: progress + "%",
                   height: "100%",
-                  background: "#111827",
+                  background: "var(--dashboard-accent, #111827)",
                 }}
               />
             </div>
@@ -318,7 +321,7 @@ export default function CustomerOnboardingPage() {
                   >
                     <div>
                       <div style={{ fontSize: 12, color: "#6b7280", fontWeight: 800 }}>
-                        LANGKAH {step.number}
+                        {tr("LANGKAH")} {step.number}
                       </div>
                       <div style={{ fontWeight: 900, fontSize: 17, marginTop: 3 }}>
                         {step.title}
@@ -334,7 +337,7 @@ export default function CustomerOnboardingPage() {
                         color: step.done ? "#166534" : "#9a3412",
                       }}
                     >
-                      {step.done ? "SELESAI" : "BELUM"}
+                      {step.done ? tr("SELESAI") : tr("BELUM")}
                     </span>
                   </div>
 
@@ -374,12 +377,12 @@ export default function CustomerOnboardingPage() {
                   textDecoration: "none",
                   padding: "12px 16px",
                   borderRadius: 10,
-                  background: "#111827",
+                  background: "var(--dashboard-accent, #111827)",
                   color: "#fff",
                   fontWeight: 900,
                 }}
               >
-                Buka Dashboard
+                {tr("Buka Dashboard")}
               </Link>
 
               {progress === 100 && (
@@ -394,7 +397,7 @@ export default function CustomerOnboardingPage() {
                     fontWeight: 900,
                   }}
                 >
-                  Lihat Kartu Saya
+                  {tr("Lihat Kartu Saya")}
                 </Link>
               )}
             </div>

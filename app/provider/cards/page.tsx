@@ -1,7 +1,17 @@
 "use client";
+import ProviderBusinessTerms from "../../components/ProviderBusinessTerms";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { getCardPublicUrl } from "../../../lib/cardPublicId";
+import ProviderMfaGate from "../../components/ProviderMfaGate";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { useLanguage } from "../../../lib/i18n";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
+import DownloadCardQr from "../../components/DownloadCardQr";
+import WriteCardNfc from "../../components/WriteCardNfc";
+import GoogleQuotaPanel from "../../components/GoogleQuotaPanel";
+import DeleteProviderCard from "../../components/DeleteProviderCard";
 
 type ProviderCard = {
   id: string;
@@ -42,6 +52,11 @@ type ResetPinResult = {
 };
 
 export default function ProviderCardsPage() {
+  return <ProviderMfaGate><ProviderCardsPageContent /></ProviderMfaGate>;
+}
+
+function ProviderCardsPageContent() {
+  const { tr } = useLanguage();
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -64,46 +79,44 @@ export default function ProviderCardsPage() {
   const [resettingCardId, setResettingCardId] = useState<string | null>(null);
   const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
   const [resetPinError, setResetPinError] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState("");
+  const currentAccount = useRef(userEmail);
+  currentAccount.current = userEmail;
+  const listSequence = useRef(0);
+  const createBusy = useRef(false);
+  const resetBusy = useRef(false);
 
   useEffect(() => {
+    let active = true; let eventReceived = false;
     supabase.auth.getSession().then(({ data }) => {
-      setUserEmail(data.session?.user?.email ?? null);
+      if (active && !eventReceived) setUserEmail(data.session?.user?.email ?? null);
+    }).catch(() => { if (active) setLoginError("Sesi belum dapat diperiksa. Silakan coba lagi."); });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      eventReceived = true;
+      if (active) setUserEmail(session?.user?.email ?? null);
     });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUserEmail(session?.user?.email ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => { active = false; listSequence.current++; currentAccount.current = null; subscription.unsubscribe(); };
   }, []);
 
   useEffect(() => {
-    if (userEmail) {
-      checkProvider();
-    } else {
-      setProviderAllowed(null);
-      setCards([]);
-    }
+    setProviderAllowed(null); setCards([]); setCreated(null); setResetPinResult(null);
+    setLoadingCards(false);
+    listSequence.current++;
+    if (userEmail) void checkProvider();
   }, [userEmail]);
 
   async function checkProvider() {
-    setLoadError("");
-
-    const { data, error } = await supabase.rpc("v3_is_provider_admin");
-
-    if (error) {
-      setLoadError(error.message);
-      setProviderAllowed(false);
-      return;
-    }
-
-    const allowed = Boolean(data);
-    setProviderAllowed(allowed);
-
-    if (allowed) {
-      loadCards();
+    const account = userEmail;
+    setProviderAllowed(null); setLoadError("");
+    try {
+      const { data, error } = await supabase.rpc("v3_is_provider_admin");
+      if (currentAccount.current !== account) return;
+      if (error) throw error;
+      const allowed = data === true;
+      setProviderAllowed(allowed);
+      if (allowed) void loadCards();
+    } catch {
+      if (currentAccount.current === account) { setLoadError("Akses provider belum dapat diverifikasi. Silakan coba lagi."); setProviderAllowed(false); }
     }
   }
 
@@ -111,117 +124,148 @@ export default function ProviderCardsPage() {
     event.preventDefault();
     setLoginError("");
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      setLoginError(error.message);
-      return;
-    }
+      if (error) {
+        console.error("Provider login failed", error);
+        setLoginError("Email atau password tidak sesuai.");
+        return;
+      }
 
-    setUserEmail(data.user?.email ?? null);
-    setPassword("");
+      setUserEmail(data.user?.email ?? null);
+      setPassword("");
+    } catch { setLoginError("Koneksi belum berhasil. Silakan coba lagi."); }
   }
 
   async function handleLogout() {
-    await supabase.auth.signOut();
-    setUserEmail(null);
-    setProviderAllowed(null);
-    setCards([]);
-    setCreated(null);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setUserEmail(null);
+      setProviderAllowed(null);
+      setCards([]);
+      setCreated(null);
+    } catch { setLoginError("Belum dapat keluar. Silakan coba lagi."); }
   }
 
   async function loadCards() {
-    setLoadingCards(true);
-    setLoadError("");
-
-    const { data, error } = await supabase.rpc("v3_provider_list_cards", {
-      p_limit: 200,
-    });
-
-    setLoadingCards(false);
-
-    if (error) {
-      setLoadError(error.message);
-      setCards([]);
-      return;
-    }
-
-    setCards((data ?? []) as ProviderCard[]);
+    const account = userEmail;
+    const request = ++listSequence.current;
+    const current = () => currentAccount.current === account && listSequence.current === request;
+    setLoadingCards(true); setLoadError("");
+    try {
+      const { data, error } = await supabase.rpc("v3_provider_list_cards", { p_limit: 200 });
+      if (!current()) return;
+      if (error || !Array.isArray(data)) throw new Error("CARDS_UNAVAILABLE");
+      setCards(data.map(card => ({ ...card, qr_url: card.qr_url ? getCardPublicUrl(card.qr_url, card.card_code) : null })));
+    } catch {
+      if (current()) { setLoadError("Daftar kartu belum dapat dimuat. Silakan coba lagi."); setCards([]); }
+    } finally { if (current()) setLoadingCards(false); }
   }
 
   async function createCard(event: FormEvent) {
     event.preventDefault();
+    if (createBusy.current || providerAllowed !== true || !userEmail) return;
+    const account = userEmail;
+    createBusy.current = true;
     setCreating(true);
     setCreateError("");
     setCreated(null);
 
-    const { data, error } = await supabase.rpc("v3_provider_create_card", {
-      p_label: label || null,
-      p_area: area || null,
-      p_internal_code: internalCode || null,
-    });
+    try {
+      const { data, error } = await supabase.rpc("v3_provider_create_card", {
+        p_label: label || null,
+        p_area: area || null,
+        p_internal_code: internalCode || null,
+      });
 
-    setCreating(false);
+      if (currentAccount.current !== account) return;
 
-    if (error) {
-      setCreateError(error.message);
-      return;
-    }
+      if (error) {
+        console.error("Provider card creation failed", error);
+        setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi.");
+        return;
+      }
 
-    if (!data?.success) {
-      setCreateError(data?.message ?? "Gagal membuat kartu.");
-      return;
-    }
+      if (!data?.success) {
+        console.error("Provider card creation returned unsuccessful result", data);
+        setCreateError("Kartu belum dapat dibuat. Periksa data lalu coba lagi.");
+        return;
+      }
 
-    setCreated(data as CreateResult);
-    setLabel("");
-    setArea("");
-    setInternalCode("");
-    await loadCards();
+      const result = data as CreateResult;
+      if (result.card_code && result.qr_url) {
+        result.qr_url = getCardPublicUrl(result.qr_url, result.card_code);
+        result.nfc_url = result.qr_url;
+      }
+      setCreated(result);
+      setLabel("");
+      setArea("");
+      setInternalCode("");
+      await loadCards();
+    } catch { if (currentAccount.current === account) setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi."); }
+    finally { createBusy.current = false; setCreating(false); }
   }
 
   async function copyText(value?: string, label?: string) {
     if (!value) return;
-    await navigator.clipboard.writeText(value);
-    setCopied(label || "Tersalin");
+    try { await navigator.clipboard.writeText(value); setCopied(label || tr("Tersalin")); }
+    catch { setCopied(tr("Belum dapat menyalin. Salin teks secara manual.", "Unable to copy. Copy the text manually.")); }
     window.setTimeout(() => setCopied(""), 1800);
   }
 
   async function resetActivationPin(card: ProviderCard) {
+    if (resetBusy.current || !userEmail || providerAllowed !== true) return;
+    const account = userEmail;
     const confirmed = window.confirm(
-      `Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`
+      tr(`Reset PIN aktivasi untuk ${card.card_code}? PIN lama akan langsung tidak berlaku.`, `Reset the activation PIN for ${card.card_code}? The old PIN will stop working immediately.`)
     );
 
     if (!confirmed) return;
 
+    resetBusy.current = true;
     setResetPinError("");
     setResetPinResult(null);
     setResettingCardId(card.id);
 
-    const { data, error } = await supabase.rpc(
-      "v3_provider_reset_activation_pin",
-      {
-        p_card_id: card.id,
+    try {
+      const { data, error } = await supabase.rpc(
+        "v3_provider_reset_activation_pin",
+        {
+          p_card_id: card.id,
+        }
+      );
+
+      if (currentAccount.current !== account) return;
+
+      if (error) {
+        console.error("Provider PIN reset failed", error);
+        setResetPinError("PIN belum dapat direset. Silakan coba lagi.");
+        return;
       }
-    );
 
-    setResettingCardId(null);
+      if (!data?.success) {
+        console.error("Provider PIN reset returned unsuccessful result", data);
+        setResetPinError("PIN belum dapat direset untuk kartu ini.");
+        return;
+      }
 
-    if (error) {
-      setResetPinError(error.message);
-      return;
-    }
+      setResetPinResult(data as ResetPinResult);
+      await loadCards();
+    } catch { if (currentAccount.current === account) setResetPinError("PIN belum dapat direset. Silakan coba lagi."); }
+    finally { resetBusy.current = false; setResettingCardId(null); }
+  }
 
-    if (!data?.success) {
-      setResetPinError(data?.message ?? "Gagal mereset PIN.");
-      return;
-    }
-
-    setResetPinResult(data as ResetPinResult);
-    await loadCards();
+  function cardDeleted(id: string) {
+    listSequence.current++; setLoadingCards(false);
+    setCards(current => current.filter(card => card.id !== id));
+    setCreated(current => current?.card_id === id ? null : current);
+    setResetPinResult(current => current?.card_id === id ? null : current);
+    setDeleteMessage(tr("Kartu berhasil dihapus dari inventori.", "Card removed from inventory."));
   }
 
   const stats = useMemo(() => {
@@ -301,6 +345,7 @@ export default function ProviderCardsPage() {
           }}
         >
           <div>
+            <div style={{ marginBottom: 10 }}><LanguageSwitcher /></div>
             <div
               style={{
                 fontSize: 12,
@@ -309,29 +354,48 @@ export default function ProviderCardsPage() {
                 color: "#6b7280",
               }}
             >
-              ULASANTOKO PROVIDER
+              YUKREVIEW PROVIDER
             </div>
-            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>Card Factory</h1>
+            <h1 style={{ margin: "5px 0 0", fontSize: 30 }}>{tr("Pusat Kartu")}</h1>
             <p style={{ margin: "7px 0 0", color: "#6b7280" }}>
-              Produksi kartu QR + NFC siap jual sebelum diaktivasi customer.
+              {tr("Produksi kartu QR + NFC siap jual sebelum diaktifkan pemilik bisnis.")}
             </p>
           </div>
 
           {userEmail && (
-            <button
-              type="button"
-              onClick={handleLogout}
-              style={{
-                ...buttonStyle,
-                background: "#ffffff",
-                color: "#111827",
-                border: "1px solid #d1d5db",
-              }}
-            >
-              Logout
-            </button>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {providerAllowed && <Link href="/provider/security" style={{ ...buttonStyle, textDecoration: "none" }}>{tr("Keamanan 2FA", "2FA Security")}</Link>}
+              {providerAllowed && (
+                <Link
+                  href="/access"
+                  style={{
+                    ...buttonStyle,
+                    background: "#ffffff",
+                    color: "#111827",
+                    border: "1px solid #d1d5db",
+                    textDecoration: "none",
+                  }}
+                >
+                  {tr("Menu Akses")}
+                </Link>
+              )}
+              <button
+                type="button"
+                onClick={handleLogout}
+                style={{
+                  ...buttonStyle,
+                  background: "#ffffff",
+                  color: "#111827",
+                  border: "1px solid #d1d5db",
+                }}
+              >
+                Keluar
+              </button>
+            </div>
           )}
         </header>
+        {providerAllowed && <GoogleQuotaPanel />}
+        {providerAllowed && <ProviderBusinessTerms key={userEmail} />}
 
         {!userEmail ? (
           <section
@@ -343,12 +407,12 @@ export default function ProviderCardsPage() {
               padding: 22,
             }}
           >
-            <h2 style={{ marginTop: 0 }}>Login Provider</h2>
+            <h2 style={{ marginTop: 0 }}>{tr("Masuk Provider")}</h2>
             <form onSubmit={handleLogin} style={{ display: "grid", gap: 10 }}>
               <input
                 style={inputStyle}
                 type="email"
-                placeholder="Email provider"
+                placeholder={tr("Email provider")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -356,16 +420,16 @@ export default function ProviderCardsPage() {
               <input
                 style={inputStyle}
                 type="password"
-                placeholder="Password"
+                placeholder={tr("Password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
               <button style={buttonStyle} type="submit">
-                Login Provider
+                {tr("Masuk Provider")}
               </button>
             </form>
-            {loginError && <p style={{ color: "#b91c1c" }}>{loginError}</p>}
+            {loginError && <p style={{ color: "#b91c1c" }}>{tr(loginError)}</p>}
           </section>
         ) : providerAllowed === false ? (
           <section
@@ -377,10 +441,11 @@ export default function ProviderCardsPage() {
               color: "#991b1b",
             }}
           >
-            Akun <strong>{userEmail}</strong> tidak memiliki akses Provider.
+            {loadError ? <><p role="alert">{tr(loadError, "Provider access could not be verified. Please retry.")}</p><button type="button" onClick={checkProvider}>{tr("Coba lagi", "Retry")}</button></>
+              : <>{tr("Akun")} <strong>{userEmail}</strong> {tr("tidak memiliki akses provider.")}</>}
           </section>
         ) : providerAllowed === null ? (
-          <p>Memeriksa akses provider...</p>
+          <p>{tr("Memeriksa akses provider...")}</p>
         ) : (
           <>
             <section
@@ -392,9 +457,9 @@ export default function ProviderCardsPage() {
               }}
             >
               {[
-                ["Total Inventory", stats.total],
-                ["Ready to Sell", stats.ready],
-                ["Activated", stats.activated],
+                [tr("Total Kartu", "Total Cards"), stats.total],
+                [tr("Siap Dijual", "Ready to Sell"), stats.ready],
+                [tr("Sudah Diaktifkan", "Activated"), stats.activated],
               ].map(([name, value]) => (
                 <div
                   key={String(name)}
@@ -422,10 +487,9 @@ export default function ProviderCardsPage() {
                 marginBottom: 18,
               }}
             >
-              <h2 style={{ marginTop: 0 }}>Buat Kartu Baru</h2>
+              <h2 style={{ marginTop: 0 }}>{tr("Buat Kartu Baru")}</h2>
               <p style={{ color: "#6b7280", lineHeight: 1.5 }}>
-                Card Code dan PIN dibuat otomatis. PIN hanya ditampilkan setelah
-                kartu dibuat, jadi simpan/cetak bersama kartu fisik.
+                {tr("Kode Kartu dan PIN dibuat otomatis. PIN hanya ditampilkan setelah kartu dibuat, jadi simpan/cetak bersama kartu fisik.")}
               </p>
 
               <form
@@ -440,22 +504,22 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={label}
                   onChange={(e) => setLabel(e.target.value)}
-                  placeholder="Label (opsional)"
+                  placeholder={tr("Label (opsional)")}
                 />
                 <input
                   style={inputStyle}
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  placeholder="Area / batch (opsional)"
+                  placeholder={tr("Area / batch (opsional)")}
                 />
                 <input
                   style={inputStyle}
                   value={internalCode}
                   onChange={(e) => setInternalCode(e.target.value)}
-                  placeholder="Internal code / SKU (opsional)"
+                  placeholder={tr("Kode internal / SKU (opsional)")}
                 />
                 <button style={buttonStyle} type="submit" disabled={creating}>
-                  {creating ? "Membuat..." : "Generate Card"}
+                  {creating ? tr("Membuat...") : tr("Buat Kartu", "Create Card")}
                 </button>
               </form>
 
@@ -483,10 +547,10 @@ export default function ProviderCardsPage() {
                     border: "1px solid #bbf7d0",
                   }}
                 >
-                  <h3 style={{ marginTop: 0 }}>Kartu siap dijual ✅</h3>
+                  <h3 style={{ marginTop: 0 }}>{tr("Kartu siap dijual ✅")}</h3>
                   <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
-                    <div><strong>Card Code:</strong> {created.card_code}</div>
-                    <div><strong>PIN Aktivasi:</strong> {created.activation_pin}</div>
+                    <div><strong>{tr("Kode Kartu:")}</strong> {created.card_code}</div>
+                    <div><strong>{tr("PIN Aktivasi:")}</strong> {created.activation_pin}</div>
                     <div style={{ overflowWrap: "anywhere" }}>
                       <strong>QR / NFC URL:</strong> {created.qr_url}
                     </div>
@@ -503,16 +567,16 @@ export default function ProviderCardsPage() {
                     <button
                       type="button"
                       style={buttonStyle}
-                      onClick={() => copyText(created.card_code, "Card Code")}
+                      onClick={() => copyText(created.card_code, tr("Kode Kartu", "Card Code"))}
                     >
-                      Copy Card Code
+                      {tr("Salin Kode Kartu")}
                     </button>
                     <button
                       type="button"
                       style={buttonStyle}
                       onClick={() => copyText(created.activation_pin, "PIN")}
                     >
-                      Copy PIN
+                      {tr("Salin PIN")}
                     </button>
                     <button
                       type="button"
@@ -524,8 +588,12 @@ export default function ProviderCardsPage() {
                       }}
                       onClick={() => copyText(created.qr_url, "URL")}
                     >
-                      Copy URL
+                      {tr("Salin URL")}
                     </button>
+                    {created.card_code && created.qr_url && (
+                      <DownloadCardQr cardCode={created.card_code} url={created.qr_url} />
+                    )}
+                    {created.card_code && (created.nfc_url || created.qr_url) && <WriteCardNfc cardCode={created.card_code} url={(created.nfc_url || created.qr_url)!} />}
                   </div>
                 </div>
               )}
@@ -550,9 +618,9 @@ export default function ProviderCardsPage() {
                 }}
               >
                 <div>
-                  <h2 style={{ margin: 0 }}>Inventory</h2>
+                  <h2 style={{ margin: 0 }}>{tr("Inventori Kartu")}</h2>
                   <div style={{ color: "#6b7280", fontSize: 13, marginTop: 4 }}>
-                    Kartu provider, baik belum terjual maupun sudah aktif.
+                    {tr("Kartu provider, baik belum terjual maupun sudah aktif.")}
                   </div>
                 </div>
                 <button
@@ -565,7 +633,7 @@ export default function ProviderCardsPage() {
                     border: "1px solid #d1d5db",
                   }}
                 >
-                  Refresh
+                  {tr("Muat Ulang")}
                 </button>
               </div>
 
@@ -581,16 +649,16 @@ export default function ProviderCardsPage() {
                   style={inputStyle}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari card code, label, area, SKU, owner..."
+                  placeholder={tr("Cari kode kartu, label, area, SKU, pemilik bisnis...", "Search card code, label, area, SKU, owner...")}
                 />
                 <select
                   style={inputStyle}
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
-                  <option value="all">Semua status</option>
-                  <option value="ready_to_sell">Ready to Sell</option>
-                  <option value="activated">Activated</option>
+                  <option value="all">{tr("Semua status")}</option>
+                  <option value="ready_to_sell">{tr("Siap Dijual")}</option>
+                  <option value="activated">{tr("Sudah Diaktifkan")}</option>
                 </select>
               </div>
 
@@ -606,22 +674,22 @@ export default function ProviderCardsPage() {
                   }}
                 >
                   <div style={{ fontWeight: 900, marginBottom: 6 }}>
-                    PIN baru untuk {resetPinResult.card_code}
+                    {tr("PIN baru untuk")} {resetPinResult.card_code}
                   </div>
                   <div style={{ fontSize: 14, marginBottom: 10 }}>
-                    PIN Aktivasi: <strong>{resetPinResult.activation_pin}</strong>
+                    {tr("PIN Aktivasi:")} <strong>{resetPinResult.activation_pin}</strong>
                   </div>
                   <div style={{ fontSize: 12, marginBottom: 10 }}>
-                    Simpan PIN ini sekarang. Setelah panel ini hilang, PIN tidak dapat dilihat kembali.
+                    {tr("Simpan PIN ini sekarang. Setelah panel ini hilang, PIN tidak dapat dilihat kembali.")}
                   </div>
                   <button
                     type="button"
                     style={buttonStyle}
                     onClick={() =>
-                      copyText(resetPinResult.activation_pin, "PIN baru")
+                      copyText(resetPinResult.activation_pin, tr("PIN baru"))
                     }
                   >
-                    Copy PIN Baru
+                    {tr("Salin PIN Baru")}
                   </button>
                 </div>
               )}
@@ -636,9 +704,11 @@ export default function ProviderCardsPage() {
                     color: "#991b1b",
                   }}
                 >
-                  {resetPinError}
+                  {tr(resetPinError)}
                 </div>
               )}
+
+              {deleteMessage && <p role="status" style={{ color: "#166534" }}>{deleteMessage}</p>}
 
               {copied && (
                 <div
@@ -652,7 +722,7 @@ export default function ProviderCardsPage() {
                     fontWeight: 800,
                   }}
                 >
-                  {copied} berhasil disalin.
+                  {copied} {tr("berhasil disalin.")}
                 </div>
               )}
 
@@ -666,17 +736,17 @@ export default function ProviderCardsPage() {
                     marginBottom: 12,
                   }}
                 >
-                  {loadError}
+                  {tr(loadError)}
                 </div>
               )}
 
               {loadingCards ? (
-                <p>Memuat inventory...</p>
+                <p>{tr("Memuat inventory...")}</p>
               ) : cards.length === 0 ? (
-                <div style={{ color: "#6b7280" }}>Belum ada inventory.</div>
+                <div style={{ color: "#6b7280" }}>{tr("Belum ada inventory.")}</div>
               ) : filteredCards.length === 0 ? (
                 <div style={{ color: "#6b7280" }}>
-                  Tidak ada kartu yang cocok dengan filter.
+                  {tr("Tidak ada kartu yang cocok dengan filter.")}
                 </div>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>
@@ -713,7 +783,7 @@ export default function ProviderCardsPage() {
                               marginTop: 3,
                             }}
                           >
-                            {card.label || "Tanpa label"}
+                            {card.label || tr("Tanpa label")}
                             {card.internal_code ? ` · ${card.internal_code}` : ""}
                           </div>
                         </div>
@@ -739,7 +809,11 @@ export default function ProviderCardsPage() {
                                   : "#1d4ed8",
                           }}
                         >
-                          {card.inventory_status.replaceAll("_", " ")}
+                          {card.inventory_status === "ready_to_sell"
+                            ? tr("Siap Dijual", "Ready to Sell")
+                            : card.inventory_status === "activated"
+                              ? tr("Sudah Diaktifkan", "Activated")
+                              : card.inventory_status}
                         </span>
                       </div>
 
@@ -752,14 +826,14 @@ export default function ProviderCardsPage() {
                           fontSize: 13,
                         }}
                       >
-                        <div><strong>Area:</strong> {card.area || "-"}</div>
+                        <div><strong>{tr("Area:")}</strong> {card.area || "-"}</div>
                         <div>
-                          <strong>QR:</strong> {card.qr_enabled ? "Ready" : "Off"}
+                          <strong>QR:</strong> {card.qr_enabled ? tr("Aktif", "Active") : tr("Nonaktif", "Inactive")}
                           {" · "}
-                          <strong>NFC:</strong> {card.nfc_enabled ? "Ready" : "Off"}
+                          <strong>NFC:</strong> {card.nfc_enabled ? tr("Aktif", "Active") : tr("Nonaktif", "Inactive")}
                         </div>
                         <div>
-                          <strong>Owner:</strong> {card.business_name || "Belum ada"}
+                          <strong>{tr("Pemilik:")}</strong> {card.business_name || tr("Belum ada", "None")}
                         </div>
                         <div style={{ overflowWrap: "anywhere" }}>
                           <strong>URL:</strong> {card.qr_url || "-"}
@@ -782,9 +856,9 @@ export default function ProviderCardsPage() {
                             color: "#111827",
                             border: "1px solid #d1d5db",
                           }}
-                          onClick={() => copyText(card.card_code, "Card Code")}
+                          onClick={() => copyText(card.card_code, tr("Kode Kartu", "Card Code"))}
                         >
-                          Copy Card Code
+                          {tr("Salin Kode Kartu")}
                         </button>
 
                         {card.inventory_status === "ready_to_sell" && (
@@ -800,8 +874,8 @@ export default function ProviderCardsPage() {
                             onClick={() => resetActivationPin(card)}
                           >
                             {resettingCardId === card.id
-                              ? "Resetting..."
-                              : "Reset PIN"}
+                              ? tr("Resetting...")
+                              : tr("Reset PIN")}
                           </button>
                         )}
 
@@ -817,8 +891,10 @@ export default function ProviderCardsPage() {
                               }}
                               onClick={() => copyText(card.qr_url ?? undefined, "QR/NFC URL")}
                             >
-                              Copy URL
+                              {tr("Salin URL")}
                             </button>
+                            <DownloadCardQr cardCode={card.card_code} url={card.qr_url} enabled={card.qr_enabled} />
+                            <WriteCardNfc cardCode={card.card_code} url={card.qr_url} enabled={card.nfc_enabled} />
                             <a
                               href={card.qr_url}
                               target="_blank"
@@ -829,10 +905,11 @@ export default function ProviderCardsPage() {
                                 textDecoration: "none",
                               }}
                             >
-                              Test Card
+                              {tr("Uji Kartu")}
                             </a>
                           </>
                         )}
+                        <DeleteProviderCard cardId={card.id} cardCode={card.card_code} onDeleted={cardDeleted} />
                       </div>
                     </article>
                   ))}
