@@ -88,3 +88,43 @@
 .yr-footer .yr-logo-y{font-size:31px}
 @media(max-width:950px){.yr-hero{gap:24px;min-height:0}.yr-hero h1{font-size:clamp(38px,5vw,55px)}.yr-product-card{max-width:340px}.yr-product-card h2{font-size:28px}}
 @media(max-width:680px){.yr-nav{padding:17px 0}.yr-logo-y{font-size:29px;margin-right:7px}.yr-home .yr-brand-word{font-size:20px!important}.yr-brand-spark{width:8px;height:8px;margin-bottom:16px}.yr-nav nav{gap:9px}.yr-home .yr-small{font-size:11px}.yr-hero{padding:48px 0 45px;gap:20px}.yr-hero h1{font-size:clamp(37px,9.2vw,49px);letter-spacing:-1.7px}.yr-illustration{min-height:360px;max-width:390px;padding:25px 12px 40px}.yr-orbit{max-width:330px}.yr-product-card{max-width:320px;min-height:0;padding:23px}.yr-product-card h2{font-size:25px}.yr-card-kicker{margin-top:18px}.yr-stars{font-size:21px}.yr-floating-note{bottom:0;right:1%;padding:10px 12px}.yr-float-badge{right:0;top:2%;font-size:9px}.yr-section{padding:55px 0}.yr-section-head h2{letter-spacing:-.9px}.yr-feature{padding:20px}.yr-how{padding:27px 22px}.yr-footer .yr-logo-y{font-size:27px}}
+
+
+/* Mobile layout hotfix: keep copy and card in separate stacked rows. */
+@media(max-width:900px){
+  .yr-home .yr-hero{display:grid;grid-template-columns:minmax(0,1fr);gap:32px;min-height:0}
+  .yr-home .yr-hero-copy,.yr-home .yr-illustration{min-width:0;width:100%;max-width:100%}
+  .yr-home .yr-hero-copy{position:relative;z-index:2}
+  .yr-home .yr-illustration{position:relative;grid-column:1;grid-row:auto;z-index:1;margin:0 auto;overflow:visible}
+  .yr-home .yr-hero h1,.yr-home .yr-lead{max-width:100%;overflow-wrap:normal;word-break:normal}
+}
+@media(max-width:680px){
+  .yr-home{padding-left:6%;padding-right:6%}
+  .yr-home .yr-nav{gap:12px;min-height:70px}
+  .yr-home .yr-nav nav{margin-left:auto;flex-shrink:0}
+  .yr-home .yr-hero{display:flex;flex-direction:column;align-items:stretch;gap:38px;padding:42px 0 52px}
+  .yr-home .yr-hero-copy{width:100%;order:0}
+  .yr-home .yr-eyebrow{max-width:100%;font-size:10px;line-height:1.6;letter-spacing:1.15px}
+  .yr-home .yr-hero h1{font-size:clamp(34px,9vw,43px);line-height:1.14;letter-spacing:-1.5px;margin:20px 0 18px;overflow-wrap:normal;word-break:normal}
+  .yr-home .yr-lead{max-width:100%;font-size:14px;line-height:1.75}
+  .yr-home .yr-hero-actions{gap:15px;margin-top:24px}
+  .yr-home .yr-helper{max-width:100%;margin-top:20px;line-height:1.6}
+  .yr-home .yr-illustration{order:1;width:100%;max-width:350px;min-height:340px;box-sizing:border-box;padding:20px 12px 38px;align-self:center}
+  .yr-home .yr-orbit{width:88%;max-width:310px;aspect-ratio:1;max-height:310px}
+  .yr-home .yr-hero-halo{inset:7% 10%}
+  .yr-home .yr-product-card{box-sizing:border-box;width:90%;max-width:300px;transform:rotate(-5deg);padding:20px 21px 19px;min-height:255px}
+  .yr-home .yr-product-card h2{font-size:24px;line-height:1.24}
+  .yr-home .yr-card-top{font-size:19px}
+  .yr-home .yr-stars{font-size:19px;letter-spacing:5px}
+  .yr-home .yr-floating-note{right:0;bottom:0;max-width:75%;box-sizing:border-box}
+  .yr-home .yr-float-badge{right:0;top:0}
+  .yr-home .yr-feature-grid{grid-template-columns:minmax(0,1fr)}
+  .yr-home .yr-feature{padding:22px}
+  .yr-home .yr-benefits{margin-top:0}
+}
+@media(max-width:360px){
+  .yr-home .yr-nav .yr-brand-word{font-size:18px!important}
+  .yr-home .yr-small{padding:9px;font-size:10px}
+  .yr-home .yr-hero h1{font-size:33px}
+  .yr-home .yr-floating-note{max-width:80%}
+}
