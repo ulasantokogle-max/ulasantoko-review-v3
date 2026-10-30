@@ -31,7 +31,7 @@ const now = Date.now();
 const good = {
   providerActive: true, providerAal2: true, ownerApproved: true,
   providerMatches: true, businessMatches: true, sessionActive: true,
-  revoked: false, sessionExpiresAtMs: now + 1000, nowMs: now,
+  revoked: false, sessionStartedAtMs: now, sessionExpiresAtMs: now + 1000, nowMs: now,
   businessActive: true, businessTermWritable: true,
   requestedScopes: ["landing.text"], approvedScopes: ["landing.text"],
 };
@@ -43,6 +43,10 @@ for (const key of ["providerActive", "providerAal2", "ownerApproved", "providerM
 assert.equal(permissions.canEditSupportScope({ ...good, revoked: true }, "landing.text"), false);
 assert.equal(permissions.canEditSupportScope({ ...good, sessionExpiresAtMs: now }, "landing.text"), false);
 assert.equal(permissions.canEditSupportScope({ ...good, approvedScopes: [] }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, sessionStartedAtMs: now + 1 }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, sessionExpiresAtMs: now + 30 * 60 * 1000 + 1 }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, sessionExpiresAtMs: now }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, sessionStartedAtMs: NaN }, "landing.text"), false);
 
 const routes = [
   "app/api/provider/support/requests/route.ts",
