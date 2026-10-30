@@ -36,6 +36,7 @@ export type SupportAuthorization = {
   businessMatches: boolean;
   sessionActive: boolean;
   revoked: boolean;
+  sessionStartedAtMs: number;
   sessionExpiresAtMs: number;
   nowMs: number;
   businessActive: boolean;
@@ -46,7 +47,10 @@ export type SupportAuthorization = {
 
 export function canEditSupportScope(context: SupportAuthorization, scope: unknown): boolean {
   if (!isSupportScope(scope)) return false;
-  if (!Number.isFinite(context.nowMs) || !Number.isFinite(context.sessionExpiresAtMs)) return false;
+  if (!Number.isFinite(context.nowMs) || !Number.isFinite(context.sessionStartedAtMs) || !Number.isFinite(context.sessionExpiresAtMs)) return false;
+  if (context.sessionStartedAtMs > context.nowMs) return false;
+  if (context.sessionExpiresAtMs <= context.sessionStartedAtMs) return false;
+  if (context.sessionExpiresAtMs - context.sessionStartedAtMs > 30 * 60 * 1000) return false;
   return context.providerActive && context.providerAal2 && context.ownerApproved &&
     context.providerMatches && context.businessMatches && context.sessionActive &&
     !context.revoked && context.sessionExpiresAtMs > context.nowMs &&
