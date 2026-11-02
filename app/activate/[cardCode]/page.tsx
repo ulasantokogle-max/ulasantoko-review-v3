@@ -22,6 +22,8 @@ export default function ActivateCardPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -88,6 +90,7 @@ export default function ActivateCardPage() {
   async function handleAuth(event: FormEvent) {
     event.preventDefault();
     if (authLoading) return;
+    if (mode === "signup" && password !== confirmPassword) { setAuthError("Konfirmasi password tidak cocok."); return; }
     setAuthLoading(true); setAuthError(""); setAuthMessage("");
     try {
       if (mode === "login") {
@@ -100,11 +103,25 @@ export default function ActivateCardPage() {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo } });
       if (error) { setAuthError("Akun belum dapat dibuat. Periksa data lalu coba lagi."); return; }
       setPassword("");
+      setConfirmPassword("");
       setAuthMessage(!data.session
         ? tr("Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini.")
         : tr("Akun berhasil dibuat dan Anda sudah masuk.", "Account created and you are signed in."));
     } catch {
       setAuthError(tr("Koneksi belum berhasil. Silakan coba lagi.", "Connection failed. Please try again."));
+    } finally { setAuthLoading(false); }
+  }
+
+  async function handleGoogleLogin() {
+    if (authLoading) return;
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const redirectTo = new URL("/activate/" + encodeURIComponent(cardCode), window.location.origin).toString();
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+      if (error) setAuthError("Login Google belum tersedia. Silakan gunakan email.");
+    } catch {
+      setAuthError("Login Google gagal. Silakan coba lagi.");
     } finally { setAuthLoading(false); }
   }
 
@@ -129,6 +146,7 @@ export default function ActivateCardPage() {
       setActivationError("");
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
       setAuthMessage("");
       setMode("signup");
 
@@ -349,7 +367,7 @@ export default function ActivateCardPage() {
               />
               <input
                 style={inputStyle}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 autoComplete={mode === "signup" ? "new-password" : "current-password"}
                 placeholder={tr("Password minimal 6 karakter")}
                 value={password}
@@ -357,6 +375,16 @@ export default function ActivateCardPage() {
                 minLength={6}
                 required
               />
+              {mode === "signup" && (
+                <input style={inputStyle} type={showPassword ? "text" : "password"}
+                  autoComplete="new-password" placeholder="Konfirmasi password"
+                  value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6} required />
+              )}
+              <button type="button" style={{ ...buttonStyle, background: "#f3f4f6", color: "#111827" }}
+                onClick={() => setShowPassword(v => !v)}>
+                {showPassword ? "Sembunyikan password" : "Lihat password"}
+              </button>
               <button style={buttonStyle} type="submit" disabled={authLoading}>
                 {authLoading
                   ? tr("Memproses...")
@@ -366,6 +394,10 @@ export default function ActivateCardPage() {
               </button>
             </form>
 
+            <button type="button" disabled={authLoading} onClick={handleGoogleLogin}
+              style={{ ...buttonStyle, width: "100%", marginTop: 12, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>
+              Lanjutkan dengan Google
+            </button>
             {mode === "login" && <a href="/forgot-password" style={{display:"block",textAlign:"right",marginTop:10,color:"#2563eb",fontSize:14,fontWeight:700,textDecoration:"none"}}>{tr("Lupa Password?", "Forgot Password?")}</a>}
             {authError && <p style={{ color: "#b91c1c" }}>{tr(authError)}</p>}
             {authMessage && (
