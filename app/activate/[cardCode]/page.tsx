@@ -117,7 +117,7 @@ export default function ActivateCardPage() {
     setAuthError("");
     setAuthLoading(true);
     try {
-      const redirectTo = new URL("/activate/" + encodeURIComponent(cardCode), window.location.origin).toString();
+      const redirectTo = new URL("/activate/" + encodeURIComponent(cardCode), "https://yukreview.id").toString();
       const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
       if (error) setAuthError("Login Google belum tersedia. Silakan gunakan email.");
     } catch {
