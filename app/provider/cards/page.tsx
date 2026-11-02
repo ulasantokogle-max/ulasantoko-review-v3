@@ -64,6 +64,9 @@ export default function ProviderCardsPage() {
   const [resettingCardId, setResettingCardId] = useState<string | null>(null);
   const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
   const [resetPinError, setResetPinError] = useState("");
+  const [resaleError, setResaleError] = useState("");
+  const [resaleResult, setResaleResult] = useState<ResetPinResult | null>(null);
+  const [resaleCardId, setResaleCardId] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -221,6 +224,32 @@ export default function ProviderCardsPage() {
     }
 
     setResetPinResult(data as ResetPinResult);
+    await loadCards();
+  }
+
+  async function resetCardForResale(card: ProviderCard) {
+    const owner = card.business_name || "bisnis sebelumnya";
+    const code = window.prompt(
+      `RESET KARTU ${card.card_code} dari ${owner}?\nAkses bisnis lama akan langsung terputus.\nKetik kode kartu untuk konfirmasi:`
+    );
+    if (code !== card.card_code) return;
+
+    setResaleError("");
+    setResaleResult(null);
+    setResaleCardId(card.id);
+    const { data, error } = await supabase.rpc("v3_provider_factory_reset_card", {
+      p_card_id: card.id,
+    });
+    setResaleCardId(null);
+    if (error) {
+      setResaleError(error.message);
+      return;
+    }
+    if (!data?.success) {
+      setResaleError(data?.message ?? "Reset kartu gagal.");
+      return;
+    }
+    setResaleResult(data as ResetPinResult);
     await loadCards();
   }
 
@@ -626,6 +655,16 @@ export default function ProviderCardsPage() {
                 </div>
               )}
 
+              {resaleResult?.success && (
+                <div style={{ marginBottom: 12, padding: 14, borderRadius: 12, background: "#f0fdf4", color: "#166534" }}>
+                  <strong>{resaleResult.card_code} — Siap Jual</strong>
+                  <p>PIN aktivasi baru: <strong>{resaleResult.activation_pin}</strong></p>
+                  <p style={{ fontSize: 12 }}>Simpan PIN baru sekarang. QR dan NFC tidak berubah.</p>
+                  <button type="button" style={buttonStyle} onClick={() => copyText(resaleResult.activation_pin, "PIN baru")}>Copy PIN Baru</button>
+                </div>
+              )}
+              {resaleError && <div role="alert" style={{ marginBottom: 12, padding: 12, color: "#991b1b", background: "#fef2f2" }}>{resaleError}</div>}
+
               {resetPinError && (
                 <div
                   style={{
@@ -786,6 +825,16 @@ export default function ProviderCardsPage() {
                         >
                           Copy Card Code
                         </button>
+
+                        {card.inventory_status === "activated" && (
+                          <button type="button"
+                            style={{ ...buttonStyle, background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca" }}
+                            disabled={resaleCardId === card.id}
+                            onClick={() => resetCardForResale(card)}
+                          >
+                            {resaleCardId === card.id ? "Mereset..." : "Reset Kartu → Siap Jual"}
+                          </button>
+                        )}
 
                         {card.inventory_status === "ready_to_sell" && (
                           <button
