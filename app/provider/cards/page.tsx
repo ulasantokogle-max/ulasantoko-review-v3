@@ -79,6 +79,10 @@ function ProviderCardsPageContent() {
   const [resettingCardId, setResettingCardId] = useState<string | null>(null);
   const [resetPinResult, setResetPinResult] = useState<ResetPinResult | null>(null);
   const [resetPinError, setResetPinError] = useState("");
+  const [resaleCardId, setResaleCardId] = useState<string | null>(null);
+  const [resaleResult, setResaleResult] = useState<ResetPinResult | null>(null);
+  const [resaleError, setResaleError] = useState("");
+  const resaleBusy = useRef(false);
   const [deleteMessage, setDeleteMessage] = useState("");
   const currentAccount = useRef(userEmail);
   currentAccount.current = userEmail;
@@ -266,6 +270,37 @@ function ProviderCardsPageContent() {
     setCreated(current => current?.card_id === id ? null : current);
     setResetPinResult(current => current?.card_id === id ? null : current);
     setDeleteMessage(tr("Kartu berhasil dihapus dari inventori.", "Card removed from inventory."));
+  }
+
+  async function resetCardForResale(card: ProviderCard) {
+    if (resaleBusy.current || !userEmail || providerAllowed !== true) return;
+    const account = userEmail;
+    const entered = window.prompt(
+      tr(
+        `Reset kartu ${card.card_code} dari ${card.business_name || "bisnis sebelumnya"}? Kartu akan dilepas dan siap dijual kembali. Masukkan kode kartu untuk konfirmasi:`,
+        `Release ${card.card_code} from ${card.business_name || "previous business"} for resale? Type the card code to confirm:`
+      )
+    );
+    if (entered !== card.card_code) return;
+    resaleBusy.current = true;
+    setResaleCardId(card.id);
+    setResaleResult(null);
+    setResaleError("");
+    try {
+      const { data, error } = await supabase.rpc("v3_provider_factory_reset_card", { p_card_id: card.id });
+      if (currentAccount.current !== account) return;
+      if (error || !data?.success) {
+        setResaleError(tr("Reset kartu gagal. Coba lagi.", "Card reset failed. Please try again."));
+        return;
+      }
+      setResaleResult(data as ResetPinResult);
+      await loadCards();
+    } catch {
+      if (currentAccount.current === account) setResaleError(tr("Reset kartu gagal. Coba lagi.", "Card reset failed. Please try again."));
+    } finally {
+      resaleBusy.current = false;
+      setResaleCardId(null);
+    }
   }
 
   const stats = useMemo(() => {
@@ -694,6 +729,15 @@ function ProviderCardsPageContent() {
                 </div>
               )}
 
+              {resaleResult?.success && (
+                <div role="status" style={{ padding: 14, marginBottom: 12, borderRadius: 12, background: "#f0fdf4", color: "#166534" }}>
+                  <strong>{resaleResult.card_code} — {tr("Siap Dijual", "Ready to Sell")}</strong>
+                  <p>{tr("PIN aktivasi baru:", "New activation PIN:")} <strong>{resaleResult.activation_pin}</strong></p>
+                  <button type="button" style={buttonStyle} onClick={() => copyText(resaleResult.activation_pin, tr("PIN Baru", "New PIN"))}>{tr("Salin PIN Baru", "Copy New PIN")}</button>
+                </div>
+              )}
+              {resaleError && <div role="alert" style={{ marginBottom: 12, padding: 12, background: "#fef2f2", color: "#991b1b" }}>{resaleError}</div>}
+
               {resetPinError && (
                 <div
                   style={{
@@ -860,6 +904,15 @@ function ProviderCardsPageContent() {
                         >
                           {tr("Salin Kode Kartu")}
                         </button>
+
+                        {card.inventory_status === "activated" && (
+                          <button type="button"
+                            style={{ ...buttonStyle, background: "#fee2e2", color: "#991b1b", border: "1px solid #fecaca" }}
+                            disabled={resaleCardId === card.id}
+                            onClick={() => resetCardForResale(card)}>
+                            {resaleCardId === card.id ? tr("Mereset...", "Resetting...") : tr("Reset Kartu → Siap Jual", "Reset Card → Ready to Sell")}
+                          </button>
+                        )}
 
                         {card.inventory_status === "ready_to_sell" && (
                           <button
