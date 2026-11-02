@@ -230,7 +230,7 @@ export default function ProviderCardsPage() {
   async function resetCardForResale(card: ProviderCard) {
     const owner = card.business_name || "bisnis sebelumnya";
     const code = window.prompt(
-      `RESET KARTU ${card.card_code} dari ${owner}?\\nAkses bisnis lama akan langsung terputus.\\nKetik kode kartu untuk konfirmasi:`
+      `RESET KARTU ${card.card_code} dari ${owner}?\nAkses bisnis lama akan langsung terputus.\nKetik kode kartu untuk konfirmasi:`
     );
     if (code !== card.card_code) return;
 
