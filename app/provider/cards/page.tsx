@@ -237,7 +237,7 @@ export default function ProviderCardsPage() {
     setResaleError("");
     setResaleResult(null);
     setResaleCardId(card.id);
-    const { data, error } = await supabase.rpc("v3_provider_reset_card_for_resale", {
+    const { data, error } = await supabase.rpc("v3_provider_factory_reset_card", {
       p_card_id: card.id,
     });
     setResaleCardId(null);
