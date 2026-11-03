@@ -20,16 +20,9 @@ function orderLink(name: string, sides: number, price: number) {
   return "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
 }
 function Brand() {
-  return <span className="yr-logo" aria-label="YukReview.id">
-    <svg viewBox="0 0 64 68" width="48" height="50" role="img" aria-label="Ikon ulasan YukReview">
-      <defs><linearGradient id="yrbubble" x1="0" x2="1" y1="1" y2="0"><stop stopColor="#03b8e7"/><stop offset="1" stopColor="#0860f7"/></linearGradient></defs>
-      <path d="M43 15C46 7 52 5 59 11" stroke="#0869fa" strokeWidth="4" strokeLinecap="round" fill="none"/>
-      <path d="M45 7C53 0 59 2 63 7" stroke="#0869fa" strokeWidth="4" strokeLinecap="round" fill="none"/>
-      <path d="M6 32C6 19 16 10 29 10h8c15 0 24 10 24 24v5c0 16-12 25-26 25H21L8 67l3-15C8 47 6 40 6 32Z" fill="url(#yrbubble)"/>
-      <path d="m33 19 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z" fill="white"/>
-    </svg><span className="yr-word"><b>Yuk</b><strong>Review</strong><b>.id</b></span>
-  </span>;
+  return <span className="yr-logo"><img src="/yukreview-logo.png" width={240} height={71} alt="YukReview.id" /></span>;
 }
+
 const features = [
   { icon:"✦", name:"Lebih mudah meminta ulasan", desc:"Pelanggan cukup tap NFC atau scan QR untuk menuju ulasan Google bisnis Anda." },
   { icon:"◈", name:"Tanpa aplikasi tambahan", desc:"Cukup gunakan kamera ponsel atau fitur NFC yang tersedia." },
