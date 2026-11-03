@@ -46,7 +46,17 @@ export default function Home() {
   <header className="yr-header"><div className="yr-container yr-nav"><a href="/" aria-label="Beranda YukReview"><Brand /></a><nav aria-label="Navigasi"><a href="#keunggulan">Keunggulan</a><a href="#cara-kerja">Cara Kerja</a><a href="#paket">Paket & Harga</a><a href="#faq">FAQ</a></nav><a className="yr-nav-cta" href="/dashboard">Masuk Dashboard ↗</a></div></header>
   <section className="yr-hero" id="beranda"><div className="yr-container yr-hero-grid">
    <div><span className="yr-pill">KARTU REVIEW GOOGLE · NFC + QR CODE</span><h1>Ulasan Google jadi <em>lebih mudah.</em><br/>Bisnis makin dipercaya.</h1><p className="yr-lead">Permudah pelanggan memberikan ulasan Google hanya dengan <b>tap NFC atau scan QR Code.</b> Pilih akses langsung atau Smart Landing dengan halaman bisnis profesional.</p><div className="yr-actions"><a className="yr-primary" href="#paket">Lihat Paket & Harga <span>↗</span></a><a className="yr-outline" href="#cara-kerja">Cara Kerja ↓</a></div><div className="yr-mini"><span>✓ Tanpa aplikasi tambahan</span><span>✓ QR + NFC</span><span>✓ Cocok untuk berbagai bisnis</span></div></div>
-   <div className="yr-art" aria-label="Ilustrasi kartu NFC dan QR YukReview"><div className="yr-art-circle"></div><div className="yr-stand"><div className="yr-stand-top"><Brand/><span className="yr-nfc-icon">◉</span></div><div className="yr-stand-center"><span className="yr-big-g">G</span><div className="yr-art-stars">★★★★★</div><strong>Bagikan pengalaman Anda!</strong><span>Scan QR atau tap NFC</span></div><div className="yr-art-bottom"><span className="yr-qr" aria-label="Ilustrasi QR, bukan kode aktif">▦</span><span>SCAN QR<br/><small>ATAU TAP NFC</small></span><span className="yr-nfc-waves">)))</span></div></div><div className="yr-art-chip">✦ <b>Satu kartu</b><span>Dua cara akses</span></div></div>
+   <div className="yr-poster-display" aria-label="Desain poster Google Review YukReview versi terang dan gelap">
+      <div className="yr-poster-item yr-poster-item-light">
+        <div className="yr-poster-image yr-poster-image-light" role="img" aria-label="Poster YukReview putih dengan QR Code, NFC, dan lima bintang"></div>
+        <span>Clean White</span>
+      </div>
+      <div className="yr-poster-item yr-poster-item-dark">
+        <div className="yr-poster-image yr-poster-image-dark" role="img" aria-label="Poster YukReview navy gelap dengan QR Code, NFC, dan lima bintang"></div>
+        <span>Dark Premium</span>
+      </div>
+      <p className="yr-poster-hint">Visual contoh desain. QR pada gambar bukan QR kartu yang diaktivasi.</p>
+    </div>
   </div></section>
   <div className="yr-trust"><div className="yr-container">Didesain untuk <b>Kafe & Restoran</b> · <b>Hotel</b> · <b>Salon</b> · <b>Toko Retail</b> · <b>Bisnis Layanan</b></div></div>
   <section className="yr-section yr-container" id="keunggulan"><div className="yr-center"><span className="yr-kicker">KENAPA YUKREVIEW?</span><h2>Lebih praktis untuk pelanggan.<br/><span>Lebih profesional untuk bisnis.</span></h2><p>Hubungkan pengalaman offline di meja kasir dengan ulasan dan informasi bisnis online.</p></div><div className="yr-feature-grid">{features.map(f=><article key={f.name} className="yr-feature"><div className="yr-feature-icon">{f.icon}</div><h3>{f.name}</h3><p>{f.desc}</p></article>)}</div></section>
