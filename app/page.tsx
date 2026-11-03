@@ -9,83 +9,62 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   openGraph: {
     type: "website", url: YUKREVIEW_SITE_URL, siteName: "YukReview",
-    title: YUKREVIEW_SEARCH_TITLE, description: YUKREVIEW_SEARCH_DESCRIPTION, locale: "id_ID",
+    title: YUKREVIEW_SEARCH_TITLE, description: YUKREVIEW_SEARCH_DESCRIPTION, locale: "id_ID"
   },
-  twitter: { card: "summary", title: YUKREVIEW_SEARCH_TITLE, description: YUKREVIEW_SEARCH_DESCRIPTION },
+  twitter: { card: "summary", title: YUKREVIEW_SEARCH_TITLE, description: YUKREVIEW_SEARCH_DESCRIPTION }
 };
 
+const phone = "6281382189991";
+function orderLink(name: string, sides: number, price: number) {
+  const message = `Halo YukReview, saya ingin pesan ${name} ${sides} sisi dengan harga Rp${price.toLocaleString("id-ID")}. Mohon info pemesanan.`;
+  return "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+}
+function Brand() {
+  return <span className="yr-logo" aria-label="YukReview.id">
+    <svg viewBox="0 0 64 68" width="48" height="50" role="img" aria-label="Ikon ulasan YukReview">
+      <defs><linearGradient id="yrbubble" x1="0" x2="1" y1="1" y2="0"><stop stopColor="#03b8e7"/><stop offset="1" stopColor="#0860f7"/></linearGradient></defs>
+      <path d="M43 15C46 7 52 5 59 11" stroke="#0869fa" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      <path d="M45 7C53 0 59 2 63 7" stroke="#0869fa" strokeWidth="4" strokeLinecap="round" fill="none"/>
+      <path d="M6 32C6 19 16 10 29 10h8c15 0 24 10 24 24v5c0 16-12 25-26 25H21L8 67l3-15C8 47 6 40 6 32Z" fill="url(#yrbubble)"/>
+      <path d="m33 19 5 10 11 2-8 8 2 11-10-5-10 5 2-11-8-8 11-2Z" fill="white"/>
+    </svg><span className="yr-word"><b>Yuk</b><strong>Review</strong><b>.id</b></span>
+  </span>;
+}
 const features = [
-  ["01", "Ulasan Google lebih mudah", "Arahkan pelanggan ke halaman ulasan Google melalui satu kartu. Pelanggan tetap bebas memberikan ulasan sesuai pengalamannya."],
-  ["02", "Satu halaman untuk bisnis", "Tampilkan menu PDF, WhatsApp, Instagram, TikTok, dan YouTube. Pilih tombol yang sesuai dengan kebutuhan bisnis."],
-  ["03", "Kelola lewat dashboard", "Atur nama bisnis, logo, cover, tema, dan tautan. Pembaruan halaman berlaku pada kartu yang terhubung ke bisnis tersebut."],
-  ["04", "Masukan privat sebagai pilihan", "Pelanggan dapat mengirim masukan langsung kepada bisnis melalui pilihan terpisah, tanpa wajib mengisinya sebelum menuju Google."],
+  { icon:"✦", name:"Lebih mudah meminta ulasan", desc:"Pelanggan cukup tap NFC atau scan QR untuk menuju ulasan Google bisnis Anda." },
+  { icon:"◈", name:"Tanpa aplikasi tambahan", desc:"Cukup gunakan kamera ponsel atau fitur NFC yang tersedia." },
+  { icon:"▣", name:"Tampilan bisnis profesional", desc:"Paket Smart Landing menampilkan logo, cover, kontak, dan tautan bisnis dalam satu halaman." },
+  { icon:"↗", name:"Bisa dikelola ulang", desc:"Perbarui informasi bisnis pada dashboard tanpa mencetak ulang kartu Smart Landing." }
 ];
-const steps = [
-  ["Aktivasi kartu", "Pemilik bisnis membuka QR atau NFC kartu, mendaftar atau masuk, lalu menyelesaikan aktivasi."],
-  ["Atur halaman bisnis", "Lengkapi profil dan tautan Google Review. Tambahkan menu, kontak, serta media sosial melalui dashboard."],
-  ["Pelanggan scan atau tap", "Pelanggan membuka halaman bisnis lewat QR atau NFC, lalu memilih Google Review atau informasi yang dibutuhkan."],
+const faqs = [
+  ["Apa perbedaan Direct Review dan Smart Landing?", "Direct Review membuka tautan ulasan Google secara langsung. Smart Landing membuka halaman YukReview yang berisi tautan ulasan dan informasi bisnis."],
+  ["Apakah pelanggan harus memasang aplikasi?", "Tidak. Untuk QR cukup gunakan kamera atau pembaca QR. Untuk tap NFC, gunakan ponsel yang mendukung NFC."],
+  ["Apakah ulasan dijamin bintang lima?", "Tidak. Pelanggan menulis ulasan secara sukarela sesuai pengalaman masing-masing."],
+  ["Apakah Smart Landing sudah termasuk tahun pertama?", "Ya. Harga pembelian Smart Landing mencakup layanan tahun pertama. Perpanjangan tahun berikutnya Rp59.000 per 12 bulan sesuai ketentuan layanan."],
+  ["Bagaimana cara aktivasi kartu?", "Setelah menerima kartu, scan QR atau tap NFC lalu ikuti proses aktivasi dan pengaturan bisnis sesuai petunjuk. Paket Direct Review disiapkan dengan tautan Google Review langsung."],
 ];
-const siteSchema = {
-  "@context": "https://schema.org", "@graph": [
-    { "@type": "WebSite", "@id": YUKREVIEW_SITE_URL + "/#website", name: "YukReview", alternateName: "YukReview Kartu Google Review", url: YUKREVIEW_SITE_URL, description: YUKREVIEW_SEARCH_DESCRIPTION, inLanguage: "id" },
-    { "@type": "Organization", "@id": YUKREVIEW_SITE_URL + "/#organization", name: "YukReview", url: YUKREVIEW_SITE_URL, description: "Platform kartu Google Review dengan QR dan NFC untuk bisnis.", email: "kontak@yukreview.id", contactPoint: { "@type": "ContactPoint", telephone: "+6281382189991", email: "kontak@yukreview.id", contactType: "customer service", availableLanguage: "Indonesian" } },
-  ],
-};
-
+const schema = {"@context":"https://schema.org","@graph":[
+  {"@type":"WebSite","name":"YukReview","url":YUKREVIEW_SITE_URL,"description":YUKREVIEW_SEARCH_DESCRIPTION,"inLanguage":"id"},
+  {"@type":"Organization","name":"YukReview","url":YUKREVIEW_SITE_URL,"email":"kontak@yukreview.id","contactPoint":{"@type":"ContactPoint","telephone":"+6281382189991","contactType":"customer service","availableLanguage":"Indonesian"}}
+]};
 export default function Home() {
-  return <main className="yr-home" lang="id">
-    <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema).replace(/</g, "\\u003c") }} />
-    <header className="yr-nav">
-      <a className="yr-brand" href="/" aria-label="YukReview beranda"><span className="yr-brand-art" aria-hidden="true"><svg className="yr-brand-symbol" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14H34L47 28L61 14H83L58 43L73 78H49L40 56L29 78H7L30 43L8 14Z" fill="#F32032"/><path d="M32 14L47 28L40 40L22 20L32 14Z" fill="#FF5A62"/><path d="M61 14L47 28L54 40L72 20L61 14Z" fill="#D90F26"/></svg><span className="yr-brand-word"><span className="yr-brand-yuk">Yuk</span><span className="yr-brand-review">Review</span></span><svg className="yr-brand-spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2162F" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg></span></a>
-      <nav aria-label="Navigasi utama"><a className="yr-nav-detail" href="#fitur">Fitur</a><a className="yr-nav-detail" href="#cara-kerja">Cara Kerja</a><a className="yr-nav-detail" href="#kontak">Kontak</a><a className="yr-button yr-small" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></nav>
-    </header>
-    <section className="yr-hero" aria-labelledby="yr-title">
-      <div className="yr-hero-copy">
-        <div className="yr-eyebrow"><span aria-hidden="true">✦</span> KARTU GOOGLE REVIEW · QR & NFC</div>
-        <h1 id="yr-title">Kartu Google Review.<br /><span>Satu tap, lebih dekat.</span></h1>
-        <p className="yr-lead">YukReview membantu pelanggan membuka ulasan Google dan informasi bisnis melalui kartu QR & NFC. Praktis untuk restoran, kafe, toko, hotel, dan bisnis layanan.</p>
-        <div className="yr-hero-actions"><a className="yr-button" href="#cara-kerja">Kenali Cara Kerjanya <span aria-hidden="true">↓</span></a><a className="yr-link" href="/dashboard">Kelola Kartu Saya <span aria-hidden="true">↗</span></a></div>
-        <p className="yr-helper">Sudah punya kartu? Scan QR atau tap NFC kartu untuk memulai aktivasi.</p>
-      </div>
-      <div className="yr-illustration" aria-label="Ilustrasi kartu Google Review YukReview">
-        <div className="yr-orbit" aria-hidden="true" />
-        <div className="yr-product-card">
-          <div className="yr-card-top"><strong>YukReview<span>.</span></strong><svg aria-hidden="true" width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M11 11a7 7 0 0 1 0 8M16 7a12 12 0 0 1 0 16M21 3a17 17 0 0 1 0 24" /></svg></div>
-          <div className="yr-stars" aria-hidden="true">★ ★ ★ ★ ★</div>
-          <h2>Pengalaman Anda<br />berarti bagi kami.</h2>
-          <div className="yr-card-bottom"><span>Scan QR atau tap NFC<br /><strong>Bagikan ulasan di Google</strong></span><span className="yr-card-arrow" aria-hidden="true">↗</span></div>
-        </div>
-        <div className="yr-floating-note"><span aria-hidden="true">✦</span><div><strong>QR & NFC</strong><span>Terhubung ke halaman bisnis</span></div></div>
-      </div>
-    </section>
-    <div className="yr-benefits" aria-label="Manfaat kartu"><span>Tanpa aplikasi khusus untuk pengunjung</span><span>Satu bisnis, banyak kartu</span><span>Tautan dan tampilan bisa diperbarui</span></div>
-    <section className="yr-section" id="fitur" aria-labelledby="yr-features-title">
-      <div className="yr-section-head"><span className="yr-eyebrow">LEBIH DARI SEKADAR KARTU</span><h2 id="yr-features-title">Ulasan, informasi, dan koneksi.<br />Dalam satu halaman bisnis.</h2></div>
-      <div className="yr-feature-grid">{features.map(([number, title, description]) => <article className="yr-feature" key={number}><span className="yr-number">{number}</span><h3>{title}</h3><p>{description}</p></article>)}</div>
-    </section>
-    <section className="yr-how" id="cara-kerja" aria-labelledby="yr-how-title">
-      <div className="yr-section-head"><span className="yr-eyebrow">DARI KARTU KE PELANGGAN</span><h2 id="yr-how-title">Mulai dengan tiga langkah.</h2></div>
-      <ol className="yr-step-grid">{steps.map(([title, description], index) => <li key={title}><span className="yr-step-number">{index + 1}</span><h3>{title}</h3><p>{description}</p></li>)}</ol>
-    </section>
-    <section className="yr-faq yr-section" aria-labelledby="yr-faq-title">
-      <div className="yr-section-head"><span className="yr-eyebrow">PERTANYAAN UMUM</span><h2 id="yr-faq-title">Kenali YukReview.</h2></div>
-      <details><summary>Apa itu kartu Google Review YukReview?</summary><p>Kartu fisik dengan QR dan NFC yang terhubung ke halaman bisnis. Pelanggan dapat membuka Google Review, kontak bisnis, menu PDF, dan media sosial melalui halaman tersebut.</p></details>
-      <details><summary>Apakah pelanggan harus memasang aplikasi?</summary><p>Tidak perlu aplikasi khusus YukReview. Pelanggan dapat scan QR menggunakan kamera atau pembaca QR, atau tap kartu pada ponsel yang mendukung NFC. Untuk mengirim ulasan Google, pelanggan mengikuti proses masuk akun Google.</p></details>
-      <details><summary>Apakah satu bisnis bisa menggunakan banyak kartu?</summary><p>Bisa. Beberapa kartu dapat diaktifkan dalam bisnis yang sama dan dikelola melalui satu dashboard bisnis.</p></details>
-      <details><summary>Apakah YukReview menjamin rating tertentu?</summary><p>Tidak. Ulasan dan rating berasal dari pengalaman pelanggan. Tombol Google Review tersedia tanpa penyaringan berdasarkan rating; masukan privat merupakan pilihan terpisah.</p></details>
-    </section>
-    <section className="yr-contact yr-section" id="kontak" aria-labelledby="yr-contact-title">
-      <div className="yr-section-head"><span className="yr-eyebrow">CUSTOMER SERVICE YUKREVIEW</span><h2 id="yr-contact-title">Butuh bantuan? Hubungi kami.</h2><p className="yr-contact-intro">Tanyakan kartu, aktivasi, atau pengelolaan halaman bisnis kepada tim YukReview.</p></div>
-      <div className="yr-contact-grid">
-        <a className="yr-contact-card" href="https://wa.me/6281382189991" target="_blank" rel="noopener noreferrer">
-          <span className="yr-eyebrow">WHATSAPP CUSTOMER SERVICE</span><strong>+62 813-8218-9991</strong><span className="yr-contact-action">Chat via WhatsApp <span aria-hidden="true">↗</span></span>
-        </a>
-        <a className="yr-contact-card" href="mailto:kontak@yukreview.id">
-          <span className="yr-eyebrow">EMAIL CUSTOMER SERVICE</span><strong>kontak@yukreview.id</strong><span className="yr-contact-action">Kirim Email <span aria-hidden="true">↗</span></span>
-        </a>
-      </div>
-    </section>
-    <section className="yr-cta"><div><span className="yr-eyebrow">SUDAH PUNYA KARTU YUKREVIEW?</span><h2>Halaman bisnis Anda,<br />kelola dari satu dashboard.</h2></div><a className="yr-button yr-button-light" href="/dashboard">Masuk Dashboard <span aria-hidden="true">↗</span></a></section>
-    <footer className="yr-footer"><span className="yr-brand"><span className="yr-brand-art" aria-hidden="true"><svg className="yr-brand-symbol" viewBox="0 0 92 92" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 14H34L47 28L61 14H83L58 43L73 78H49L40 56L29 78H7L30 43L8 14Z" fill="#F32032"/><path d="M32 14L47 28L40 40L22 20L32 14Z" fill="#FF5A62"/><path d="M61 14L47 28L54 40L72 20L61 14Z" fill="#D90F26"/></svg><span className="yr-brand-word"><span className="yr-brand-yuk">Yuk</span><span className="yr-brand-review">Review</span></span><svg className="yr-brand-spark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#F2162F" d="M12 0 15 9 24 12 15 15 12 24 9 15 0 12 9 9Z"/></svg></span></span><p>Kartu Google Review QR & NFC untuk bisnis.</p><div className="yr-footer-contact"><a href="https://wa.me/6281382189991" target="_blank" rel="noopener noreferrer">+62 813-8218-9991</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a></div><a href="/dashboard">Masuk akun</a></footer>
-  </main>;
+ return <main className="yr-home" lang="id">
+  <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(schema).replace(/</g,"\\u003c")}} />
+  <header className="yr-header"><div className="yr-container yr-nav"><a href="/" aria-label="Beranda YukReview"><Brand /></a><nav aria-label="Navigasi"><a href="#keunggulan">Keunggulan</a><a href="#cara-kerja">Cara Kerja</a><a href="#paket">Paket & Harga</a><a href="#faq">FAQ</a></nav><a className="yr-nav-cta" href="/dashboard">Masuk Dashboard ↗</a></div></header>
+  <section className="yr-hero" id="beranda"><div className="yr-container yr-hero-grid">
+   <div><span className="yr-pill">KARTU REVIEW GOOGLE · NFC + QR CODE</span><h1>Ulasan Google jadi <em>lebih mudah.</em><br/>Bisnis makin dipercaya.</h1><p className="yr-lead">Permudah pelanggan memberikan ulasan Google hanya dengan <b>tap NFC atau scan QR Code.</b> Pilih akses langsung atau Smart Landing dengan halaman bisnis profesional.</p><div className="yr-actions"><a className="yr-primary" href="#paket">Lihat Paket & Harga <span>↗</span></a><a className="yr-outline" href="#cara-kerja">Cara Kerja ↓</a></div><div className="yr-mini"><span>✓ Tanpa aplikasi tambahan</span><span>✓ QR + NFC</span><span>✓ Cocok untuk berbagai bisnis</span></div></div>
+   <div className="yr-art" aria-label="Ilustrasi kartu NFC dan QR YukReview"><div className="yr-art-circle"></div><div className="yr-stand"><div className="yr-stand-top"><Brand/><span className="yr-nfc-icon">◉</span></div><div className="yr-stand-center"><span className="yr-big-g">G</span><div className="yr-art-stars">★★★★★</div><strong>Bagikan pengalaman Anda!</strong><span>Scan QR atau tap NFC</span></div><div className="yr-art-bottom"><span className="yr-qr" aria-label="Ilustrasi QR, bukan kode aktif">▦</span><span>SCAN QR<br/><small>ATAU TAP NFC</small></span><span className="yr-nfc-waves">)))</span></div></div><div className="yr-art-chip">✦ <b>Satu kartu</b><span>Dua cara akses</span></div></div>
+  </div></section>
+  <div className="yr-trust"><div className="yr-container">Didesain untuk <b>Kafe & Restoran</b> · <b>Hotel</b> · <b>Salon</b> · <b>Toko Retail</b> · <b>Bisnis Layanan</b></div></div>
+  <section className="yr-section yr-container" id="keunggulan"><div className="yr-center"><span className="yr-kicker">KENAPA YUKREVIEW?</span><h2>Lebih praktis untuk pelanggan.<br/><span>Lebih profesional untuk bisnis.</span></h2><p>Hubungkan pengalaman offline di meja kasir dengan ulasan dan informasi bisnis online.</p></div><div className="yr-feature-grid">{features.map(f=><article key={f.name} className="yr-feature"><div className="yr-feature-icon">{f.icon}</div><h3>{f.name}</h3><p>{f.desc}</p></article>)}</div></section>
+  <section className="yr-section yr-how" id="cara-kerja"><div className="yr-container"><div className="yr-center"><span className="yr-kicker">MUDAH DIGUNAKAN</span><h2>Cukup tiga langkah.</h2></div><div className="yr-steps">{[["01","Aktivasi","Pemilik menghubungkan kartu dengan tujuan Google Review atau halaman bisnis."],["02","Tap NFC / Scan QR","Pelanggan mendekatkan ponsel atau memindai QR Code pada kartu."],["03","Beri Ulasan","Pelanggan menuliskan pengalaman secara jujur di Google."]].map(s=><div className="yr-step" key={s[0]}><span>{s[0]}</span><h3>{s[1]}</h3><p>{s[2]}</p></div>)}</div></div></section>
+  <section className="yr-section yr-container" id="paket"><div className="yr-center"><span className="yr-kicker">PAKET & HARGA</span><h2>Pilih sesuai kebutuhan bisnis.</h2><p>Dua pilihan solusi, dengan opsi desain satu atau dua sisi.</p></div><div className="yr-pricing">
+   <article className="yr-plan"><span className="yr-plan-type">PAKET 1</span><h3>Direct Google Review</h3><p>NFC dan QR langsung membuka halaman ulasan Google bisnis, tanpa website perantara.</p><div className="yr-plan-price">Mulai <strong>Rp65.000</strong></div><div className="yr-plan-options"><a href={orderLink("Direct Google Review",1,65000)} target="_blank" rel="noopener noreferrer"><span>1 Sisi</span><b>Rp65.000 ↗</b></a><a href={orderLink("Direct Google Review",2,75000)} target="_blank" rel="noopener noreferrer"><span>2 Sisi</span><b>Rp75.000 ↗</b></a></div><p className="yr-plan-note">Tanpa dashboard dan biaya langganan YukReview.</p></article>
+   <article className="yr-plan yr-plan-featured"><span className="yr-plan-type">PAKET 2 · SMART LANDING</span><h3>YukReview Smart Landing</h3><p>Halaman bisnis dengan Google Review, WhatsApp, media sosial, cover, dan katalog PDF sesuai konfigurasi.</p><div className="yr-plan-price">Mulai <strong>Rp95.000</strong></div><div className="yr-plan-options"><a href={orderLink("Smart Landing YukReview",1,95000)} target="_blank" rel="noopener noreferrer"><span>1 Sisi</span><b>Rp95.000 ↗</b></a><a href={orderLink("Smart Landing YukReview",2,125000)} target="_blank" rel="noopener noreferrer"><span>2 Sisi</span><b>Rp125.000 ↗</b></a></div><p className="yr-plan-note">Sudah termasuk tahun pertama; perpanjangan Rp59.000/tahun.</p></article>
+  </div><p className="yr-fine">Ulasan Google bersifat sukarela dan tidak dijamin menghasilkan rating atau jumlah ulasan tertentu. Harga belum termasuk ongkos kirim bila berlaku.</p></section>
+  <section className="yr-section yr-demo"><div className="yr-container yr-demo-layout"><div><span className="yr-kicker">KHUSUS SMART LANDING</span><h2>Satu halaman untuk semua informasi bisnis.</h2><p>Tampilkan identitas usaha, tombol Google Review, WhatsApp, media sosial, dan katalog dalam satu halaman responsif.</p><a className="yr-primary" href="#paket">Pilih Smart Landing ↗</a></div><div className="yr-phone"><div className="yr-phone-cover"></div><div className="yr-phone-mark">✦</div><h3>Bisnis Anda</h3><small>Halaman publik YukReview</small><div className="yr-phone-button">★ Beri Ulasan di Google</div><div className="yr-phone-whatsapp">Hubungi via WhatsApp</div><div className="yr-phone-social">Instagram · TikTok · YouTube</div></div></div></section>
+  <section className="yr-section yr-container yr-faq" id="faq"><div className="yr-center"><span className="yr-kicker">FAQ</span><h2>Pertanyaan yang sering diajukan.</h2></div>{faqs.map(f=><details key={f[0]}><summary>{f[0]}</summary><p>{f[1]}</p></details>)}</section>
+  <section className="yr-final" id="kontak"><div className="yr-container yr-final-inner"><div><span className="yr-kicker">SIAP MULAI?</span><h2>Bikin pelanggan lebih mudah<br/>memberikan ulasan Google.</h2><p>Hubungi tim YukReview untuk tanya paket dan pemesanan.</p></div><a className="yr-primary yr-final-button" href={"https://wa.me/"+phone+"?text="+encodeURIComponent("Halo YukReview, saya ingin tanya paket kartu NFC + QR.")} target="_blank" rel="noopener noreferrer">Chat WhatsApp Sekarang ↗</a></div></section>
+  <footer className="yr-footer"><div className="yr-container yr-footer-grid"><div><Brand/><p>Kartu Google Review NFC + QR Code untuk kebutuhan bisnis.</p></div><div><b>YukReview</b><a href="#keunggulan">Keunggulan</a><a href="#cara-kerja">Cara Kerja</a><a href="#paket">Paket & Harga</a></div><div><b>Kontak</b><a href="https://wa.me/6281382189991">+62 813-8218-9991</a><a href="mailto:kontak@yukreview.id">kontak@yukreview.id</a><a href="/dashboard">Dashboard Owner</a></div></div><div className="yr-container yr-copyright">© 2026 YukReview.id · Produk independen, tidak berafiliasi dengan Google.</div></footer>
+ </main>;
 }
