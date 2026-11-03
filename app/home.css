@@ -6,3 +6,16 @@
 .yr-stand .yr-logo{background:#ffffff;border-radius:7px;padding:3px 7px}
 .yr-footer .yr-logo img{width:207px;background:#ffffff;border-radius:8px;padding:5px 8px}
 @media(max-width:700px){.yr-logo img{width:176px}.yr-stand .yr-logo img{width:126px}.yr-footer .yr-logo img{width:185px}}
+
+/* Approved light/dark YukReview posters — isolated to homepage */
+.yr-poster-display{display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;position:relative;padding:18px 0}
+.yr-poster-item{border:1px solid #d9e8fb;background:#fff;padding:9px;border-radius:19px;box-shadow:0 20px 45px rgba(4,37,89,.15);min-width:0}
+.yr-poster-item-light{transform:rotate(-3deg) translateY(14px)}
+.yr-poster-item-dark{background:#071c42;border-color:#164f9b;transform:rotate(3deg) translateY(-8px)}
+.yr-poster-image{width:100%;aspect-ratio:1/1;background-image:url('/yukreview-posters.webp');background-repeat:no-repeat;background-size:200% 100%;border-radius:11px}
+.yr-poster-image-light{background-position:left center}
+.yr-poster-image-dark{background-position:right center}
+.yr-poster-item>span{display:block;text-align:center;font-size:12px;font-weight:800;color:#164b86;padding:9px 0 3px}
+.yr-poster-item-dark>span{color:#dcf2ff}
+.yr-poster-hint{grid-column:1/-1;text-align:center;font-size:11px;color:#617b9c;margin:13px 0 0}
+@media(max-width:700px){.yr-poster-display{gap:10px;padding:22px 0 0}.yr-poster-item{padding:6px;border-radius:12px}.yr-poster-image{border-radius:8px}.yr-poster-hint{font-size:10px}.yr-poster-item>span{font-size:10px}.yr-poster-item-light{transform:rotate(-2deg) translateY(8px)}.yr-poster-item-dark{transform:rotate(2deg)}}
