@@ -92,10 +92,9 @@ export default function Home() {
     <article className="yr-showcase-card yr-showcase-card-smart" aria-labelledby="yr-package-smart">
      <div className="yr-showcase-visual">
       <span className="yr-showcase-ribbon">PAKET 2 · SMART LANDING</span>
-      <div className="yr-smart-clean-mockup" aria-label="Ilustrasi mockup kartu YukReview Smart Landing Clean White HD">
-       <img src="/yukreview-smart-landing-clean-mockup-hd.webp" alt="Mockup kartu YukReview Smart Landing Clean White pada dudukan akrilik bening" width={1254} height={1254} loading="lazy" decoding="async" />
+      <div className="yr-smart-clean-mockup yr-smart-phone-mockup" aria-label="Ilustrasi HP Smart Landing YukReview dengan Google Review, feedback internal, dan ikon WhatsApp serta media sosial">
+       <img src="/yukreview-smart-landing-phone-mockup-hd.webp" alt="Mockup HP Smart Landing YukReview: Google Review, Feedback untuk Owner, kemudian WhatsApp, YouTube, Instagram dan TikTok sejajar" width={1024} height={1536} loading="lazy" decoding="async" />
       </div>
-      <span className="yr-mockup-caption">Contoh kartu Smart Landing Clean White HD · QR hanya ilustrasi</span>
      </div>
      <div className="yr-showcase-details">
       <span className="yr-showcase-eyebrow">TAHUN PERTAMA SUDAH TERMASUK</span>
