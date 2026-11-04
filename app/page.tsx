@@ -46,13 +46,9 @@ export default function Home() {
   <header className="yr-header"><div className="yr-container yr-nav"><a href="/" aria-label="Beranda YukReview"><Brand /></a><nav aria-label="Navigasi"><a href="#keunggulan">Keunggulan</a><a href="#cara-kerja">Cara Kerja</a><a href="#paket">Paket & Harga</a><a href="#faq">FAQ</a></nav><a className="yr-nav-cta" href="/dashboard">Masuk Dashboard ↗</a></div></header>
   <section className="yr-hero" id="beranda"><div className="yr-container yr-hero-grid">
    <div><span className="yr-pill">KARTU REVIEW GOOGLE · NFC + QR CODE</span><h1>Ulasan Google jadi <em>lebih mudah.</em><br/>Bisnis makin dipercaya.</h1><p className="yr-lead">Permudah pelanggan memberikan ulasan Google hanya dengan <b>tap NFC atau scan QR Code.</b> Pilih akses langsung atau Smart Landing dengan halaman bisnis profesional.</p><div className="yr-actions"><a className="yr-primary" href="#paket">Lihat Paket & Harga <span>↗</span></a><a className="yr-outline" href="#cara-kerja">Cara Kerja ↓</a></div><div className="yr-mini"><span>✓ Tanpa aplikasi tambahan</span><span>✓ QR + NFC</span><span>✓ Cocok untuk berbagai bisnis</span></div></div>
-   <div className="yr-poster-display" aria-label="Desain poster Google Review YukReview versi terang dan gelap">
-      <div className="yr-poster-item yr-poster-item-light">
-        <img className="yr-poster-image yr-poster-image-light" src="/yukreview-design-light-hq.webp" alt="Desain YukReview putih dengan QR Code dan NFC" width={1254} height={1254} loading="eager" decoding="async" />
-        <span>Clean White</span>
-      </div>
-      <div className="yr-poster-item yr-poster-item-dark">
-        <img className="yr-poster-image yr-poster-image-dark" src="/yukreview-design-dark-hq.webp" alt="Desain YukReview navy gelap dengan QR Code dan NFC" width={1254} height={1254} loading="eager" decoding="async" />
+   <div className="yr-poster-display yr-poster-display-single" aria-label="Desain hero YukReview Dark Premium">
+      <div className="yr-poster-item yr-poster-item-dark yr-poster-item-single">
+        <img className="yr-poster-image yr-poster-image-dark" src="/yukreview-design-dark-hq.webp" alt="Desain kartu ulasan YukReview Dark Premium dengan QR Code dan NFC" width={1254} height={1254} loading="eager" decoding="async" fetchPriority="high" />
         <span>Dark Premium</span>
       </div>
       <p className="yr-poster-hint">Visual contoh desain. QR pada gambar bukan QR kartu yang diaktivasi.</p>
