@@ -39,3 +39,36 @@
 .yr-plan-benefits li::before{content:"✓";position:absolute;left:0;top:1px;width:17px;height:17px;border-radius:50%;background:#e0f5ed;color:#0e956c;display:grid;place-items:center;font-size:11px;font-weight:900}
 .yr-plan-featured .yr-plan-benefits{background:#edf6ff;border-color:#cfe4ff}
 @media(max-width:700px){.yr-plan-benefits{padding:15px}.yr-plan-benefits li{font-size:13px}}
+
+/* Vertically stacked, full-width pricing packages, homepage only */
+.yr-pricing-section .yr-pricing-stacked{display:flex;flex-direction:column;gap:26px;align-items:stretch}
+.yr-pricing-section .yr-plan-wide{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(290px,.75fr);gap:36px;align-items:stretch;padding:34px 38px;border-radius:26px}
+.yr-plan-wide .yr-plan-head h3{font-size:clamp(25px,2.6vw,34px);margin:10px 0 12px;letter-spacing:-.8px}
+.yr-plan-wide .yr-plan-head>p{font-size:15px;line-height:1.7;color:var(--muted);max-width:590px;margin:0 0 20px}
+.yr-plan-wide .yr-plan-benefits{min-height:0;margin:0;padding:20px 22px}
+.yr-plan-wide .yr-plan-benefits li{font-size:14px}
+.yr-plan-wide .yr-plan-wide-purchase{border-left:1px solid #dae7f7;padding:2px 0 2px 32px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+.yr-plan-wide .yr-plan-small-label{font-size:13px;font-weight:750;color:#597593}
+.yr-plan-wide .yr-plan-price{margin:4px 0 22px;display:block;min-height:0}
+.yr-plan-wide .yr-plan-price strong{font-size:clamp(30px,3vw,40px);color:#0a3a80}
+.yr-plan-wide .yr-plan-options{display:grid;gap:11px;margin:0 0 18px}
+.yr-plan-wide .yr-plan-options>a{border:1px solid #dceaf9;background:#fff;font-weight:700;transition:background .2s,border-color .2s}
+.yr-plan-wide .yr-plan-options>a:hover{border-color:#7ab9ff;background:#edf7ff}
+.yr-plan-wide .yr-plan-order-cta{display:flex;justify-content:center;align-items:center;gap:8px;text-align:center;background:linear-gradient(110deg,#0a65ec,#039fe3);border-radius:13px;padding:14px 18px;color:#fff;font-size:14px;font-weight:850;box-shadow:0 10px 24px #086de42b;transition:filter .2s}
+.yr-plan-wide .yr-plan-order-cta:hover{filter:brightness(1.07)}
+.yr-plan-wide .yr-plan-note{font-size:12px;line-height:1.6;min-height:0;margin:14px 0 0;color:#5b7394}
+.yr-plan-wide.yr-plan-featured .yr-plan-wide-purchase{border-left-color:#c7e0fb}
+.yr-plan-wide.yr-plan-featured .yr-plan-benefits{background:#fff}
+@media(max-width:900px){
+ .yr-pricing-section .yr-plan-wide{grid-template-columns:1fr;gap:20px;padding:25px}
+ .yr-plan-wide .yr-plan-wide-purchase{border-left:0;border-top:1px solid #dae7f7;padding:22px 0 0}
+ .yr-plan-wide .yr-plan-head>p{max-width:none}
+ .yr-plan-wide .yr-plan-options{grid-template-columns:1fr 1fr}
+}
+@media(max-width:540px){
+ .yr-pricing-section .yr-plan-wide{padding:20px;gap:16px;border-radius:20px}
+ .yr-plan-wide .yr-plan-options{grid-template-columns:1fr}
+ .yr-plan-wide .yr-plan-benefits{padding:17px}
+ .yr-plan-wide .yr-plan-benefits li{font-size:13px}
+ .yr-plan-wide .yr-plan-order-cta{width:100%}
+}
