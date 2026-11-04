@@ -46,12 +46,16 @@ export default function Home() {
   <header className="yr-header"><div className="yr-container yr-nav"><a href="/" aria-label="Beranda YukReview"><Brand /></a><nav aria-label="Navigasi"><a href="#keunggulan">Keunggulan</a><a href="#cara-kerja">Cara Kerja</a><a href="#paket">Paket & Harga</a><a href="#faq">FAQ</a></nav><a className="yr-nav-cta" href="/dashboard">Masuk Dashboard ↗</a></div></header>
   <section className="yr-hero" id="beranda"><div className="yr-container yr-hero-grid">
    <div><span className="yr-pill">KARTU REVIEW GOOGLE · NFC + QR CODE</span><h1>Ulasan Google jadi <em>lebih mudah.</em><br/>Bisnis makin dipercaya.</h1><p className="yr-lead">Permudah pelanggan memberikan ulasan Google hanya dengan <b>tap NFC atau scan QR Code.</b> Pilih akses langsung atau Smart Landing dengan halaman bisnis profesional.</p><div className="yr-actions"><a className="yr-primary" href="#paket">Lihat Paket & Harga <span>↗</span></a><a className="yr-outline" href="#cara-kerja">Cara Kerja ↓</a></div><div className="yr-mini"><span>✓ Tanpa aplikasi tambahan</span><span>✓ QR + NFC</span><span>✓ Cocok untuk berbagai bisnis</span></div></div>
-   <div className="yr-poster-display yr-poster-display-single" aria-label="Desain hero YukReview Dark Premium">
-      <div className="yr-poster-item yr-poster-item-dark yr-poster-item-single">
-        <img className="yr-poster-image yr-poster-image-dark" src="/yukreview-design-dark-hq.webp" alt="Desain kartu ulasan YukReview Dark Premium dengan QR Code dan NFC" width={1254} height={1254} loading="eager" decoding="async" fetchPriority="high" />
-        <span>Dark Premium</span>
+   <div className="yr-poster-display yr-poster-display-single yr-mini-stand-scene" aria-label="Mockup kartu Dark Premium YukReview di atas stand akrilik mini">
+      <div className="yr-mini-stand-stage">
+        <div className="yr-mini-stand-back" aria-hidden="true"></div>
+        <div className="yr-mini-stand-card">
+          <img src="/yukreview-design-dark-hq.webp" alt="Ilustrasi kartu ulasan YukReview Dark Premium dengan QR Code dan NFC pada stand akrilik mini" width={1254} height={1254} loading="eager" decoding="async" fetchPriority="high" />
+        </div>
+        <div className="yr-mini-stand-base" aria-hidden="true"></div>
+        <div className="yr-mini-stand-hooks" aria-hidden="true"><span></span><span></span></div>
       </div>
-      <p className="yr-poster-hint">Visual contoh desain. QR pada gambar bukan QR kartu yang diaktivasi.</p>
+      <p className="yr-poster-hint">Mockup ilustrasi stand akrilik mini. QR pada gambar bukan QR kartu aktif.</p>
     </div>
   </div></section>
   <div className="yr-trust"><div className="yr-container">Didesain untuk <b>Kafe & Restoran</b> · <b>Hotel</b> · <b>Salon</b> · <b>Toko Retail</b> · <b>Bisnis Layanan</b></div></div>
