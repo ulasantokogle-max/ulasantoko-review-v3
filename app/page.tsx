@@ -107,6 +107,7 @@ export default function Home() {
        <li>Tambahkan tautan media sosial dan katalog PDF</li>
        <li>Profil bisnis dengan logo, cover, dan pilihan tampilan</li>
        <li>Informasi dapat diperbarui melalui dashboard owner</li>
+       <li>Feedback internal ke owner: pelanggan bisa mengirim kritik dan saran secara privat, terpisah dari ulasan Google</li>
        <li>Layanan Smart Landing tahun pertama termasuk harga kartu</li>
       </ul></div>
       <div className="yr-showcase-prices" aria-label="Pilihan harga paket Smart Landing">
