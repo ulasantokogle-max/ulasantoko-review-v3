@@ -218,3 +218,8 @@
 /* Package 1 HD image: preserve sharp source and 1:1 aspect ratio */
 .yr-pricing-showcase img[src="/yukreview-direct-review-hd.webp"]{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;image-rendering:auto;display:block}
 @media(max-width:560px){.yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-review-hd.webp"]){width:min(290px,96%)}}
+
+/* Package 2: single Clean White acrylic HD mockup (scoped to pricing only) */
+.yr-pricing-showcase .yr-smart-clean-mockup{width:100%;min-height:300px;display:flex;align-items:center;justify-content:center;padding:14px 8px;min-width:0}
+.yr-pricing-showcase .yr-smart-clean-mockup img{display:block;width:min(100%,330px);height:auto;aspect-ratio:1/1;object-fit:contain;border-radius:16px;box-shadow:0 12px 26px rgba(17,64,128,.10);image-rendering:auto}
+@media(max-width:560px){.yr-pricing-showcase .yr-smart-clean-mockup{min-height:240px;padding:12px 2px}.yr-pricing-showcase .yr-smart-clean-mockup img{width:min(100%,300px)}}
