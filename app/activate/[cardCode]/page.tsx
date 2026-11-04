@@ -24,6 +24,7 @@ export default function ActivateCardPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -392,26 +393,56 @@ export default function ActivateCardPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <input
-                style={inputStyle}
-                type={showPassword ? "text" : "password"}
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                placeholder={tr("Password minimal 6 karakter")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={6}
-                required
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  style={{ ...inputStyle, paddingRight: 52 }}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  placeholder={tr("Password minimal 6 karakter")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button type="button"
+                  aria-label={showPassword ? tr("Sembunyikan password", "Hide password") : tr("Lihat password", "Show password")}
+                  title={showPassword ? tr("Sembunyikan password", "Hide password") : tr("Lihat password", "Show password")}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword(v => !v)}
+                  style={{ position: "absolute", right: 5, top: "50%", transform: "translateY(-50%)", width: 40, height: 40, border: 0, background: "transparent", color: "#64748b", display: "grid", placeItems: "center", cursor: "pointer", borderRadius: 10 }}>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                      {showPassword && <path d="M3 3l18 18" />}
+                    </svg>
+                </button>
+              </div>
               {mode === "signup" && (
-                <input style={inputStyle} type={showPassword ? "text" : "password"}
-                  autoComplete="new-password" placeholder="Konfirmasi password"
-                  value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
-                  minLength={6} required />
+              <div style={{ position: "relative" }}>
+                <input
+                  style={{ ...inputStyle, paddingRight: 52 }}
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder={"Konfirmasi password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button type="button"
+                  aria-label={showConfirmPassword ? tr("Sembunyikan konfirmasi password", "Hide konfirmasi password") : tr("Lihat konfirmasi password", "Show konfirmasi password")}
+                  title={showConfirmPassword ? tr("Sembunyikan konfirmasi password", "Hide konfirmasi password") : tr("Lihat konfirmasi password", "Show konfirmasi password")}
+                  aria-pressed={showConfirmPassword}
+                  onClick={() => setShowConfirmPassword(v => !v)}
+                  style={{ position: "absolute", right: 5, top: "50%", transform: "translateY(-50%)", width: 40, height: 40, border: 0, background: "transparent", color: "#64748b", display: "grid", placeItems: "center", cursor: "pointer", borderRadius: 10 }}>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                      {showConfirmPassword && <path d="M3 3l18 18" />}
+                    </svg>
+                </button>
+              </div>
               )}
-              <button type="button" style={{ ...buttonStyle, background: "#f1f5f9", color: "#334155" }}
-                onClick={() => setShowPassword(v => !v)}>
-                {showPassword ? "Sembunyikan password" : "Lihat password"}
-              </button>
               <button style={buttonStyle} type="submit" disabled={authLoading}>
                 {authLoading
                   ? tr("Memproses...")
