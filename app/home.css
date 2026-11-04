@@ -138,3 +138,52 @@
 .yr-smart-phone-top{height:29px}
 .yr-smart-phone-action{padding:6px 2px}
 }
+
+/* FINAL clean white pricelist: separate Direct Google card and two HD YukReview Smart Landing posters */
+.yr-home .yr-pricing-showcase{background:#fff;color:#142e50}
+.yr-pricing-showcase .yr-pricing-intro{margin-bottom:38px}
+.yr-pricing-showcase .yr-showcase-card,
+.yr-pricing-showcase .yr-showcase-card-smart{
+ background:#fff;color:#173457;border:1px solid #d7e5f7;
+ box-shadow:0 14px 46px rgba(13,60,124,.09);border-radius:26px;
+}
+.yr-pricing-showcase .yr-showcase-card-smart{border-color:#9dc8ff}
+.yr-pricing-showcase .yr-showcase-visual{
+ background:linear-gradient(160deg,#fafdff,#eef7ff);border:1px solid #deebf8;
+ border-radius:20px;min-height:380px;justify-content:flex-start;
+}
+.yr-pricing-showcase .yr-showcase-ribbon{background:#e7f2ff;border:1px solid #c6deff;color:#0863d5}
+.yr-pricing-showcase .yr-mockup-stage{min-height:300px}
+.yr-pricing-showcase .yr-mockup-acrylic{width:min(340px,96%);max-width:100%;padding:0;background:#fff;border:0;border-radius:17px;box-shadow:0 12px 30px rgba(31,80,132,.14);transform:none}
+.yr-pricing-showcase .yr-mockup-acrylic img{border-radius:17px}
+.yr-pricing-showcase .yr-mockup-glow{background:#bedcf0;opacity:.7;filter:blur(18px)}
+.yr-pricing-showcase .yr-mockup-caption{color:#6b86a2}
+.yr-pricing-showcase .yr-showcase-eyebrow{color:#0d71e9}
+.yr-pricing-showcase .yr-showcase-details h3{color:#12315a}
+.yr-pricing-showcase .yr-showcase-description{color:#5c7492}
+.yr-pricing-showcase .yr-showcase-benefits{background:#f7fbff;border:1px solid #deebfa}
+.yr-pricing-showcase .yr-showcase-benefits>strong{color:#163b68}
+.yr-pricing-showcase .yr-showcase-benefits li{color:#425e7d}
+.yr-pricing-showcase .yr-showcase-benefits li::before{color:#0baf7c}
+.yr-pricing-showcase .yr-showcase-price-option,
+.yr-pricing-showcase .yr-showcase-card-smart .yr-showcase-price-option{
+ background:#fff;border:1px solid #dae8fa;box-shadow:0 7px 18px #163b780b;
+}
+.yr-pricing-showcase .yr-showcase-price-option>span{color:#517197}
+.yr-pricing-showcase .yr-showcase-price-option strong{color:#123e79}
+.yr-pricing-showcase .yr-showcase-footnote{color:#6a819d}
+.yr-pricing-showcase .yr-smart-design-pair{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;align-items:start;padding:16px 0;min-width:0}
+.yr-pricing-showcase .yr-smart-design{margin:0;min-width:0;background:#fff;border:1px solid #d5e5fa;padding:9px 9px 5px;border-radius:16px;box-shadow:0 8px 22px #19477a13}
+.yr-pricing-showcase .yr-smart-design img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain;border-radius:10px}
+.yr-pricing-showcase .yr-smart-design figcaption{font-size:12px;font-weight:850;text-align:center;color:#18518e;margin:8px 0 4px}
+.yr-pricing-showcase .yr-showcase-prices a{background:linear-gradient(110deg,#0a67ed,#089feb);color:#fff}
+@media(max-width:940px){
+ .yr-pricing-showcase .yr-showcase-visual{min-height:unset}
+ .yr-pricing-showcase .yr-mockup-stage{min-height:220px}
+}
+@media(max-width:560px){
+ .yr-pricing-showcase .yr-smart-design-pair{grid-template-columns:1fr;gap:14px;padding:14px 0}
+ .yr-pricing-showcase .yr-smart-design{width:min(310px,100%);margin:auto}
+ .yr-pricing-showcase .yr-showcase-card{padding:13px}
+ .yr-pricing-showcase .yr-showcase-visual{padding:15px 10px}
+}
