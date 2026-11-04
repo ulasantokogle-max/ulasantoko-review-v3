@@ -70,11 +70,11 @@ export default function Home() {
       <span className="yr-showcase-ribbon">PAKET 1 · DIRECT GOOGLE REVIEW</span>
       <div className="yr-mockup-stage">
        <div className="yr-mockup-acrylic">
-        <img src="/yukreview-design-light-hq.webp" alt="Ilustrasi desain kartu YukReview warna putih dengan elemen QR Code dan NFC" width={1254} height={1254} loading="lazy" />
+        <img src="/yukreview-direct-review-google.svg" alt="Ilustrasi umum kartu Direct Google Review bertema Google dengan ikon QR Code dan NFC" width={900} height={900} loading="lazy" />
        </div>
        <div className="yr-mockup-glow"></div>
       </div>
-      <span className="yr-mockup-caption">Contoh visual kartu YukReview · QR ilustratif</span>
+      <span className="yr-mockup-caption">Contoh kartu Google Review umum · QR hanya ilustrasi</span>
      </div>
      <div className="yr-showcase-details">
       <span className="yr-showcase-eyebrow">TANPA LANGGANAN TAHUNAN</span>
@@ -97,17 +97,11 @@ export default function Home() {
     <article className="yr-showcase-card yr-showcase-card-smart" aria-labelledby="yr-package-smart">
      <div className="yr-showcase-visual">
       <span className="yr-showcase-ribbon">PAKET 2 · SMART LANDING</span>
-      <div className="yr-mockup-stage yr-mockup-stage-smart">
-       <div className="yr-mockup-acrylic yr-mockup-acrylic-smart"><img src="/yukreview-design-dark-hq.webp" alt="Ilustrasi kartu YukReview versi dark premium dengan QR Code dan NFC" width={1254} height={1254} loading="lazy" /></div>
-       <div className="yr-smart-phone" aria-label="Ilustrasi tampilan Smart Landing di ponsel">
-        <div className="yr-smart-phone-top"><img src="/yukreview-logo.png" alt="YukReview.id" width={240} height={71}/></div>
-        <div className="yr-smart-phone-cover"></div><div className="yr-smart-phone-business">Bisnis Anda<small>Halaman bisnis YukReview</small></div>
-        <div className="yr-smart-phone-action">★ Beri Ulasan Google</div><div className="yr-smart-phone-action yr-smart-phone-wa">Hubungi WhatsApp</div>
-        <div className="yr-smart-phone-social">Instagram · TikTok · PDF</div>
-       </div>
-       <div className="yr-mockup-glow"></div>
+      <div className="yr-smart-design-pair" aria-label="Dua desain YukReview Smart Landing resolusi tinggi">
+       <figure className="yr-smart-design"><img src="/yukreview-design-light-hq.webp" alt="Desain YukReview Smart Landing Clean White HD" width={1254} height={1254} loading="lazy" /><figcaption>Clean White</figcaption></figure>
+       <figure className="yr-smart-design"><img src="/yukreview-design-dark-hq.webp" alt="Desain YukReview Smart Landing Dark Premium HD" width={1254} height={1254} loading="lazy" /><figcaption>Dark Premium</figcaption></figure>
       </div>
-      <span className="yr-mockup-caption">Ilustrasi kartu + halaman Smart Landing</span>
+      <span className="yr-mockup-caption">Dua contoh desain kartu YukReview HD · QR ilustratif</span>
      </div>
      <div className="yr-showcase-details">
       <span className="yr-showcase-eyebrow">TAHUN PERTAMA SUDAH TERMASUK</span>
