@@ -213,4 +213,8 @@
 /* Photo-style mockup for Direct Google Review pricelist only */
 .yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-google-mockup.webp"]){width:min(260px,90%);max-width:100%;border:0;background:transparent;padding:0;box-shadow:none}
 .yr-pricing-showcase .yr-mockup-acrylic img[src="/yukreview-direct-google-mockup.webp"]{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:contain;border-radius:14px;transform:none;image-rendering:auto}
-@media(max-width:560px){.yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-google-mockup.webp"]){width:min(245px,90%)}}
+@media(max-width:560px){.yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-review-hd.webp"]){width:min(310px,96%);max-width:100%;overflow:hidden}}
+
+/* Package 1 HD image: preserve sharp source and 1:1 aspect ratio */
+.yr-pricing-showcase img[src="/yukreview-direct-review-hd.webp"]{width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;image-rendering:auto;display:block}
+@media(max-width:560px){.yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-review-hd.webp"]){width:min(290px,96%)}}
