@@ -72,3 +72,69 @@
  .yr-plan-wide .yr-plan-benefits li{font-size:13px}
  .yr-plan-wide .yr-plan-order-cta{width:100%}
 }
+
+/* YukReview illustrated pricelist. Static visual only; buttons remain real anchors. */
+.yr-pricing-showcase{background:linear-gradient(180deg,#f5faff 0%,#eaf4ff 44%,#f8fbff 100%);overflow:hidden}
+.yr-pricing-intro{margin-bottom:34px}
+.yr-pricing-catalog{display:grid;grid-template-columns:1fr;gap:30px}
+.yr-showcase-card{display:grid;grid-template-columns:minmax(290px,.8fr) minmax(0,1.2fr);gap:36px;align-items:stretch;padding:24px;border:1px solid #1c4a87;border-radius:27px;background:linear-gradient(140deg,#07172e,#102b56 70%,#092449);box-shadow:0 22px 55px #143c7633;color:#fff;overflow:hidden}
+.yr-showcase-card-smart{background:linear-gradient(135deg,#08142d,#092d60 75%,#081b3a);border-color:#126bea}
+.yr-showcase-visual{display:flex;flex-direction:column;min-width:0;align-items:center;justify-content:space-between;gap:14px;border:1px solid #4279bf66;border-radius:20px;padding:18px 16px 16px;background:radial-gradient(circle at 50% 47%,#1954a566,#0a1d3b 70%);overflow:hidden}
+.yr-showcase-ribbon{display:inline-block;color:#fff;background:#116cf0;border:1px solid #61b5ff66;border-radius:999px;padding:7px 15px;font-weight:850;letter-spacing:.07em;font-size:11px;text-align:center}
+.yr-mockup-stage{position:relative;width:100%;min-height:290px;display:flex;align-items:center;justify-content:center;isolation:isolate}
+.yr-mockup-acrylic{position:relative;z-index:2;width:min(285px,75%);padding:8px;border:2px solid #a0cfff;border-radius:17px;background:#eff8ff;box-shadow:8px 12px 0 -3px #355f9b,0 21px 40px #0008;transform:perspective(800px) rotateY(-9deg) rotateX(3deg)}
+.yr-mockup-acrylic img{display:block;width:100%;height:auto;aspect-ratio:1/1;object-fit:contain;border-radius:10px}
+.yr-mockup-glow{position:absolute;z-index:0;bottom:3%;width:70%;height:23px;background:#119cffa8;filter:blur(23px);border-radius:50%}
+.yr-mockup-caption{color:#b8d4f3;font-size:11px;text-align:center}
+.yr-showcase-details{min-width:0;padding:12px 10px 10px 0}
+.yr-showcase-eyebrow{font-size:11px;letter-spacing:.1em;font-weight:850;color:#71d5ff}
+.yr-showcase-details h3{font-size:clamp(25px,2.75vw,37px);line-height:1.2;letter-spacing:-.035em;color:#fff;margin:9px 0 12px}
+.yr-showcase-description{color:#c7d9ee;font-size:14px;line-height:1.75;margin:0 0 20px;max-width:630px}
+.yr-showcase-benefits{padding:17px 21px 18px;background:#ffffff0a;border:1px solid #9dccff30;border-radius:17px}
+.yr-showcase-benefits>strong{display:block;color:#fff;font-size:14px;margin:0 0 12px}
+.yr-showcase-benefits ul{list-style:none;margin:0;padding:0;display:grid;gap:11px}
+.yr-showcase-benefits li{position:relative;padding-left:26px;font-size:13px;line-height:1.6;color:#e5eefb}
+.yr-showcase-benefits li::before{content:"✓";position:absolute;left:0;top:2px;color:#1cf1b9;font-size:17px;font-weight:900;line-height:1}
+.yr-showcase-prices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin-top:18px}
+.yr-showcase-price-option{display:flex;flex-direction:column;gap:6px;background:#102f60;border:1px solid #477bc1;border-radius:16px;padding:17px;min-width:0}
+.yr-showcase-card-smart .yr-showcase-price-option{background:#092656;border-color:#377de2}
+.yr-showcase-price-option>span{color:#d1e5ff;font-weight:800;font-size:13px}
+.yr-showcase-price-option strong{font-size:clamp(23px,2.35vw,31px);color:#fff;letter-spacing:-.035em;white-space:nowrap}
+.yr-showcase-price-option>a{display:block;text-align:center;padding:12px 9px;border-radius:11px;background:linear-gradient(110deg,#0874fb,#0c9feb);color:#fff;font-weight:850;font-size:13px;text-decoration:none;transition:transform .2s,filter .2s}
+.yr-showcase-price-option>a:hover{filter:brightness(1.12);transform:translateY(-2px)}
+.yr-showcase-price-option>a:focus-visible{outline:3px solid #f9d96b;outline-offset:3px}
+.yr-showcase-footnote{font-size:11px;line-height:1.6;color:#c4d8ee;margin:15px 0 0}
+.yr-mockup-stage-smart{min-height:330px;justify-content:flex-start;padding-left:8%}
+.yr-mockup-acrylic-smart{width:59%;transform:perspective(800px) rotateY(-12deg) rotateX(3deg);margin-right:-10%;z-index:2}
+.yr-smart-phone{position:relative;z-index:3;align-self:center;width:42%;max-width:170px;min-height:245px;border:6px solid #071020;border-radius:23px;background:#fff;box-shadow:0 17px 30px #0008;overflow:hidden;color:#16304c;text-align:center;padding-bottom:12px;transform:rotate(4deg)}
+.yr-smart-phone-top{height:39px;background:#eff6ff;display:flex;justify-content:center;align-items:center;padding:5px}
+.yr-smart-phone-top img{display:block;width:100px;max-width:96%;height:auto}
+.yr-smart-phone-cover{height:54px;background:linear-gradient(125deg,#06317d,#2595ff)}
+.yr-smart-phone-business{font-size:12px;font-weight:900;margin:9px 4px}.yr-smart-phone-business small{display:block;font-size:7px;font-weight:500;color:#66809e}
+.yr-smart-phone-action{margin:8px 7px;padding:8px 3px;color:#0b58aa;border-radius:7px;border:1px solid #cce4ff;font-size:8px;font-weight:850}
+.yr-smart-phone-wa{color:#fff;background:#16a56a;border-color:#16a56a}
+.yr-smart-phone-social{font-size:7px;color:#4e6d91;margin:10px 0 0}
+@media(max-width:940px){
+.yr-showcase-card{grid-template-columns:1fr;gap:18px;padding:18px}
+.yr-showcase-visual{min-height:340px}
+.yr-mockup-stage{min-height:280px}
+.yr-showcase-details{padding:10px}
+.yr-showcase-prices{gap:12px}
+}
+@media(max-width:560px){
+.yr-pricing-showcase{padding-top:58px}
+.yr-showcase-card{padding:12px;border-radius:20px;gap:12px}
+.yr-showcase-visual{padding:15px 9px;min-height:270px}
+.yr-showcase-ribbon{font-size:10px}
+.yr-mockup-stage{min-height:220px}
+.yr-mockup-stage-smart{min-height:240px}
+.yr-showcase-details{padding:10px 5px}
+.yr-showcase-details h3{font-size:26px}
+.yr-showcase-benefits{padding:16px}
+.yr-showcase-prices{grid-template-columns:1fr}
+.yr-showcase-price-option strong{font-size:29px}
+.yr-smart-phone{min-height:210px;border-width:4px}
+.yr-smart-phone-cover{height:36px}
+.yr-smart-phone-top{height:29px}
+.yr-smart-phone-action{padding:6px 2px}
+}
