@@ -197,3 +197,25 @@
  .yr-home .yr-hero .yr-poster-display-single{padding:16px 0 0}
  .yr-home .yr-hero .yr-poster-item-single{width:min(100%,390px);padding:8px;border-radius:17px}
 }
+
+/* Acrylic mini-stand hero mockup; card stays full-size, support ~30% smaller */
+.yr-home .yr-mini-stand-scene{position:relative;min-height:480px;width:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:20px 14px 14px;background:linear-gradient(180deg,#eff8ff 0%,#edf6fe 72%,#e0c9ae 72.4%,#f0dac0 100%);border-radius:25px;overflow:hidden}
+.yr-home .yr-mini-stand-scene::before{content:"";position:absolute;left:3%;top:8%;width:135px;height:170px;border-radius:50%;background:radial-gradient(ellipse at 60% 10%,#98b46f88 0,#b2ce8b44 48%,transparent 75%);filter:blur(11px);opacity:.65}
+.yr-home .yr-mini-stand-scene::after{content:"";position:absolute;bottom:0;left:0;right:0;height:22%;background:linear-gradient(120deg,#debc9955,transparent 42%,#bb907133);pointer-events:none}
+.yr-home .yr-mini-stand-stage{position:relative;isolation:isolate;display:flex;align-items:center;justify-content:center;width:min(100%,460px);height:385px;min-width:0}
+.yr-home .yr-mini-stand-back{position:absolute;z-index:1;width:185px;height:292px;left:31%;top:23px;border:9px solid #e6faffbb;border-radius:14px 21px 7px 10px;background:linear-gradient(90deg,#ffffff70,#c2e6ff10 48%,#c4e9ff68);transform:skewY(8deg) rotate(-9deg);box-shadow:inset 8px 0 8px #ffffff77,7px 7px 3px #3b657338}
+.yr-home .yr-mini-stand-card{position:relative;z-index:3;width:310px;max-width:76%;border-radius:17px;overflow:hidden;transform:perspective(850px) rotateY(-9deg) rotateZ(-2deg);box-shadow:0 22px 35px #1a34535e,0 0 0 3px #dff3ffad;border:3px solid #d8effa}
+.yr-home .yr-mini-stand-card img{width:100%;height:auto;display:block;aspect-ratio:1;object-fit:cover;image-rendering:auto}
+.yr-home .yr-mini-stand-base{position:absolute;z-index:2;width:245px;height:66px;bottom:2px;left:50%;transform:translateX(-50%) skewX(-10deg);border:7px solid #b9e8faac;border-radius:53% 40% 42% 45%;background:linear-gradient(165deg,#ffffffaa,#d4edfd45);box-shadow:0 8px 14px #8b6f5680,inset 1px 6px 6px #fff}
+.yr-home .yr-mini-stand-hooks{position:absolute;z-index:4;width:258px;height:75px;bottom:20px;display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+.yr-home .yr-mini-stand-hooks span{display:block;width:31px;height:65px;border:7px solid #bfe6f5c9;border-top-color:#efffffeb;background:linear-gradient(100deg,#e6ffff55,#a1d8ef28);border-radius:13px 15px 5px 8px;box-shadow:inset 2px 2px 6px #fff}
+.yr-home .yr-mini-stand-scene .yr-poster-hint{position:relative;z-index:5;max-width:460px;margin:5px 10px 0;text-align:center;color:#496a88;font-size:11px}
+@media(max-width:700px){
+.yr-home .yr-mini-stand-scene{min-height:400px;padding:14px 10px}
+.yr-home .yr-mini-stand-stage{height:330px;width:min(100%,410px)}
+.yr-home .yr-mini-stand-card{width:270px;max-width:78%}
+.yr-home .yr-mini-stand-back{width:147px;height:244px;top:22px}
+.yr-home .yr-mini-stand-base{width:209px;height:54px;bottom:2px}
+.yr-home .yr-mini-stand-hooks{width:216px;height:65px;bottom:16px}
+.yr-home .yr-mini-stand-hooks span{height:55px;width:26px}
+}
