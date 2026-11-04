@@ -209,3 +209,8 @@
  .yr-home .yr-hero-photo-frame{width:100%;max-width:480px;border-radius:15px}
  .yr-home .yr-hero-photo-display .yr-poster-hint{font-size:10px}
 }
+
+/* Photo-style mockup for Direct Google Review pricelist only */
+.yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-google-mockup.webp"]){width:min(260px,90%);max-width:100%;border:0;background:transparent;padding:0;box-shadow:none}
+.yr-pricing-showcase .yr-mockup-acrylic img[src="/yukreview-direct-google-mockup.webp"]{display:block;width:100%;height:auto;aspect-ratio:4/5;object-fit:contain;border-radius:14px;transform:none;image-rendering:auto}
+@media(max-width:560px){.yr-pricing-showcase .yr-mockup-acrylic:has(img[src="/yukreview-direct-google-mockup.webp"]){width:min(245px,90%)}}

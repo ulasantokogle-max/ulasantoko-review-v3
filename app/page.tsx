@@ -65,7 +65,7 @@ export default function Home() {
       <span className="yr-showcase-ribbon">PAKET 1 · DIRECT GOOGLE REVIEW</span>
       <div className="yr-mockup-stage">
        <div className="yr-mockup-acrylic">
-        <img src="/yukreview-direct-review-google.svg" alt="Ilustrasi umum kartu Direct Google Review bertema Google dengan ikon QR Code dan NFC" width={900} height={900} loading="lazy" />
+        <img src="/yukreview-direct-google-mockup.webp" alt="Mockup kartu Direct Google Review bertema Google dengan dudukan akrilik bening, QR Code dan NFC" width={220} height={275} loading="lazy" />
        </div>
        <div className="yr-mockup-glow"></div>
       </div>
