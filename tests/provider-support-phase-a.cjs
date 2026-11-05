@@ -46,6 +46,10 @@ for (const key of ["providerActive", "providerAal2", "ownerApproved", "providerM
   assert.equal(permissions.canEditSupportScope({ ...good, [key]: false }, "landing.text"), false, key);
 }
 assert.equal(permissions.canEditSupportScope({ ...good, revoked: true }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, providerAal2: "true" }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, ownerApproved: 1 }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, revoked: null }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, businessTermWritable: "true" }, "landing.text"), false);
 assert.equal(permissions.canEditSupportScope({ ...good, sessionExpiresAtMs: now }, "landing.text"), false);
 assert.equal(permissions.canEditSupportScope({ ...good, approvedScopes: [] }, "landing.text"), false);
 assert.equal(permissions.canEditSupportScope({ ...good, sessionStartedAtMs: now + 1 }, "landing.text"), false);
