@@ -24,3 +24,7 @@ jobs:
         run: npm ci --ignore-scripts
       - name: TypeScript type check
         run: npx tsc --noEmit
+      - name: Build Next.js application
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+        run: npm run build
