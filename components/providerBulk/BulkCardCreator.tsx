@@ -64,6 +64,10 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
 
   async function createBatch() {
     if (busy.current || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_BATCH) return;
+    if (quantity > 1 && internalCode.trim() && !/\d+$/.test(internalCode.trim())) {
+      setError("SKU internal untuk batch massal harus diakhiri angka, contoh YRC-BKS-053.");
+      return;
+    }
     if (cards.length > 0 && !exported.current) {
       setError("Konfirmasi penyimpanan CSV batch sebelumnya terlebih dahulu. PIN tidak dapat diambil ulang dari inventori.");
       return;
@@ -79,12 +83,6 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
     const batchLabel = label.trim();
     const batchArea = area.trim();
     const batchInternalCode = internalCode.trim();
-    if (quantity > 1 && batchInternalCode && !/\d+$/.test(batchInternalCode)) {
-      setError("SKU internal untuk batch massal harus diakhiri angka, contoh YRC-BKS-052.");
-      busy.current = false;
-      setRunning(false);
-      return;
-    }
     try {
       for (let i = 0; i < quantity; i++) {
         const cardInternalCode = nextInternalCode(batchInternalCode, i);
