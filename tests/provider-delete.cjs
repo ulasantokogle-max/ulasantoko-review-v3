@@ -1,0 +1,38 @@
+const fs=require('node:fs'),Module=require('node:module'),ts=require('typescript'),assert=require('node:assert/strict');
+const React=require('react'),{act,create}=require('react-test-renderer');
+global.IS_REACT_ACT_ENVIRONMENT=true;
+for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
+let calls=[],deleted=[],result={data:{success:true},error:null};
+const original=Module._load;
+Module._load=function(id,p,main){
+ if(id.endsWith('/lib/supabase'))return {supabase:{rpc:async(name,args)=>{calls.push({name,args});return result;}}};
+ if(id.endsWith('/lib/i18n'))return {useLanguage:()=>({tr:id=>id})};
+ return original.call(this,id,p,main);
+};
+const Delete=require('../app/components/DeleteProviderCard.tsx').default;
+(async()=>{
+ let tree;
+ await act(async()=>{tree=create(React.createElement(Delete,{cardId:'card-id',cardCode:'ULAS-01007',onDeleted:id=>deleted.push(id)}));});
+ const button=label=>tree.root.findAllByType('button').find(b=>b.children.includes(label));
+ await act(async()=>button('Hapus Kartu').props.onClick());
+ assert.equal(calls.length,0,'Opening confirmation must never delete');
+ assert.equal(button('Konfirmasi Hapus').props.disabled,true);
+ await act(async()=>tree.root.findByType('input').props.onChange({target:{value:'WRONG'}}));
+ await act(async()=>button('Konfirmasi Hapus').props.onClick());
+ assert.equal(calls.length,0,'Wrong code denied even via handler');
+ await act(async()=>button('Batal').props.onClick());
+ assert.equal(calls.length,0);
+ await act(async()=>button('Hapus Kartu').props.onClick());
+ assert.equal(tree.root.findByType('input').props.value,'');
+ await act(async()=>tree.root.findByType('input').props.onChange({target:{value:'ULAS-01007'}}));
+ result={data:null,error:{message:'FORBIDDEN'}};
+ await act(async()=>button('Konfirmasi Hapus').props.onClick());
+ assert.equal(deleted.length,0,'Failure must keep card visible');
+ assert(tree.root.findByProps({role:'alert'}));
+ result={data:{success:true},error:null};
+ await act(async()=>button('Konfirmasi Hapus').props.onClick());
+ assert.deepEqual(deleted,['card-id']);
+ assert.deepEqual(calls.at(-1),{name:'v3_provider_delete_card',args:{p_card_id:'card-id',p_confirm_code:'ULAS-01007'}});
+ await act(async()=>tree.unmount());
+ console.log('PASS provider delete UI: open/cancel, exact confirmation, failure keeps card, success callback and scoped RPC');
+})().catch(error=>{console.error(error);process.exitCode=1;});

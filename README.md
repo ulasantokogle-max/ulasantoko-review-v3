@@ -1,4 +1,4 @@
-# UlasanToko Review V3
+# YukReview V3
 
 Standalone Google Review Card platform.
 

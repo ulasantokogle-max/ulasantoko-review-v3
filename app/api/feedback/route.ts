@@ -1,23 +1,43 @@
+import { ApiInputError, readApiJson } from "../../../lib/apiInput";
 import { NextResponse } from "next/server";
+import { getFeedbackError } from "../../../lib/feedbackErrors";
 import { createClient } from "@supabase/supabase-js";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    let body: Record<string, unknown>;
+    try {
+      const parsed = await readApiJson(request);
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("Invalid feedback payload");
+      }
+      body = parsed;
+    } catch (error) {
+      return NextResponse.json({ success: false, message: "Data masukan tidak valid." }, { status: error instanceof ApiInputError ? error.status : 400 });
+    }
 
-    const cardCode = body?.card_code;
-    const rating = Number(body?.rating);
+    const cardCode = typeof body.card_code === "string" ? body.card_code.trim() : "";
+    const rating = typeof body.rating === "number" || typeof body.rating === "string" ? Number(body.rating) : NaN;
     const customerName = body?.customer_name ?? null;
     const customerPhone = body?.customer_phone ?? null;
     const message = body?.message ?? null;
     const category = body?.category ?? null;
-    const contactConsent = Boolean(body?.contact_consent);
+    const contactConsent = body.contact_consent === true;
 
-    if (!cardCode || !Number.isInteger(rating) || rating < 1 || rating > 3) {
+    const textLimits: Record<string, number> = {
+      customer_name: 120, customer_phone: 32, message: 2000, category: 80, session_id: 160,
+    };
+    const invalidText = Object.entries(textLimits).some(([key, maxLength]) => {
+      const value = body[key];
+      return value != null && (typeof value !== "string" || Array.from(value.trim()).length > maxLength);
+    });
+    const invalidConsent = body.contact_consent != null && typeof body.contact_consent !== "boolean";
+
+    if (!cardCode || cardCode.length > 160 || !Number.isInteger(rating) || rating < 1 || rating > 5 || invalidText || invalidConsent) {
       return NextResponse.json(
         {
           success: false,
-          message: "card_code and rating 1-3 are required",
+          message: "Data feedback belum lengkap.",
         },
         { status: 400 }
       );
@@ -30,7 +50,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           success: false,
-          message: "Supabase environment variables are missing",
+          message: "Layanan sedang mengalami kendala.",
         },
         { status: 500 }
       );
@@ -50,17 +70,32 @@ export async function POST(request: Request) {
     });
 
     if (error) {
+      console.error("Feedback RPC failed", error);
       return NextResponse.json(
         {
           success: false,
-          message: error.message,
+          message: "Feedback belum dapat dikirim. Silakan coba lagi.",
         },
         { status: 400 }
       );
     }
 
-    if (data?.success === false) {
-      return NextResponse.json(data, { status: 400 });
+    if (data?.success !== true) {
+      console.error("Feedback RPC returned unsuccessful result", { code: data?.code });
+      const failure = getFeedbackError(data?.code);
+      if (failure) {
+        return NextResponse.json(
+          { success: false, code: data.code, message: failure.id },
+          { status: failure.status }
+        );
+      }
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Feedback belum dapat dikirim. Silakan coba lagi.",
+        },
+        { status: 400 }
+      );
     }
 
     return NextResponse.json(data);
@@ -68,8 +103,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to submit feedback",
-        error: error instanceof Error ? error.message : "Unknown error",
+        message: "Feedback belum dapat dikirim. Silakan coba lagi.",
       },
       { status: 500 }
     );

@@ -4,36 +4,37 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase";
-
-const items = [
-  {
-    href: "/dashboard",
-    label: "Overview",
-    description: "Ringkasan bisnis & setup",
-  },
-  {
-    href: "/dashboard/cards",
-    label: "Card Management",
-    description: "QR/NFC, status & area kartu",
-  },
-  {
-    href: "/dashboard/landing-page",
-    label: "Landing Page",
-    description: "Tema, Google Review, kontak & konten",
-  },
-  {
-    href: "/dashboard/feedback",
-    label: "Feedback Inbox",
-    description: "Kelola feedback 1–3 bintang",
-  },
-  {
-    href: "/dashboard/analytics",
-    label: "Analytics & Insight",
-    description: "Ringkasan feedback & kartu",
-  },
-];
+import { useLanguage } from "../../lib/i18n";
 
 export default function DashboardNav() {
+  const { tr } = useLanguage();
+  const items = [
+    {
+      href: "/dashboard",
+      label: tr("Ringkasan", "Overview"),
+      description: tr("Ringkasan bisnis & pengaturan", "Business & setup summary"),
+    },
+    {
+      href: "/dashboard/cards",
+      label: tr("Kartu & QR/NFC", "Cards & QR/NFC"),
+      description: tr("Kelola kartu, status & area", "Manage cards, status & area"),
+    },
+    {
+      href: "/dashboard/landing-page",
+      label: tr("Halaman Publik", "Public Page"),
+      description: tr("Tampilan, ulasan, kontak & konten", "Design, reviews, contact & content"),
+    },
+    {
+      href: "/dashboard/feedback",
+      label: tr("Masukan", "Feedback"),
+      description: tr("Kelola masukan privat pelanggan", "Manage private customer feedback"),
+    },
+    {
+      href: "/dashboard/analytics",
+      label: tr("Analitik", "Analytics"),
+      description: tr("Wawasan masukan, ulasan & kartu", "Insights for feedback, reviews & cards"),
+    },
+  ];
   const pathname = usePathname();
   const router = useRouter();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -84,6 +85,7 @@ export default function DashboardNav() {
           <Link
             key={item.href}
             href={item.href}
+            aria-current={active ? "page" : undefined}
             style={{
               display: "block",
               textDecoration: "none",
@@ -127,7 +129,7 @@ export default function DashboardNav() {
           fontWeight: 900,
         }}
       >
-        {loggingOut ? "Logout..." : "Logout"}
+        {loggingOut ? tr("Keluar...", "Signing out...") : tr("Keluar", "Sign out")}
         <div
           style={{
             marginTop: 3,
@@ -137,7 +139,7 @@ export default function DashboardNav() {
             fontWeight: 500,
           }}
         >
-          Keluar dari dashboard customer
+          {tr("Keluar dari akun", "Sign out of account")}
         </div>
       </button>
     </nav>

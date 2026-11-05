@@ -1,0 +1,27 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
+for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
+const {safeYouTubeUrl}=require('../lib/youtube.ts'),{landingWithTikTok}=require('../lib/tiktok.ts');
+const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+const Card=require('../app/components/LandingCardContent.tsx').default,{landingThemes}=require('../lib/landingThemes.ts');
+(async()=>{
+ for(const url of ['https://www.youtube.com/@business','https://youtube.com/channel/UCtest','https://www.youtube.com/watch?v=test','https://www.youtube.com/shorts/test','https://youtu.be/test','https://m.youtube.com/watch?v=test'])assert.equal(safeYouTubeUrl(url),url);
+ for(const url of ['',null,'javascript:alert(1)','http://youtube.com/@test','https://youtube.com.evil.com/@test','https://youtube.com@evil.com/@test','https://youtube.com:444/@test','https://youtu.be/te st','https://www.youtube.com/@te\nst','https://www.youtube.com/'+'x'.repeat(2048)])assert.equal(safeYouTubeUrl(url),null);
+ let calls=0;
+ const legacy=()=>{calls++;return Promise.resolve({data:{legacy:true},error:null});};
+ const tiktok=()=>{calls++;return Promise.resolve({data:{tiktok_available:true},error:null});};
+ const missing=()=>Promise.resolve({data:null,error:{code:'PGRST202'}});
+ assert.equal((await landingWithTikTok(missing(),()=>landingWithTikTok(missing(),legacy))).data.legacy,true);
+ assert.equal((await landingWithTikTok(missing(),tiktok)).data.tiktok_available,true);
+ const before=calls;
+ assert.equal((await landingWithTikTok(Promise.resolve({data:null,error:{code:'42501'}}),legacy)).error.code,'42501');
+ assert.equal(calls,before,'Permission errors must not fall back');
+ const props={theme:landingThemes.soft_smoothie,themeKey:'soft_smoothie',businessName:'Business',title:'Business',description:'',pdfTitle:'Menu',showGoogleReview:false,showWhatsapp:false,showInstagram:false,showPdf:false,showAbout:false,showPromo:false,labels:{review:'Review',about:'About'},rating:null,tiktokUrl:'https://www.tiktok.com/@business'};
+ const render=extra=>renderToStaticMarkup(React.createElement(Card,{...props,...extra}));
+ assert(!render({}).includes('YouTube'));
+ const live=render({youtubeUrl:'https://www.youtube.com/@business'});
+ assert(live.includes('href="https://www.youtube.com/@business"')&&live.includes('href="https://www.tiktok.com/@business"'));
+ assert(!render({youtubeUrl:'javascript:alert(1)'}).includes('YouTube'));
+ assert(!render({youtubeUrl:'https://youtu.be/test',showYouTube:false}).includes('YouTube'));
+ assert(!render({youtubeUrl:'https://youtu.be/test',preview:true}).includes('<a '));
+ console.log('PASS YouTube HTTPS validation, optional rendering, TikTok/legacy migration fallback, permission fail closed and inert preview');
+})().catch(error=>{console.error(error);process.exitCode=1;});

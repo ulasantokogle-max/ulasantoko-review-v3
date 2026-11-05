@@ -1,0 +1,24 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
+for(const ext of ['.ts','.tsx'])require.extensions[ext]=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,jsx:ts.JsxEmit.ReactJSX,target:ts.ScriptTarget.ES2020,esModuleInterop:true}}).outputText,f);
+const {safeTikTokUrl,landingWithTikTok}=require('../lib/tiktok.ts');
+const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
+const Card=require('../app/components/LandingCardContent.tsx').default;
+const {landingThemes}=require('../lib/landingThemes.ts');
+(async()=>{
+ for(const url of ['https://www.tiktok.com/@business','https://tiktok.com/@business/video/123','https://vm.tiktok.com/test/','https://vt.tiktok.com/test/'])assert.equal(safeTikTokUrl(url),url);
+ for(const url of ['',null,'javascript:alert(1)','http://tiktok.com/@test','https://tiktok.com.evil.com/@test','https://tiktok.com@evil.com/@test','https://tiktok.com:444/@test','https://www.tiktok.com/@te st','https://www.tiktok.com/@te\nst','https://www.tiktok.com/'+'x'.repeat(2048)])assert.equal(safeTikTokUrl(url),null);
+ let fallbackCalls=0;
+ const fallback=async()=>{fallbackCalls++;return {data:{legacy:true},error:null};};
+ assert.equal((await landingWithTikTok(Promise.resolve({data:null,error:{code:'PGRST202'}}),fallback)).data.legacy,true);
+ assert.equal(fallbackCalls,1);
+ for(const code of ['42501','PGRST301','NETWORK'])assert.equal((await landingWithTikTok(Promise.resolve({data:null,error:{code}}),fallback)).error.code,code);
+ assert.equal(fallbackCalls,1,'Authorization and network errors must never fall back');
+ const props={theme:landingThemes.soft_smoothie,themeKey:'soft_smoothie',businessName:'Business',title:'Business',description:'',pdfTitle:'Menu',showGoogleReview:false,showWhatsapp:false,showInstagram:false,showPdf:false,showAbout:false,showPromo:false,labels:{review:'Review',about:'About'},rating:null};
+ const render=extra=>renderToStaticMarkup(React.createElement(Card,{...props,...extra}));
+ assert(!render({}).includes('TikTok'),'Existing pages without TikTok remain unchanged');
+ assert(render({tiktokUrl:'https://www.tiktok.com/@business'}).includes('href="https://www.tiktok.com/@business"'));
+ assert(!render({tiktokUrl:'javascript:alert(1)'}).includes('TikTok'),'Unsafe stored links must not render');
+ assert(!render({tiktokUrl:'https://www.tiktok.com/@business',showTikTok:false}).includes('TikTok'));
+ assert(!render({tiktokUrl:'https://www.tiktok.com/@business',preview:true}).includes('<a '),'Preview remains inert');
+ console.log('PASS TikTok URL validation, missing-migration compatibility, authorization fail closed, optional visibility and inert preview');
+})().catch(error=>{console.error(error);process.exitCode=1;});
