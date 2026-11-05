@@ -50,7 +50,8 @@ export default function BulkCreateCards({ onCreated }: { onCreated: () => Promis
       if (!output?.success || output.cards?.length !== quantity) throw new Error("Respons batch tidak lengkap");
       setBatch(output);
       setRequestId(null);
-      await onCreated();
+      // Refresh is best-effort: card creation already committed successfully.
+      void onCreated().catch(() => setError("Kartu berhasil dibuat, tetapi daftar inventory belum ter-refresh. Unduh CSV sekarang."));
     } catch (caught) {
       setError((caught instanceof Error ? caught.message : "Gagal membuat batch") +
         ". Periksa inventory sebelum mencoba lagi; respons terputus mungkin berarti kartu sudah dibuat.");
