@@ -85,6 +85,33 @@ function zipFiles(files: { name: string; data: Uint8Array }[]): Blob {
   u32(e, 12, centralLength); u32(e, 16, offset);
   return new Blob([...chunks.map(x => x as BlobPart), ...directory.map(x => x as BlobPart), end], { type: "application/zip" });
 }
+// A3+ 329 × 483 mm, 300 DPI. Twelve 100 × 100 mm cards per sheet.
+const PRINT_DPI = 300;
+const mm = (v: number) => Math.round(v / 25.4 * PRINT_DPI);
+async function renderSheet(cards: Card[]): Promise<HTMLCanvasElement> {
+  const canvas = document.createElement("canvas");
+  canvas.width = mm(329); canvas.height = mm(483);
+  const g = canvas.getContext("2d"); if (!g) throw Error("Canvas tidak tersedia");
+  g.fillStyle = "#ffffff"; g.fillRect(0, 0, canvas.width, canvas.height);
+  // 3 columns × 4 rows; 5 mm gaps and centered on the sheet.
+  const cardSize = mm(100), gap = mm(5);
+  const left = Math.round((canvas.width - (3 * cardSize + 2 * gap)) / 2);
+  const top = Math.round((canvas.height - (4 * cardSize + 3 * gap)) / 2);
+  for (let i = 0; i < cards.length; i++) {
+    const x = left + (i % 3) * (cardSize + gap);
+    const y = top + Math.floor(i / 3) * (cardSize + gap);
+    const card = await renderCard(cards[i]);
+    g.drawImage(card, x, y, cardSize, cardSize);
+    g.strokeStyle = "#9ca3af"; g.lineWidth = 1;
+    const mark = mm(2), d = mm(1);
+    // Crop marks stay outside the card trim area.
+    for (const [cx, cy, dx, dy] of [[x,y,-1,-1],[x+cardSize,y,1,-1],[x,y+cardSize,-1,1],[x+cardSize,y+cardSize,1,1]]) {
+      g.beginPath(); g.moveTo(cx + dx * d, cy); g.lineTo(cx + dx * (d + mark), cy);
+      g.moveTo(cx, cy + dy * d); g.lineTo(cx, cy + dy * (d + mark)); g.stroke();
+    }
+  }
+  return canvas;
+}
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob), a = document.createElement("a");
   a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 3000);
@@ -139,6 +166,22 @@ function Designer() {
     } catch (err) { setError(err instanceof Error ? err.message : "Gagal membuat ZIP."); }
     finally { setBusy(false); }
   }
+  async function exportA3() {
+    if (!cards.length || busy) return;
+    setBusy(true); setError("");
+    try {
+      const files: { name: string; data: Uint8Array }[] = [];
+      for (let i = 0; i < cards.length; i += 12) {
+        setProgress("Menyiapkan lembar A3+ " + (Math.floor(i / 12) + 1) + "/" + Math.ceil(cards.length / 12));
+        const sheet = await renderSheet(cards.slice(i, i + 12));
+        files.push({ name: "YukReview-A3plus-" + String(Math.floor(i / 12) + 1).padStart(3, "0") + ".png", data: await canvasPng(sheet) });
+        await new Promise(r => setTimeout(r, 0));
+      }
+      download(zipFiles(files), "YukReview-A3plus-300DPI-" + cards.length + "-kartu.zip");
+      setProgress("Selesai. " + files.length + " lembar A3+ siap untuk proof print.");
+    } catch (err) { setError(err instanceof Error ? err.message : "Gagal membuat layout A3+."); }
+    finally { setBusy(false); }
+  }
   return <main style={{maxWidth:1050,margin:"36px auto",padding:24,fontFamily:"Arial,sans-serif",color:"#142b56"}}>
     <Link href="/provider/cards">← Kembali ke Provider Cards</Link>
     <h1 style={{fontSize:34,marginBottom:8}}>YukReview Bulk Card Designer</h1>
@@ -152,8 +195,9 @@ function Designer() {
         <p><strong>{cards.length} kartu</strong> siap diproses.</p>
         {cards.length > 0 && <p>Contoh: {cards[0].card_code} → {cards[cards.length - 1].card_code}</p>}
         <h2>2. Export HD</h2>
-        <p>PNG 1417 × 1417 px. Untuk cetak 10 × 10 cm: sekitar 360 DPI. QR error correction H.</p>
+        <p>PNG individual 1417 × 1417 px (~360 DPI pada 10 × 10 cm), QR error correction H. Layout A3+ 329 × 483 mm pada 300 DPI: 12 kartu per lembar (3 × 4), ukuran potong 10 × 10 cm dengan jarak 5 mm dan crop marks.</p>
         <button type="button" disabled={!cards.length || busy} onClick={exportZip} style={{background:"#122c61",color:"white",border:0,borderRadius:10,padding:"15px 22px",fontWeight:700,cursor:"pointer"}}>{busy ? "Memproses..." : "Download ZIP PNG HD"}</button>
+        <button type="button" disabled={!cards.length || busy} onClick={exportA3} style={{display:"block",marginTop:12,background:"#e53d46",color:"#fff",border:0,borderRadius:10,padding:"15px 22px",fontWeight:700,cursor:"pointer"}}>{busy ? "Memproses..." : "Download Layout A3+ 300 DPI"}</button>
         {progress && <p role="status">{progress}</p>}
         {error && <p role="alert" style={{color:"#b91c1c"}}>{error}</p>}
         <p style={{fontSize:13,color:"#64748b"}}>Pastikan hasil proof print dan uji scan QR sebelum cetak massal. Template ini adalah desain produksi awal, bukan salinan persis template Figma.</p>
