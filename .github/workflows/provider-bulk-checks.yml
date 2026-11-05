@@ -20,3 +20,7 @@ jobs:
           node-version: "22"
       - name: Verify bulk creator static guards against actual checkout
         run: node tests/provider-bulk-static-safety.cjs
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts
+      - name: TypeScript type check
+        run: npx tsc --noEmit
