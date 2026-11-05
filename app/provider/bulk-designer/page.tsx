@@ -218,6 +218,8 @@ function Designer() {
     }catch(e){setError(e instanceof Error?e.message:"Gagal membuka gambar.");}
     finally{URL.revokeObjectURL(url);}
   }
+  const missingArtworks=[front,...(duplex?[back]:[])].filter(i=>!artworks[i]);
+  const readyToExport=cards.length>0 && missingArtworks.length===0 && !busy;
   const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design]);};
   useEffect(()=>{if(!cards.length||!artworks[front]){setPreview("");setBackPreview("");return;}
     let live=true;
@@ -249,7 +251,7 @@ function Designer() {
     } catch (err) { setError(err instanceof Error ? err.message : "CSV tidak dapat dibaca."); }
   }
   async function exportZip() {
-    if (!cards.length || busy) return;
+    if (!readyToExport) {setError(missingArtworks.length?"Upload template yang belum siap: "+missingArtworks.map(i=>names[i]).join(", "):"Upload CSV sebelum download.");return;}
     setBusy(true); setError("");
     try {
       const files: { name: string; data: Uint8Array }[] = [];
@@ -267,7 +269,7 @@ function Designer() {
     finally { setBusy(false); }
   }
   async function exportA3() {
-    if (!cards.length || busy) return;
+    if (!readyToExport) {setError(missingArtworks.length?"Upload template yang belum siap: "+missingArtworks.map(i=>names[i]).join(", "):"Upload CSV sebelum download.");return;}
     setBusy(true); setError("");
     try {
       const files: { name: string; data: Uint8Array }[] = [];
@@ -315,9 +317,11 @@ function Designer() {
         <label style={{display:"block",marginTop:10}}>Arah pembalikan <select value={flip} onChange={e=>setFlip(e.target.value as "horizontal"|"vertical")}><option value="horizontal">Balik kiri-kanan (mirror kolom)</option><option value="vertical">Balik atas-bawah (mirror baris)</option></select></label>
         <p style={{fontSize:12,color:"#b45309"}}>Wajib proof print 1 lembar untuk menguji orientasi depan/belakang.</p></>}
         <h2>3. Export HD</h2>
+        {missingArtworks.length>0&&<p role="alert" style={{padding:12,border:"1px solid #f59e0b",background:"#fffbeb",color:"#92400e",borderRadius:8}}>Download belum tersedia: upload template <strong>{missingArtworks.map(i=>names[i]).join(", ")}</strong> terlebih dahulu. {duplex?"Untuk mencoba satu sisi, matikan Cetak bolak-balik.":""}</p>}
+        {!cards.length&&<p role="status">Upload CSV untuk mengaktifkan download.</p>}
         <p>PNG individual 1417 × 1417 px (~360 DPI pada 10 × 10 cm), QR error correction H. Layout A3+ 329 × 483 mm pada 300 DPI: 12 kartu per lembar (3 × 4), ukuran potong 10 × 10 cm dengan jarak 5 mm dan crop marks.</p>
-        <button type="button" disabled={!cards.length || busy || !artworks[front] || (duplex&&!artworks[back])} onClick={exportZip} style={{background:"#122c61",color:"white",border:0,borderRadius:10,padding:"15px 22px",fontWeight:700,cursor:"pointer"}}>{busy ? "Memproses..." : "Download ZIP PNG HD"}</button>
-        <button type="button" disabled={!cards.length || busy || !artworks[front] || (duplex&&!artworks[back])} onClick={exportA3} style={{display:"block",marginTop:12,background:"#e53d46",color:"#fff",border:0,borderRadius:10,padding:"15px 22px",fontWeight:700,cursor:"pointer"}}>{busy ? "Memproses..." : "Download Layout A3+ 300 DPI"}</button>
+        <button type="button" disabled={!readyToExport} onClick={exportZip} style={{background:"#122c61",color:"white",border:0,borderRadius:10,padding:"15px 22px",fontWeight:700,cursor:readyToExport?"pointer":"not-allowed",opacity:readyToExport?1:.5}}>{busy ? "Memproses..." : "Download ZIP PNG HD"}</button>
+        <button type="button" disabled={!readyToExport} onClick={exportA3} style={{display:"block",marginTop:12,background:"#e53d46",color:"#fff",border:0,borderRadius:10,padding:"15px 22px",fontWeight:700,cursor:readyToExport?"pointer":"not-allowed",opacity:readyToExport?1:.5}}>{busy ? "Memproses..." : "Download Layout A3+ 300 DPI"}</button>
         {progress && <p role="status">{progress}</p>}
         {error && <p role="alert" style={{color:"#b91c1c"}}>{error}</p>}
         <p style={{fontSize:13,color:"#64748b"}}>Pastikan hasil proof print dan uji scan QR sebelum cetak massal. Template ini adalah desain produksi awal, bukan salinan persis template Figma.</p>
