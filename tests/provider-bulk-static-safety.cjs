@@ -1,0 +1,15 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+const file = fs.readFileSync(path.join(__dirname, "../components/providerBulk/BulkCardCreator.tsx"), "utf8");
+assert.match(file, /const MAX_BATCH = 25/);
+assert.match(file, /v3_provider_create_card/);
+assert.match(file, /if \(rpcError \|\|/);
+assert.match(file, /const seenCodes = new Set<string>\(\)/);
+assert.match(file, /seenCodes\.has\(data\.card_code\)/);
+assert.match(file, /break;/);
+assert.match(file, /exportCsv\(cards\)/);
+assert.match(file, /activation_pin/);
+assert.match(file, /beforeunload/);
+assert.match(file, /getCardPublicUrl/);
+console.log("PASS bulk creator static safety checks (10)");
