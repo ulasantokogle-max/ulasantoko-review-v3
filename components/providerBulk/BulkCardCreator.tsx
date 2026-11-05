@@ -15,6 +15,13 @@ type CreatedCard = {
 };
 
 const MAX_BATCH = 25;
+function nextInternalCode(base: string, offset: number): string {
+  if (!base) return "";
+  const match = /^(.*?)(\d+)$/.exec(base);
+  if (!match) return base;
+  const number = BigInt(match[2]) + BigInt(offset);
+  return match[1] + number.toString().padStart(match[2].length, "0");
+}
 function csvCell(value: string): string {
   // Protect spreadsheet users from formula injection.
   const safe = /^[\s]*[=+@\-\t\r]/.test(value) ? "'" + value : value;
@@ -72,13 +79,20 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
     const batchLabel = label.trim();
     const batchArea = area.trim();
     const batchInternalCode = internalCode.trim();
+    if (quantity > 1 && batchInternalCode && !/\d+$/.test(batchInternalCode)) {
+      setError("SKU internal untuk batch massal harus diakhiri angka, contoh YRC-BKS-052.");
+      busy.current = false;
+      setRunning(false);
+      return;
+    }
     try {
       for (let i = 0; i < quantity; i++) {
+        const cardInternalCode = nextInternalCode(batchInternalCode, i);
         // Do not automatically retry ambiguous network failures: a card may already have been created.
         const { data, error: rpcError } = await supabase.rpc("v3_provider_create_card", {
           p_label: batchLabel || null,
           p_area: batchArea || null,
-          p_internal_code: batchInternalCode || null,
+          p_internal_code: cardInternalCode || null,
         });
         if (!mounted.current) break;
         if (rpcError || data?.success !== true || !data.card_code || !data.activation_pin || !data.qr_url) {
@@ -94,7 +108,7 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
         created.push({
           card_code: data.card_code, activation_pin: data.activation_pin,
           qr_url: url, nfc_url: url,
-          label: batchLabel, area: batchArea, internal_code: batchInternalCode,
+          label: batchLabel, area: batchArea, internal_code: cardInternalCode,
         });
         setCards([...created]); setCompleted(created.length);
       }
@@ -123,10 +137,11 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
         <label>Area / Batch
           <input value={area} maxLength={100} disabled={running} onChange={e => setArea(e.target.value)} style={{ display: "block", width: "100%", padding: 10, boxSizing: "border-box" }} />
         </label>
-        <label>SKU internal
+        <label>SKU internal (nomor awal)
           <input value={internalCode} maxLength={100} disabled={running} onChange={e => setInternalCode(e.target.value)} style={{ display: "block", width: "100%", padding: 10, boxSizing: "border-box" }} />
         </label>
       </div>
+      {internalCode.trim() && quantity > 1 && /\d+$/.test(internalCode.trim()) && <p style={{ color: "#475569", margin: "8px 0 0" }}>Rentang SKU: {nextInternalCode(internalCode.trim(), 0)} sampai {nextInternalCode(internalCode.trim(), quantity - 1)}</p>}
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
         <button type="button" disabled={running || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_BATCH} onClick={createBatch} style={{ background: "#1e3a8a", color: "#fff", border: 0, borderRadius: 10, padding: "11px 16px", fontWeight: 700 }}>
           {running ? "Memproses " + completed + "/" + quantity : "Buat " + quantity + " Kartu"}
