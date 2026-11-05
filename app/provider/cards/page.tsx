@@ -480,6 +480,11 @@ function ProviderCardsPageContent() {
             </section>
 
             <BulkCardCreator key={userEmail} onComplete={() => void loadCards()} />
+            <div style={{ margin: "0 0 18px", padding: "18px 20px", background: "#eff6ff", border: "1px solid #bfdbfe", borderRadius: 16 }}>
+              <strong style={{ display: "block", color: "#1e3a8a", marginBottom: 6 }}>Desain & cetak kartu otomatis</strong>
+              <p style={{ margin: "0 0 12px", color: "#475569" }}>Sudah download CSV Bulk Creator? Buat QR dan PNG HD untuk semua kartu dalam satu klik.</p>
+              <Link href="/provider/bulk-designer" style={{ display: "inline-block", padding: "11px 16px", background: "#1e3a8a", color: "#fff", borderRadius: 9, fontWeight: 700, textDecoration: "none" }}>Buka Bulk Card Designer HD →</Link>
+            </div>
 
             <section
               style={{
