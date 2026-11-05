@@ -37,6 +37,11 @@ const good = {
 };
 assert.equal(permissions.canEditSupportScope(good, "landing.text"), true);
 assert.equal(permissions.canEditSupportScope(good, "landing.youtube"), false);
+assert.equal(permissions.canEditSupportScope(null, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, requestedScopes: null }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, approvedScopes: "landing.text" }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, approvedScopes: ["*"] }, "landing.text"), false);
+assert.equal(permissions.canEditSupportScope({ ...good, requestedScopes: ["landing.text", "cards.delete"] }, "landing.text"), false);
 for (const key of ["providerActive", "providerAal2", "ownerApproved", "providerMatches", "businessMatches", "sessionActive", "businessActive", "businessTermWritable"]) {
   assert.equal(permissions.canEditSupportScope({ ...good, [key]: false }, "landing.text"), false, key);
 }
