@@ -76,6 +76,8 @@ function ProviderCardsPageContent() {
   const [created, setCreated] = useState<CreateResult | null>(null);
   const [sheetSyncStatus, setSheetSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
   const [sheetPayload, setSheetPayload] = useState<Record<string, string> | null>(null);
+  const [sheetCheckBusy, setSheetCheckBusy] = useState(false);
+  const [sheetCheckMessage, setSheetCheckMessage] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copied, setCopied] = useState("");
@@ -226,6 +228,27 @@ function ProviderCardsPageContent() {
       await loadCards();
     } catch { if (currentAccount.current === account) setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi."); }
     finally { createBusy.current = false; setCreating(false); }
+  }
+
+  async function checkSheetsConnection() {
+    if (sheetCheckBusy) return;
+    setSheetCheckBusy(true);
+    setSheetCheckMessage("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw Error("SESSION_REQUIRED");
+      const response = await fetch("/api/provider/sync-card-sheet", {
+        headers: { Authorization: "Bearer " + session.access_token },
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw Error("CONNECTION_FAILED");
+      setSheetCheckMessage(data.tab_exists
+        ? "✓ Google Sheets terhubung. Tab Kartu Otomatis sudah tersedia."
+        : "✓ Google Sheets terhubung. Tab Kartu Otomatis akan dibuat saat pencatatan kartu pertama.");
+    } catch {
+      setSheetCheckMessage("Koneksi Google Sheets belum berhasil. Periksa Service Account, izin spreadsheet, dan konfigurasi Vercel.");
+    } finally { setSheetCheckBusy(false); }
   }
 
   async function syncCardToSheet(payload: Record<string, string>) {
@@ -533,6 +556,13 @@ function ProviderCardsPageContent() {
               }}
             >
               <h2 style={{ marginTop: 0 }}>{tr("Buat Kartu Baru")}</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+                <button type="button" onClick={() => void checkSheetsConnection()} disabled={sheetCheckBusy}
+                  style={{ border: "1px solid #cbd5e1", background: "#eff6ff", padding: "10px 12px", borderRadius: 9, fontWeight: 700, cursor: "pointer" }}>
+                  {sheetCheckBusy ? "Memeriksa…" : "Cek Koneksi Google Sheets"}
+                </button>
+                {sheetCheckMessage && <span role="status" style={{ fontSize: 13, color: sheetCheckMessage.startsWith("✓") ? "#166534" : "#92400e" }}>{sheetCheckMessage}</span>}
+              </div>
               <p style={{ color: "#6b7280", lineHeight: 1.5 }}>
                 {tr("Kode Kartu dan PIN dibuat otomatis. PIN hanya ditampilkan setelah kartu dibuat, jadi simpan/cetak bersama kartu fisik.")}
               </p>
