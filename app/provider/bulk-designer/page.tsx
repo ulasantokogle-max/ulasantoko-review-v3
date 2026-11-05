@@ -58,6 +58,7 @@ async function imageFromBlob(blob:Blob):Promise<HTMLImageElement>{
  finally{URL.revokeObjectURL(url);}
 }
 type Design = 0|1|2|3;
+type QrStyle = "standard"|"rainbow";
 const oppositeDesign: Record<Design, Design> = {0:1,1:0,2:3,3:2};
 // A dark-spectrum rainbow preserves scanner contrast on the white QR background.
 function rainbowQr(source: HTMLCanvasElement): HTMLCanvasElement {
@@ -81,7 +82,7 @@ function rainbowQr(source: HTMLCanvasElement): HTMLCanvasElement {
  return out;
 }
 const names=["Navy QR kiri","Navy QR kanan","Putih QR kanan","Putih QR kiri"];
-async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design, p:{x:number;y:number;size:number}):Promise<HTMLCanvasElement>{
+async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design, p:{x:number;y:number;size:number}, qrStyle:QrStyle):Promise<HTMLCanvasElement>{
  const c=document.createElement("canvas");c.width=SIDE;c.height=SIDE;
  const g=c.getContext("2d");if(!g)throw Error("Canvas gagal");
  g.drawImage(artwork,0,0,SIDE,SIDE);
@@ -90,7 +91,7 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.fillStyle="#fff";g.fillRect(x-4*k,y-4*k,w+8*k,w+8*k);
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
- g.imageSmoothingEnabled=false;g.drawImage(rainbowQr(qr),x,y,w,w);g.imageSmoothingEnabled=true;
+ g.imageSmoothingEnabled=false;g.drawImage(qrStyle==="rainbow"?rainbowQr(qr):qr,x,y,w,w);g.imageSmoothingEnabled=true;
  return c;
 }
 async function renderCard(card: Card): Promise<HTMLCanvasElement> {
@@ -209,6 +210,7 @@ function Designer() {
   const [duplex,setDuplex]=useState(false),[flip,setFlip]=useState<"horizontal"|"vertical">("horizontal");
   const [positions,setPositions]=useState([{x:241,y:520,size:280},{x:741,y:520,size:280},{x:741,y:540,size:280},{x:241,y:540,size:280}]);
   const [adjust,setAdjust]=useState(false);
+  const [qrStyle,setQrStyle]=useState<QrStyle>("rainbow");
   function changePosition(key:"x"|"y"|"size",v:number){setPositions(p=>p.map((item,i)=>i===front?{...item,[key]:v}:item));}
   useEffect(()=>{let live=true;Promise.all([0,1,2,3].map(async i=>{const b=await getArtwork(i);return b?imageFromBlob(b):null;})).then(a=>{if(live)setArtworks(a);}).catch(()=>{});return()=>{live=false;};},[]);
   async function uploadArtwork(i:number,file?:File){
@@ -224,7 +226,7 @@ function Designer() {
   }
   const missingArtworks=[front,...(duplex?[back]:[])].filter(i=>!artworks[i]);
   const readyToExport=cards.length>0 && missingArtworks.length===0 && !busy;
-  const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design]);};
+  const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design],qrStyle);};
   useEffect(()=>{if(!cards.length||!artworks[front]){setPreview("");setBackPreview("");return;}
     let live=true;
     draw(cards[0],front).then(c=>{if(live)setPreview(c.toDataURL("image/png"));}).catch(()=>{});
@@ -232,7 +234,7 @@ function Designer() {
     else setBackPreview("");
     return()=>{live=false};
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[cards,front,back,duplex,artworks,positions]);
+  },[cards,front,back,duplex,artworks,positions,qrStyle]);
   useEffect(() => {
     let live = true;
     (async () => {
@@ -308,6 +310,12 @@ function Designer() {
         </div>
         <p style={{fontSize:12}}>Upload empat gambar asli. Template tersimpan lokal di browser ini, bukan di database atau server YukReview.</p>
         <label>Desain depan <select value={front} onChange={e=>setFront(Number(e.target.value) as Design)}>{names.map((n,i)=><option value={i} key={n}>{n}</option>)}</select></label>
+        <fieldset style={{marginTop:14,padding:12,border:"1px solid #cbd5e1",borderRadius:10}}>
+          <legend style={{fontWeight:700}}>Warna QR Code</legend>
+          <label style={{display:"block",marginBottom:8}}><input type="radio" name="qr-style" value="rainbow" checked={qrStyle==="rainbow"} onChange={()=>setQrStyle("rainbow")}/> Rainbow — gradasi warna gelap</label>
+          <label style={{display:"block"}}><input type="radio" name="qr-style" value="standard" checked={qrStyle==="standard"} onChange={()=>setQrStyle("standard")}/> Hitam-putih — standar</label>
+          <p style={{fontSize:12,marginBottom:0}}>Pilihan berlaku untuk preview, ZIP PNG HD, dan layout A3+ (depan dan belakang). QR tetap berlatar putih agar mudah dipindai. Uji scan sebelum cetak massal.</p>
+        </fieldset>
         <button type="button" onClick={()=>setAdjust(!adjust)} style={{display:"block",margin:"12px 0",padding:10,border:"1px solid #94a3b8",borderRadius:8,background:"white"}}>{adjust?"Tutup pengaturan QR":"Atur posisi dan ukuran QR"}</button>
         {adjust&&<div style={{padding:12,background:"#eff6ff",borderRadius:10}}>
           <strong>Penempatan QR: {names[front]}</strong>
