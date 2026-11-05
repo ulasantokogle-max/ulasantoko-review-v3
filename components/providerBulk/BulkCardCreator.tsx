@@ -56,7 +56,10 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
 
   async function createBatch() {
     if (busy.current || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_BATCH) return;
-    if (cards.length > 0 && !exported.current && !window.confirm("PIN batch sebelumnya belum diekspor melalui tombol CSV. Membuat batch baru akan menghilangkan PIN tersebut dari layar. Tetap lanjut?")) return;
+    if (cards.length > 0 && !exported.current) {
+      setError("Konfirmasi penyimpanan CSV batch sebelumnya terlebih dahulu. PIN tidak dapat diambil ulang dari inventori.");
+      return;
+    }
     if (cards.length > 0 && exported.current && !window.confirm("Mulai batch baru? Pastikan CSV batch sebelumnya sudah tersimpan.")) return;
     if (!window.confirm("Buat " + quantity + " kartu baru? Setiap kartu memiliki PIN rahasia berbeda. Proses tidak dapat dibatalkan setelah RPC terkirim.")) return;
     busy.current = true;
@@ -129,7 +132,8 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
         <button type="button" disabled={running || cards.length === 0} onClick={() => {
           if (window.confirm("Ekspor CSV berisi PIN aktivasi rahasia? Simpan di tempat aman dan jangan bagikan secara publik.")) {
             exportCsv(cards);
-            exported.current = true;
+            // A browser download click cannot prove that the file was saved.
+            exported.current = window.confirm("Pastikan file CSV sudah benar-benar tersimpan dan dapat dibuka. Konfirmasi bahwa Anda telah memeriksanya?");
           }
         }} style={{ border: "1px solid #cbd5e1", borderRadius: 10, padding: "11px 16px" }}>
           Ekspor CSV ({cards.length})
