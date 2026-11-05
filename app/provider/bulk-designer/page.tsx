@@ -59,12 +59,12 @@ async function imageFromBlob(blob:Blob):Promise<HTMLImageElement>{
 }
 type Design = 0|1|2|3;
 const names=["Navy QR kiri","Navy QR kanan","Putih QR kanan","Putih QR kiri"];
-async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design):Promise<HTMLCanvasElement>{
+async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design, p:{x:number;y:number;size:number}):Promise<HTMLCanvasElement>{
  const c=document.createElement("canvas");c.width=SIDE;c.height=SIDE;
  const g=c.getContext("2d");if(!g)throw Error("Canvas gagal");
  g.drawImage(artwork,0,0,SIDE,SIDE);
- const k=SIDE/1254,left=design===0||design===3;
- const x=(left?240:740)*k,y=(left?520:540)*k,w=280*k;
+ const k=SIDE/1254;
+ const x=p.x*k,y=p.y*k,w=p.size*k;
  g.fillStyle="#fff";g.fillRect(x-4*k,y-4*k,w+8*k,w+8*k);
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
@@ -180,6 +180,9 @@ function Designer() {
   const [artworks,setArtworks]=useState<(HTMLImageElement|null)[]>([null,null,null,null]);
   const [front,setFront]=useState<Design>(0),[back,setBack]=useState<Design>(1);
   const [duplex,setDuplex]=useState(false),[flip,setFlip]=useState<"horizontal"|"vertical">("horizontal");
+  const [positions,setPositions]=useState([{x:241,y:520,size:280},{x:741,y:520,size:280},{x:741,y:540,size:280},{x:241,y:540,size:280}]);
+  const [adjust,setAdjust]=useState(false);
+  function changePosition(key:"x"|"y"|"size",v:number){setPositions(p=>p.map((item,i)=>i===front?{...item,[key]:v}:item));}
   useEffect(()=>{let live=true;Promise.all([0,1,2,3].map(async i=>{const b=await getArtwork(i);return b?imageFromBlob(b):null;})).then(a=>{if(live)setArtworks(a);}).catch(()=>{});return()=>{live=false;};},[]);
   async function uploadArtwork(i:number,file?:File){
     if(!file)return;
@@ -192,12 +195,12 @@ function Designer() {
     }catch(e){setError(e instanceof Error?e.message:"Gagal membuka gambar.");}
     finally{URL.revokeObjectURL(url);}
   }
-  const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design);};
+  const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design]);};
   useEffect(()=>{if(!cards.length||!artworks[front]){setPreview("");return;}
     let live=true;draw(cards[0],front).then(c=>{if(live)setPreview(c.toDataURL("image/png"));}).catch(()=>{});
     return()=>{live=false};
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[cards,front,artworks]);
+  },[cards,front,artworks,positions]);
   useEffect(() => {
     let live = true;
     (async () => {
@@ -273,6 +276,14 @@ function Designer() {
         </div>
         <p style={{fontSize:12}}>Upload empat gambar asli. Template tersimpan lokal di browser ini, bukan di database atau server YukReview.</p>
         <label>Desain depan <select value={front} onChange={e=>setFront(Number(e.target.value) as Design)}>{names.map((n,i)=><option value={i} key={n}>{n}</option>)}</select></label>
+        <button type="button" onClick={()=>setAdjust(!adjust)} style={{display:"block",margin:"12px 0",padding:10,border:"1px solid #94a3b8",borderRadius:8,background:"white"}}>{adjust?"Tutup pengaturan QR":"Atur posisi dan ukuran QR"}</button>
+        {adjust&&<div style={{padding:12,background:"#eff6ff",borderRadius:10}}>
+          <strong>Penempatan QR: {names[front]}</strong>
+          {(["x","y","size"] as const).map(k=><label key={k} style={{display:"block",marginTop:12}}>{k==="x"?"Posisi horizontal":k==="y"?"Posisi vertikal":"Ukuran QR"} ({positions[front][k]})
+            <input type="range" min={k==="size"?160:0} max={k==="size"?400:900} value={positions[front][k]} onChange={e=>changePosition(k,Number(e.target.value))} style={{display:"block",width:"100%"}}/>
+          </label>)}
+          <p style={{fontSize:12}}>Perhatikan preview. QR baru harus menutup QR contoh seluruhnya, tanpa menutupi ikon NFC.</p>
+        </div>}
         <label style={{display:"block",marginTop:10}}><input type="checkbox" checked={duplex} onChange={e=>setDuplex(e.target.checked)}/> Cetak bolak-balik</label>
         {duplex&&<><label style={{display:"block",marginTop:10}}>Desain belakang <select value={back} onChange={e=>setBack(Number(e.target.value) as Design)}>{names.map((n,i)=><option value={i} key={n}>{n}</option>)}</select></label>
         <label style={{display:"block",marginTop:10}}>Arah pembalikan <select value={flip} onChange={e=>setFlip(e.target.value as "horizontal"|"vertical")}><option value="horizontal">Balik kiri-kanan (mirror kolom)</option><option value="vertical">Balik atas-bawah (mirror baris)</option></select></label>
