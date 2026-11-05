@@ -74,6 +74,8 @@ function ProviderCardsPageContent() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [created, setCreated] = useState<CreateResult | null>(null);
+  const [sheetSyncStatus, setSheetSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [sheetPayload, setSheetPayload] = useState<Record<string, string> | null>(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copied, setCopied] = useState("");
@@ -150,6 +152,8 @@ function ProviderCardsPageContent() {
       setProviderAllowed(null);
       setCards([]);
       setCreated(null);
+      setSheetPayload(null);
+      setSheetSyncStatus("idle");
     } catch { setLoginError("Belum dapat keluar. Silakan coba lagi."); }
   }
 
@@ -176,6 +180,8 @@ function ProviderCardsPageContent() {
     setCreating(true);
     setCreateError("");
     setCreated(null);
+    setSheetPayload(null);
+    setSheetSyncStatus("idle");
 
     try {
       const { data, error } = await supabase.rpc("v3_provider_create_card", {
@@ -204,12 +210,43 @@ function ProviderCardsPageContent() {
         result.nfc_url = result.qr_url;
       }
       setCreated(result);
+      if (result.card_code && result.activation_pin && result.qr_url) {
+        const payload = {
+          card_code: result.card_code, activation_pin: result.activation_pin,
+          qr_url: result.qr_url, label, area, internal_code: internalCode,
+        };
+        setSheetPayload(payload);
+        await syncCardToSheet(payload);
+      } else {
+        setSheetSyncStatus("error");
+      }
       setLabel("");
       setArea("");
       setInternalCode("");
       await loadCards();
     } catch { if (currentAccount.current === account) setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi."); }
     finally { createBusy.current = false; setCreating(false); }
+  }
+
+  async function syncCardToSheet(payload: Record<string, string>) {
+    setSheetSyncStatus("syncing");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw new Error("SESSION_REQUIRED");
+      const response = await fetch("/api/provider/sync-card-sheet", {
+        method: "POST", headers: {
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload), cache: "no-store",
+      });
+      const body = await response.json();
+      if (!response.ok || !body.success) throw new Error("SHEETS_SYNC_FAILED");
+      setSheetSyncStatus("success");
+    } catch {
+      // Card creation succeeded; never create a duplicate while retrying Sheets.
+      setSheetSyncStatus("error");
+    }
   }
 
   async function copyText(value?: string, label?: string) {
@@ -556,6 +593,17 @@ function ProviderCardsPageContent() {
                   }}
                 >
                   <h3 style={{ marginTop: 0 }}>{tr("Kartu siap dijual ✅")}</h3>
+                  <div role="status" style={{ margin: "8px 0 14px", padding: 10, borderRadius: 10, background: sheetSyncStatus === "success" ? "#dcfce7" : sheetSyncStatus === "error" ? "#fef3c7" : "#eff6ff", color: sheetSyncStatus === "error" ? "#92400e" : "#1e40af", fontSize: 13 }}>
+                    {sheetSyncStatus === "success" ? "✓ Data kartu tercatat ke Google Spreadsheet"
+                      : sheetSyncStatus === "syncing" ? "Menyimpan kode kartu dan PIN ke Google Spreadsheet…"
+                      : sheetSyncStatus === "error" ? "Kartu sudah dibuat, tetapi belum tercatat di Google Spreadsheet. Salin PIN sekarang dan ulangi sinkronisasi; jangan buat kartu duplikat."
+                      : "Menyiapkan sinkronisasi…"}
+                    {sheetSyncStatus === "error" && sheetPayload && (
+                      <button type="button" onClick={() => void syncCardToSheet(sheetPayload)} style={{ display: "block", marginTop: 8, padding: "8px 12px", borderRadius: 8, border: "1px solid #d97706", background: "#fff", cursor: "pointer", fontWeight: 700 }}>
+                        Coba Sinkronkan Lagi
+                      </button>
+                    )}
+                  </div>
                   <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
                     <div><strong>{tr("Kode Kartu:")}</strong> {created.card_code}</div>
                     <div><strong>{tr("PIN Aktivasi:")}</strong> {created.activation_pin}</div>
