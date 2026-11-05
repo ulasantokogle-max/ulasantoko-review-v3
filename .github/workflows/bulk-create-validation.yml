@@ -21,4 +21,8 @@ jobs:
       # Repository has no package-lock.json; use npm install without caching.
       - run: npm install --no-audit --no-fund
       - run: npx tsc --noEmit
+      # Non-secret placeholders for build-only prerender. No database access.
       - run: npm run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: build-placeholder-not-a-real-key
