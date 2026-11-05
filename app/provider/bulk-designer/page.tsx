@@ -67,6 +67,12 @@ function rainbowQr(source: HTMLCanvasElement): HTMLCanvasElement {
  const mask=document.createElement("canvas");mask.width=out.width;mask.height=out.height;
  const m=mask.getContext("2d");if(!m)throw Error("Mask QR tidak tersedia");
  m.drawImage(source,0,0);
+ const pixels=m.getImageData(0,0,mask.width,mask.height);
+ for(let i=0;i<pixels.data.length;i+=4){
+   const dark=pixels.data[i]<128 && pixels.data[i+1]<128 && pixels.data[i+2]<128;
+   pixels.data[i+3]=dark?255:0;
+ }
+ m.putImageData(pixels,0,0);
  m.globalCompositeOperation="source-in";
  const grad=m.createLinearGradient(0,0,mask.width,mask.height);
  grad.addColorStop(0,"#142b56");grad.addColorStop(.24,"#552176");grad.addColorStop(.5,"#005a65");grad.addColorStop(.75,"#923044");grad.addColorStop(1,"#142b56");
