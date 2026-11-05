@@ -58,6 +58,22 @@ async function imageFromBlob(blob:Blob):Promise<HTMLImageElement>{
  finally{URL.revokeObjectURL(url);}
 }
 type Design = 0|1|2|3;
+const oppositeDesign: Record<Design, Design> = {0:1,1:0,2:3,3:2};
+// A dark-spectrum rainbow preserves scanner contrast on the white QR background.
+function rainbowQr(source: HTMLCanvasElement): HTMLCanvasElement {
+ const out=document.createElement("canvas");out.width=source.width;out.height=source.height;
+ const g=out.getContext("2d");if(!g)throw Error("Canvas QR tidak tersedia");
+ g.fillStyle="#ffffff";g.fillRect(0,0,out.width,out.height);
+ const mask=document.createElement("canvas");mask.width=out.width;mask.height=out.height;
+ const m=mask.getContext("2d");if(!m)throw Error("Mask QR tidak tersedia");
+ m.drawImage(source,0,0);
+ m.globalCompositeOperation="source-in";
+ const grad=m.createLinearGradient(0,0,mask.width,mask.height);
+ grad.addColorStop(0,"#142b56");grad.addColorStop(.24,"#552176");grad.addColorStop(.5,"#005a65");grad.addColorStop(.75,"#923044");grad.addColorStop(1,"#142b56");
+ m.fillStyle=grad;m.fillRect(0,0,mask.width,mask.height);
+ g.drawImage(mask,0,0);
+ return out;
+}
 const names=["Navy QR kiri","Navy QR kanan","Putih QR kanan","Putih QR kiri"];
 async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design, p:{x:number;y:number;size:number}):Promise<HTMLCanvasElement>{
  const c=document.createElement("canvas");c.width=SIDE;c.height=SIDE;
@@ -68,7 +84,7 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.fillStyle="#fff";g.fillRect(x-4*k,y-4*k,w+8*k,w+8*k);
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
- g.imageSmoothingEnabled=false;g.drawImage(qr,x,y,w,w);g.imageSmoothingEnabled=true;
+ g.imageSmoothingEnabled=false;g.drawImage(rainbowQr(qr),x,y,w,w);g.imageSmoothingEnabled=true;
  return c;
 }
 async function renderCard(card: Card): Promise<HTMLCanvasElement> {
@@ -176,9 +192,10 @@ function Designer() {
   const [allowed, setAllowed] = useState(false), [checking, setChecking] = useState(true);
   const [cards, setCards] = useState<Card[]>([]), [error, setError] = useState("");
   const [busy, setBusy] = useState(false), [progress, setProgress] = useState("");
-  const [preview, setPreview] = useState("");
+  const [preview, setPreview] = useState(""), [backPreview,setBackPreview]=useState("");
   const [artworks,setArtworks]=useState<(HTMLImageElement|null)[]>([null,null,null,null]);
-  const [front,setFront]=useState<Design>(0),[back,setBack]=useState<Design>(1);
+  const [front,setFront]=useState<Design>(0);
+  const back=oppositeDesign[front];
   const [duplex,setDuplex]=useState(false),[flip,setFlip]=useState<"horizontal"|"vertical">("horizontal");
   const [positions,setPositions]=useState([{x:241,y:520,size:280},{x:741,y:520,size:280},{x:741,y:540,size:280},{x:241,y:540,size:280}]);
   const [adjust,setAdjust]=useState(false);
@@ -196,11 +213,14 @@ function Designer() {
     finally{URL.revokeObjectURL(url);}
   }
   const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design]);};
-  useEffect(()=>{if(!cards.length||!artworks[front]){setPreview("");return;}
-    let live=true;draw(cards[0],front).then(c=>{if(live)setPreview(c.toDataURL("image/png"));}).catch(()=>{});
+  useEffect(()=>{if(!cards.length||!artworks[front]){setPreview("");setBackPreview("");return;}
+    let live=true;
+    draw(cards[0],front).then(c=>{if(live)setPreview(c.toDataURL("image/png"));}).catch(()=>{});
+    if(duplex&&artworks[back])draw(cards[0],back).then(c=>{if(live)setBackPreview(c.toDataURL("image/png"));}).catch(()=>{if(live)setBackPreview("");});
+    else setBackPreview("");
     return()=>{live=false};
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[cards,front,artworks,positions]);
+  },[cards,front,back,duplex,artworks,positions]);
   useEffect(() => {
     let live = true;
     (async () => {
@@ -285,7 +305,7 @@ function Designer() {
           <p style={{fontSize:12}}>Perhatikan preview. QR baru harus menutup QR contoh seluruhnya, tanpa menutupi ikon NFC.</p>
         </div>}
         <label style={{display:"block",marginTop:10}}><input type="checkbox" checked={duplex} onChange={e=>setDuplex(e.target.checked)}/> Cetak bolak-balik</label>
-        {duplex&&<><label style={{display:"block",marginTop:10}}>Desain belakang <select value={back} onChange={e=>setBack(Number(e.target.value) as Design)}>{names.map((n,i)=><option value={i} key={n}>{n}</option>)}</select></label>
+        {duplex&&<><p style={{fontSize:13}}>Desain belakang otomatis: <strong>{names[back]}</strong> (QR dan NFC bertukar posisi). Upload template pasangan jika belum siap.</p>
         <label style={{display:"block",marginTop:10}}>Arah pembalikan <select value={flip} onChange={e=>setFlip(e.target.value as "horizontal"|"vertical")}><option value="horizontal">Balik kiri-kanan (mirror kolom)</option><option value="vertical">Balik atas-bawah (mirror baris)</option></select></label>
         <p style={{fontSize:12,color:"#b45309"}}>Wajib proof print 1 lembar untuk menguji orientasi depan/belakang.</p></>}
         <h2>3. Export HD</h2>
@@ -296,7 +316,7 @@ function Designer() {
         {error && <p role="alert" style={{color:"#b91c1c"}}>{error}</p>}
         <p style={{fontSize:13,color:"#64748b"}}>Pastikan hasil proof print dan uji scan QR sebelum cetak massal. Template ini adalah desain produksi awal, bukan salinan persis template Figma.</p>
       </section>
-      <section><h2>Preview kartu pertama</h2>{preview ? <img src={preview} alt="Preview kartu YukReview" style={{width:"100%",maxWidth:480,borderRadius:14,boxShadow:"0 10px 40px #142b5622"}}/> : <p>Preview akan muncul setelah CSV diunggah.</p>}</section>
+      <section><h2>Preview kartu pertama — depan</h2>{preview ? <img src={preview} alt="Preview depan kartu YukReview" style={{width:"100%",maxWidth:480,borderRadius:14,boxShadow:"0 10px 40px #142b5622"}}/> : <p>Preview akan muncul setelah CSV diunggah.</p>}{duplex&&<><h2>Preview belakang — QR berlawanan</h2>{backPreview?<img src={backPreview} alt="Preview belakang kartu YukReview" style={{width:"100%",maxWidth:480,borderRadius:14,boxShadow:"0 10px 40px #142b5622"}}/>:<p>Upload template pasangan {names[back]} untuk preview belakang.</p>}</>}</section>
     </div>}
   </main>;
 }
