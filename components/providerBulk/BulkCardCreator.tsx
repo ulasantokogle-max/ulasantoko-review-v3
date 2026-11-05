@@ -29,7 +29,7 @@ function exportCsv(cards: CreatedCard[]) {
   anchor.href = url;
   anchor.download = "yukreview-bulk-" + new Date().toISOString().slice(0, 10) + ".csv";
   anchor.click();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 export default function BulkCardCreator({ onComplete }: { onComplete?: () => void }) {
   const [quantity, setQuantity] = useState(5);
@@ -42,6 +42,7 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
   const [completed, setCompleted] = useState(0);
   const busy = useRef(false);
   const exported = useRef(false);
+  const [csvVerified, setCsvVerified] = useState(false);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
@@ -64,6 +65,7 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
     if (!window.confirm("Buat " + quantity + " kartu baru? Setiap kartu memiliki PIN rahasia berbeda. Proses tidak dapat dibatalkan setelah RPC terkirim.")) return;
     busy.current = true;
     exported.current = false;
+    setCsvVerified(false);
     setRunning(true); setError(""); setCompleted(0); setCards([]);
     const created: CreatedCard[] = [];
     const seenCodes = new Set<string>();
@@ -133,12 +135,19 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
           if (window.confirm("Ekspor CSV berisi PIN aktivasi rahasia? Simpan di tempat aman dan jangan bagikan secara publik.")) {
             exportCsv(cards);
             // A browser download click cannot prove that the file was saved.
-            exported.current = window.confirm("Pastikan file CSV sudah benar-benar tersimpan dan dapat dibuka. Konfirmasi bahwa Anda telah memeriksanya?");
+            // Confirmation is deliberately separate from the download click.
           }
         }} style={{ border: "1px solid #cbd5e1", borderRadius: 10, padding: "11px 16px" }}>
           Ekspor CSV ({cards.length})
         </button>
       </div>
+      {cards.length > 0 && !running && <label style={{ display: "flex", gap: 8, alignItems: "flex-start", marginTop: 12 }}>
+        <input type="checkbox" checked={csvVerified} onChange={e => {
+          setCsvVerified(e.target.checked);
+          exported.current = e.target.checked;
+        }} />
+        Saya sudah membuka dan memeriksa file CSV hasil ekspor, termasuk kode kartu dan PIN aktivasi.
+      </label>}
       {error && <p role="alert" style={{ color: "#b91c1c" }}>{error}</p>}
       {cards.length > 0 && <p role="status">Berhasil dibuat: {cards.length} kartu. {running ? "Proses berjalan." : "Ekspor CSV sekarang untuk menyimpan PIN."}</p>}
       {cards.length > 0 && <div style={{ maxHeight: 260, overflow: "auto", border: "1px solid #e5e7eb", borderRadius: 10 }}>
