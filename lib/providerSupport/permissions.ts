@@ -25,6 +25,8 @@ export function validateRequestedScopes(value: unknown): SupportScope[] | null {
 }
 
 export function isApprovedScope(requested: readonly SupportScope[], approved: readonly SupportScope[], scope: SupportScope): boolean {
+  if (!Array.isArray(requested) || !Array.isArray(approved)) return false;
+  if (!requested.every(isSupportScope) || !approved.every(isSupportScope)) return false;
   return requested.includes(scope) && approved.includes(scope);
 }
 
@@ -46,7 +48,7 @@ export type SupportAuthorization = {
 };
 
 export function canEditSupportScope(context: SupportAuthorization, scope: unknown): boolean {
-  if (!isSupportScope(scope)) return false;
+  if (!context || typeof context !== "object" || !isSupportScope(scope)) return false;
   if (!Number.isFinite(context.nowMs) || !Number.isFinite(context.sessionStartedAtMs) || !Number.isFinite(context.sessionExpiresAtMs)) return false;
   if (context.sessionStartedAtMs > context.nowMs) return false;
   if (context.sessionExpiresAtMs <= context.sessionStartedAtMs) return false;
