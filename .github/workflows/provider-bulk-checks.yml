@@ -1,0 +1,22 @@
+name: Provider Bulk Safety Checks
+on:
+  push:
+    branches:
+      - feature/provider-support-access-v1
+    paths:
+      - "components/providerBulk/**"
+      - "tests/provider-bulk-static-safety.cjs"
+      - ".github/workflows/provider-bulk-checks.yml"
+  workflow_dispatch:
+jobs:
+  static-check:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify bulk creator static guards against actual checkout
+        run: node tests/provider-bulk-static-safety.cjs
