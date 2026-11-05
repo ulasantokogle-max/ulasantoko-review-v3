@@ -63,6 +63,7 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
     exported.current = false;
     setRunning(true); setError(""); setCompleted(0); setCards([]);
     const created: CreatedCard[] = [];
+    const seenCodes = new Set<string>();
     const batchLabel = label.trim();
     const batchArea = area.trim();
     const batchInternalCode = internalCode.trim();
@@ -79,6 +80,11 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
           setError("Proses berhenti di kartu ke-" + (i + 1) + ". Jangan langsung mengulang: periksa inventori terlebih dahulu untuk mencegah kartu ganda.");
           break;
         }
+        if (seenCodes.has(data.card_code)) {
+          setError("Kode kartu duplikat terdeteksi. Proses dihentikan; periksa inventori dan ekspor hasil yang sudah berhasil.");
+          break;
+        }
+        seenCodes.add(data.card_code);
         const url = getCardPublicUrl(data.qr_url, data.card_code);
         created.push({
           card_code: data.card_code, activation_pin: data.activation_pin,
