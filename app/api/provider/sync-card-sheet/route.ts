@@ -80,8 +80,20 @@ export async function GET(req: NextRequest) {
     };
     if (metadata.spreadsheetId !== SPREADSHEET_ID) throw Error("UNEXPECTED_SPREADSHEET");
     return json({ success: true, accessible: true, tab_exists: !!metadata.sheets?.some(x => x.properties?.title === TAB) });
-  } catch {
-    return json({ success: false, error: "SHEETS_CONNECTION_FAILED" }, 502);
+  } catch (error) {
+    // Expose a fixed diagnostic category only to an authenticated Provider.
+    // Never return credentials, signed JWTs, OAuth responses, or raw Google errors.
+    const kind = error instanceof Error ? error.message : "";
+    const allowed = new Set([
+      "GOOGLE_TOKEN_FAILED", "GOOGLE_TOKEN_MISSING",
+      "SHEETS_REQUEST_FAILED_400", "SHEETS_REQUEST_FAILED_401",
+      "SHEETS_REQUEST_FAILED_403", "SHEETS_REQUEST_FAILED_404",
+      "UNEXPECTED_SPREADSHEET",
+    ]);
+    const diagnostic = allowed.has(kind) ? kind : kind.includes("key") || kind.includes("DECODER")
+      ? "PRIVATE_KEY_INVALID"
+      : "GOOGLE_CONNECTION_UNAVAILABLE";
+    return json({ success: false, error: "SHEETS_CONNECTION_FAILED", diagnostic }, 502);
   }
 }
 
