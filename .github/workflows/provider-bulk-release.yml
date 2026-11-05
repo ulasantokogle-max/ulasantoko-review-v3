@@ -1,0 +1,25 @@
+name: Provider Bulk Release Validation
+on:
+  push:
+    branches:
+      - release/provider-bulk-only-v1
+  pull_request:
+    branches:
+      - cleanup/production-surface-v1
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node tests/provider-bulk-static-safety.cjs
+      - run: npx tsc --noEmit
+      - run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
