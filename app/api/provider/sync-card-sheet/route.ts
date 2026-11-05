@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSign } from "node:crypto";
+import { createPrivateKey, createSign } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
@@ -17,6 +17,31 @@ function encode(input: object) {
   return Buffer.from(JSON.stringify(input)).toString("base64url");
 }
 
+function normalizedPrivateKey(raw: string): string {
+  let value = raw.trim();
+  // Support PEM pasted from a Google JSON key and JSON-escaped PEM.
+  if (value.startsWith("{")) {
+    try {
+      const data: unknown = JSON.parse(value);
+      if (data && typeof data === "object" && "private_key" in data &&
+          typeof (data as { private_key: unknown }).private_key === "string") {
+        value = (data as { private_key: string }).private_key;
+      }
+    } catch { throw Error("PRIVATE_KEY_FORMAT_INVALID"); }
+  } else if (value.startsWith('"') && value.endsWith('"')) {
+    try { value = JSON.parse(value) as string; }
+    catch { value = value.slice(1, -1); }
+  }
+  value = value.replace(/\\r\\n/g, "\n").replace(/\\n/g, "\n")
+    .replace(/\r\n/g, "\n").trim();
+  if (!/^-----BEGIN PRIVATE KEY-----\n[\s\S]+\n-----END PRIVATE KEY-----$/.test(value)) {
+    throw Error("PRIVATE_KEY_FORMAT_INVALID");
+  }
+  try { createPrivateKey(value); }
+  catch { throw Error("PRIVATE_KEY_FORMAT_INVALID"); }
+  return value;
+}
+
 async function googleToken(email: string, privateKey: string) {
   const now = Math.floor(Date.now() / 1000);
   const head = encode({ alg: "RS256", typ: "JWT" });
@@ -28,7 +53,7 @@ async function googleToken(email: string, privateKey: string) {
   const signer = createSign("RSA-SHA256");
   signer.update(unsigned);
   signer.end();
-  const signature = signer.sign(privateKey).toString("base64url");
+  const signature = signer.sign(normalizedPrivateKey(privateKey)).toString("base64url");
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
@@ -70,7 +95,7 @@ export async function GET(req: NextRequest) {
   if (roleError || isAdmin !== true) return json({ success: false, error: "FORBIDDEN" }, 403);
 
   const email = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const key = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_PRIVATE_KEY;
   if (!email || !key) return json({ success: false, error: "SHEETS_NOT_CONFIGURED" }, 503);
 
   try {
@@ -90,9 +115,7 @@ export async function GET(req: NextRequest) {
       "SHEETS_REQUEST_FAILED_403", "SHEETS_REQUEST_FAILED_404",
       "UNEXPECTED_SPREADSHEET",
     ]);
-    const diagnostic = allowed.has(kind) ? kind : kind.includes("key") || kind.includes("DECODER")
-      ? "PRIVATE_KEY_INVALID"
-      : "GOOGLE_CONNECTION_UNAVAILABLE";
+    const diagnostic = kind === "PRIVATE_KEY_FORMAT_INVALID" ? "PRIVATE_KEY_INVALID" : allowed.has(kind) ? kind : "GOOGLE_CONNECTION_UNAVAILABLE";
     return json({ success: false, error: "SHEETS_CONNECTION_FAILED", diagnostic }, 502);
   }
 }
@@ -115,7 +138,7 @@ export async function POST(req: NextRequest) {
   if (roleError || isAdmin !== true) return json({ success: false, error: "FORBIDDEN" }, 403);
 
   const email = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
-  const key = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  const key = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_PRIVATE_KEY;
   if (!email || !key) return json({ success: false, error: "SHEETS_NOT_CONFIGURED" }, 503);
 
   let item: Record<string, unknown>;
