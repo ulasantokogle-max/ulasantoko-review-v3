@@ -247,12 +247,25 @@ function ProviderCardsPageContent() {
         cache: "no-store",
       });
       const data = await response.json();
-      if (!response.ok || !data.success) throw Error("CONNECTION_FAILED");
+      if (!response.ok || !data.success) {
+        const codes: Record<string, string> = {
+          GOOGLE_TOKEN_FAILED: "Google menolak autentikasi Service Account. Periksa private key serta status akun.",
+          GOOGLE_TOKEN_MISSING: "Google tidak mengembalikan token. Periksa kredensial Service Account.",
+          PRIVATE_KEY_INVALID: "Format private key tidak valid. Periksa isi GOOGLE_SHEETS_SERVICE_ACCOUNT_PRIVATE_KEY di Vercel.",
+          SHEETS_REQUEST_FAILED_403: "Google Sheets menolak akses (403). Pastikan spreadsheet dibagikan sebagai Editor ke Service Account.",
+          SHEETS_REQUEST_FAILED_404: "Spreadsheet tidak ditemukan (404). Periksa akses dan alamat spreadsheet.",
+          SHEETS_REQUEST_FAILED_401: "Token ditolak oleh Google Sheets (401). Periksa kredensial.",
+          SHEETS_REQUEST_FAILED_400: "Google Sheets menolak permintaan (400).",
+          UNEXPECTED_SPREADSHEET: "Spreadsheet tidak sesuai dengan ID yang dikonfigurasi.",
+        };
+        setSheetCheckMessage(codes[String(data.diagnostic || "")] || "Koneksi belum berhasil (" + String(data.error || response.status) + ").");
+        return;
+      }
       setSheetCheckMessage(data.tab_exists
         ? "✓ Google Sheets terhubung. Tab Kartu Otomatis sudah tersedia."
         : "✓ Google Sheets terhubung. Tab Kartu Otomatis akan dibuat saat kartu baru dicatat.");
     } catch {
-      setSheetCheckMessage("Koneksi Google Sheets belum berhasil. Periksa Service Account, izin spreadsheet, dan konfigurasi Vercel.");
+      setSheetCheckMessage("Jaringan atau sesi Provider gagal. Silakan coba lagi.");
     } finally { setSheetCheckBusy(false); }
   }
 
