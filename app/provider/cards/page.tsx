@@ -73,6 +73,10 @@ function ProviderCardsPageContent() {
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState("");
   const [created, setCreated] = useState<CreateResult | null>(null);
+  const [sheetSyncStatus, setSheetSyncStatus] = useState<"idle" | "syncing" | "success" | "error">("idle");
+  const [sheetPayload, setSheetPayload] = useState<Record<string, string> | null>(null);
+  const [sheetCheckBusy, setSheetCheckBusy] = useState(false);
+  const [sheetCheckMessage, setSheetCheckMessage] = useState("");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [copied, setCopied] = useState("");
@@ -153,6 +157,8 @@ function ProviderCardsPageContent() {
       setProviderAllowed(null);
       setCards([]);
       setCreated(null);
+      setSheetPayload(null);
+      setSheetSyncStatus("idle");
     } catch { setLoginError("Belum dapat keluar. Silakan coba lagi."); }
   }
 
@@ -179,6 +185,8 @@ function ProviderCardsPageContent() {
     setCreating(true);
     setCreateError("");
     setCreated(null);
+    setSheetPayload(null);
+    setSheetSyncStatus("idle");
 
     try {
       const { data, error } = await supabase.rpc("v3_provider_create_card", {
@@ -207,12 +215,68 @@ function ProviderCardsPageContent() {
         result.nfc_url = result.qr_url;
       }
       setCreated(result);
+      if (result.card_code && result.activation_pin && result.qr_url) {
+        const payload = {
+          card_code: result.card_code,
+          activation_pin: result.activation_pin,
+          qr_url: result.qr_url,
+          label, area, internal_code: internalCode,
+        };
+        setSheetPayload(payload);
+        await syncCardToSheet(payload);
+      } else {
+        setSheetSyncStatus("error");
+      }
       setLabel("");
       setArea("");
       setInternalCode("");
       await loadCards();
     } catch { if (currentAccount.current === account) setCreateError("Kartu belum dapat dibuat. Perbarui daftar untuk memeriksa hasil sebelum mencoba lagi."); }
     finally { createBusy.current = false; setCreating(false); }
+  }
+
+  async function checkSheetsConnection() {
+    if (sheetCheckBusy) return;
+    setSheetCheckBusy(true);
+    setSheetCheckMessage("");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw Error("SESSION_REQUIRED");
+      const response = await fetch("/api/provider/sync-card-sheet", {
+        headers: { Authorization: "Bearer " + session.access_token },
+        cache: "no-store",
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) throw Error("CONNECTION_FAILED");
+      setSheetCheckMessage(data.tab_exists
+        ? "✓ Google Sheets terhubung. Tab Kartu Otomatis sudah tersedia."
+        : "✓ Google Sheets terhubung. Tab Kartu Otomatis akan dibuat saat kartu baru dicatat.");
+    } catch {
+      setSheetCheckMessage("Koneksi Google Sheets belum berhasil. Periksa Service Account, izin spreadsheet, dan konfigurasi Vercel.");
+    } finally { setSheetCheckBusy(false); }
+  }
+
+  async function syncCardToSheet(payload: Record<string, string>) {
+    setSheetSyncStatus("syncing");
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) throw Error("SESSION_REQUIRED");
+      const response = await fetch("/api/provider/sync-card-sheet", {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + session.access_token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        cache: "no-store",
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) throw Error("SHEETS_SYNC_FAILED");
+      setSheetSyncStatus("success");
+    } catch {
+      // A created card is never created again solely because Google Sheets failed.
+      setSheetSyncStatus("error");
+    }
   }
 
   async function copyText(value?: string, label?: string) {
@@ -523,6 +587,13 @@ function ProviderCardsPageContent() {
               }}
             >
               <h2 style={{ marginTop: 0 }}>{tr("Buat Kartu Baru")}</h2>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+                <button type="button" onClick={() => void checkSheetsConnection()} disabled={sheetCheckBusy}
+                  style={{ border: "1px solid #cbd5e1", background: "#eff6ff", padding: "10px 12px", borderRadius: 9, fontWeight: 700, cursor: "pointer" }}>
+                  {sheetCheckBusy ? "Memeriksa…" : "Cek Koneksi Google Sheets"}
+                </button>
+                {sheetCheckMessage && <span role="status" style={{ fontSize: 13, color: sheetCheckMessage.startsWith("✓") ? "#166534" : "#92400e" }}>{sheetCheckMessage}</span>}
+              </div>
               <p style={{ color: "#6b7280", lineHeight: 1.5 }}>
                 {tr("Kode Kartu dan PIN dibuat otomatis. PIN hanya ditampilkan setelah kartu dibuat, jadi simpan/cetak bersama kartu fisik.")}
               </p>
@@ -583,6 +654,17 @@ function ProviderCardsPageContent() {
                   }}
                 >
                   <h3 style={{ marginTop: 0 }}>{tr("Kartu siap dijual ✅")}</h3>
+                  <div role="status" style={{ margin: "8px 0 14px", padding: 10, borderRadius: 10, background: sheetSyncStatus === "success" ? "#dcfce7" : sheetSyncStatus === "error" ? "#fef3c7" : "#eff6ff", color: sheetSyncStatus === "error" ? "#92400e" : "#1e40af", fontSize: 13 }}>
+                    {sheetSyncStatus === "success" ? "✓ Kartu otomatis tercatat ke Google Spreadsheet"
+                      : sheetSyncStatus === "syncing" ? "Menyimpan kode kartu dan PIN ke Google Spreadsheet…"
+                      : sheetSyncStatus === "error" ? "Kartu sudah dibuat, tetapi belum tercatat ke Google Spreadsheet. Salin PIN sekarang lalu coba sinkronkan lagi; jangan buat kartu duplikat."
+                      : "Menyiapkan sinkronisasi…"}
+                    {sheetSyncStatus === "error" && sheetPayload && (
+                      <button type="button" onClick={() => void syncCardToSheet(sheetPayload)} style={{ display: "block", marginTop: 8, padding: "8px 12px", borderRadius: 8, border: "1px solid #d97706", background: "#fff", cursor: "pointer", fontWeight: 700 }}>
+                        Coba Sinkronkan Lagi
+                      </button>
+                    )}
+                  </div>
                   <div style={{ display: "grid", gap: 8, fontSize: 14 }}>
                     <div><strong>{tr("Kode Kartu:")}</strong> {created.card_code}</div>
                     <div><strong>{tr("PIN Aktivasi:")}</strong> {created.activation_pin}</div>
