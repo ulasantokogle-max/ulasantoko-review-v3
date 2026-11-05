@@ -51,6 +51,40 @@ async function sheetsFetch(path: string, token: string, init?: RequestInit) {
   return response.json();
 }
 
+// Read-only connectivity check. Never creates cards or writes PINs.
+export async function GET(req: NextRequest) {
+  const bearer = req.headers.get("authorization") || "";
+  const jwt = bearer.startsWith("Bearer ") ? bearer.slice(7) : "";
+  if (!jwt) return json({ success: false, error: "LOGIN_REQUIRED" }, 401);
+
+  const supaUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supaUrl || !anon) return json({ success: false, error: "BACKEND_NOT_CONFIGURED" }, 503);
+  const supabase = createClient(supaUrl, anon, {
+    global: { headers: { Authorization: "Bearer " + jwt } },
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data: user, error: userError } = await supabase.auth.getUser(jwt);
+  if (userError || !user.user) return json({ success: false, error: "INVALID_SESSION" }, 401);
+  const { data: isAdmin, error: roleError } = await supabase.rpc("v3_is_provider_admin");
+  if (roleError || isAdmin !== true) return json({ success: false, error: "FORBIDDEN" }, 403);
+
+  const email = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_EMAIL;
+  const key = process.env.GOOGLE_SHEETS_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  if (!email || !key) return json({ success: false, error: "SHEETS_NOT_CONFIGURED" }, 503);
+
+  try {
+    const token = await googleToken(email, key);
+    const metadata = await sheetsFetch("?fields=spreadsheetId,sheets.properties.title", token) as {
+      spreadsheetId?: string; sheets?: Array<{ properties?: { title?: string } }>;
+    };
+    if (metadata.spreadsheetId !== SPREADSHEET_ID) throw Error("UNEXPECTED_SPREADSHEET");
+    return json({ success: true, accessible: true, tab_exists: !!metadata.sheets?.some(x => x.properties?.title === TAB) });
+  } catch {
+    return json({ success: false, error: "SHEETS_CONNECTION_FAILED" }, 502);
+  }
+}
+
 export async function POST(req: NextRequest) {
   const bearer = req.headers.get("authorization") || "";
   const jwt = bearer.startsWith("Bearer ") ? bearer.slice(7) : "";
