@@ -116,9 +116,24 @@ function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob), a = document.createElement("a");
   a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 3000);
 }
+// Write PNG pHYs metadata so print software recognizes the intended physical DPI.
+function setPngDpi(png: Uint8Array, dpi: number): Uint8Array {
+  const signature = [137,80,78,71,13,10,26,10];
+  if (png.length < 33 || !signature.every((v,i) => png[i] === v)) throw Error("PNG tidak valid");
+  const view = new DataView(png.buffer, png.byteOffset, png.byteLength);
+  if (view.getUint32(8) !== 13 || String.fromCharCode(...png.slice(12,16)) !== "IHDR") throw Error("Header PNG tidak valid");
+  const ppm = Math.round(dpi / 0.0254);
+  const chunk = new Uint8Array(21), cv = new DataView(chunk.buffer);
+  cv.setUint32(0,9); chunk.set([112,72,89,115],4);
+  cv.setUint32(8,ppm); cv.setUint32(12,ppm); chunk[16]=1;
+  cv.setUint32(17,crc32(chunk.subarray(4,17)));
+  const out = new Uint8Array(png.length + chunk.length);
+  out.set(png.subarray(0,33),0); out.set(chunk,33); out.set(png.subarray(33),54);
+  return out;
+}
 async function canvasPng(c: HTMLCanvasElement): Promise<Uint8Array> {
   const blob = await new Promise<Blob>((resolve, reject) => c.toBlob(b => b ? resolve(b) : reject(Error("Gagal membuat PNG")), "image/png"));
-  return new Uint8Array(await blob.arrayBuffer());
+  return setPngDpi(new Uint8Array(await blob.arrayBuffer()), c.width === SIDE ? 360 : PRINT_DPI);
 }
 export default function BulkDesignerPage() {
   return <ProviderMfaGate><Designer /></ProviderMfaGate>;
