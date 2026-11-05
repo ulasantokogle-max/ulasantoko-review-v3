@@ -37,6 +37,26 @@ function getCards(csv: string): Card[] {
     return { card_code, qr_url: url.href, internal_code: (r[col("internal_code")] || "").trim(), label: (r[col("label")] || "").trim() };
   }).filter(x => x.card_code);
 }
+function templateDb():Promise<IDBDatabase>{
+ return new Promise((resolve,reject)=>{const q=indexedDB.open("yukreview-print-artworks",1);
+ q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains("templates"))q.result.createObjectStore("templates");};
+ q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});
+}
+async function saveArtwork(slot:number,file:Blob):Promise<void>{
+ const db=await templateDb();
+ try{await new Promise<void>((resolve,reject)=>{const tx=db.transaction("templates","readwrite");tx.objectStore("templates").put(file,slot);tx.oncomplete=()=>resolve();tx.onerror=()=>reject(tx.error);});}
+ finally{db.close();}
+}
+async function getArtwork(slot:number):Promise<Blob|undefined>{
+ const db=await templateDb();
+ try{return await new Promise<Blob|undefined>((resolve,reject)=>{const tx=db.transaction("templates","readonly");const q=tx.objectStore("templates").get(slot);q.onsuccess=()=>resolve(q.result as Blob|undefined);q.onerror=()=>reject(q.error);});}
+ finally{db.close();}
+}
+async function imageFromBlob(blob:Blob):Promise<HTMLImageElement>{
+ const url=URL.createObjectURL(blob);
+ try{const img=new Image();img.src=url;await img.decode();return img;}
+ finally{URL.revokeObjectURL(url);}
+}
 type Design = 0|1|2|3;
 const names=["Navy QR kiri","Navy QR kanan","Putih QR kanan","Putih QR kiri"];
 async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design):Promise<HTMLCanvasElement>{
@@ -102,7 +122,7 @@ function zipFiles(files: { name: string; data: Uint8Array }[]): Blob {
 // A3+ 329 × 483 mm, 300 DPI. Twelve 100 × 100 mm cards per sheet.
 const PRINT_DPI = 300;
 const mm = (v: number) => Math.round(v / 25.4 * PRINT_DPI);
-async function renderSheet(cards: Card[], render: (card:Card)=>Promise<HTMLCanvasElement>, mirror=false): Promise<HTMLCanvasElement> {
+async function renderSheet(cards: Card[], render: (card:Card)=>Promise<HTMLCanvasElement>, flip: "none"|"horizontal"|"vertical"="none"): Promise<HTMLCanvasElement> {
   const canvas = document.createElement("canvas");
   canvas.width = mm(329); canvas.height = mm(483);
   const g = canvas.getContext("2d"); if (!g) throw Error("Canvas tidak tersedia");
@@ -112,8 +132,8 @@ async function renderSheet(cards: Card[], render: (card:Card)=>Promise<HTMLCanva
   const left = Math.round((canvas.width - (3 * cardSize + 2 * gap)) / 2);
   const top = Math.round((canvas.height - (4 * cardSize + 3 * gap)) / 2);
   for (let i = 0; i < cards.length; i++) {
-    const x = left + (mirror ? 2-i%3 : i%3) * (cardSize + gap);
-    const y = top + Math.floor(i / 3) * (cardSize + gap);
+    const x = left + (flip==="horizontal" ? 2-i%3 : i%3) * (cardSize + gap);
+    const y = top + (flip==="vertical" ? 3-Math.floor(i/3) : Math.floor(i/3)) * (cardSize + gap);
     const card = await render(cards[i]);
     g.drawImage(card, x, y, cardSize, cardSize);
     g.strokeStyle = "#9ca3af"; g.lineWidth = 1;
@@ -159,13 +179,15 @@ function Designer() {
   const [preview, setPreview] = useState("");
   const [artworks,setArtworks]=useState<(HTMLImageElement|null)[]>([null,null,null,null]);
   const [front,setFront]=useState<Design>(0),[back,setBack]=useState<Design>(1);
-  const [duplex,setDuplex]=useState(false),[mirror,setMirror]=useState(true);
+  const [duplex,setDuplex]=useState(false),[flip,setFlip]=useState<"horizontal"|"vertical">("horizontal");
+  useEffect(()=>{let live=true;Promise.all([0,1,2,3].map(async i=>{const b=await getArtwork(i);return b?imageFromBlob(b):null;})).then(a=>{if(live)setArtworks(a);}).catch(()=>{});return()=>{live=false;};},[]);
   async function uploadArtwork(i:number,file?:File){
     if(!file)return;
     if(!file.type.startsWith("image/")||file.size>15_000_000){setError("File harus gambar maksimal 15 MB.");return;}
     const url=URL.createObjectURL(file);
     try{const img=new Image();img.src=url;await img.decode();
       if(img.width<1000||Math.abs(img.width-img.height)>5)throw Error("Desain harus persegi minimal 1000px.");
+      await saveArtwork(i,file);
       setArtworks(a=>a.map((v,j)=>i===j?img:v));setError("");
     }catch(e){setError(e instanceof Error?e.message:"Gagal membuka gambar.");}
     finally{URL.revokeObjectURL(url);}
@@ -225,7 +247,7 @@ function Designer() {
         const sheet = await renderSheet(cards.slice(i, i + 12),card=>draw(card,front));
         const n=String(Math.floor(i/12)+1).padStart(3,"0");
         files.push({name:"YukReview-A3plus-"+n+"-DEPAN.png",data:await canvasPng(sheet)});
-        if(duplex){const b=await renderSheet(cards.slice(i,i+12),card=>draw(card,back),mirror);files.push({name:"YukReview-A3plus-"+n+"-BELAKANG.png",data:await canvasPng(b)});}
+        if(duplex){const b=await renderSheet(cards.slice(i,i+12),card=>draw(card,back),flip);files.push({name:"YukReview-A3plus-"+n+"-BELAKANG.png",data:await canvasPng(b)});}
         await new Promise(r => setTimeout(r, 0));
       }
       download(zipFiles(files), "YukReview-A3plus-300DPI-" + cards.length + "-kartu.zip");
@@ -249,11 +271,11 @@ function Designer() {
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
           {names.map((name,i)=><label key={name} style={{padding:10,border:"1px solid #cbd5e1",borderRadius:10}}><strong>{i+1}. {name}</strong><input type="file" accept="image/png,image/jpeg,image/webp" onChange={e=>void uploadArtwork(i,e.target.files?.[0])} style={{width:"100%",marginTop:8}}/>{artworks[i]&&<span style={{color:"green"}}> Siap</span>}</label>)}
         </div>
-        <p style={{fontSize:12}}>Upload empat gambar asli. Untuk keamanan, gambar hanya diproses dalam browser; upload ulang saat halaman dimuat ulang.</p>
+        <p style={{fontSize:12}}>Upload empat gambar asli. Template tersimpan lokal di browser ini, bukan di database atau server YukReview.</p>
         <label>Desain depan <select value={front} onChange={e=>setFront(Number(e.target.value) as Design)}>{names.map((n,i)=><option value={i} key={n}>{n}</option>)}</select></label>
         <label style={{display:"block",marginTop:10}}><input type="checkbox" checked={duplex} onChange={e=>setDuplex(e.target.checked)}/> Cetak bolak-balik</label>
         {duplex&&<><label style={{display:"block",marginTop:10}}>Desain belakang <select value={back} onChange={e=>setBack(Number(e.target.value) as Design)}>{names.map((n,i)=><option value={i} key={n}>{n}</option>)}</select></label>
-        <label style={{display:"block",marginTop:10}}><input type="checkbox" checked={mirror} onChange={e=>setMirror(e.target.checked)}/> Mirror kolom untuk balik kiri-kanan</label>
+        <label style={{display:"block",marginTop:10}}>Arah pembalikan <select value={flip} onChange={e=>setFlip(e.target.value as "horizontal"|"vertical")}><option value="horizontal">Balik kiri-kanan (mirror kolom)</option><option value="vertical">Balik atas-bawah (mirror baris)</option></select></label>
         <p style={{fontSize:12,color:"#b45309"}}>Wajib proof print 1 lembar untuk menguji orientasi depan/belakang.</p></>}
         <h2>3. Export HD</h2>
         <p>PNG individual 1417 × 1417 px (~360 DPI pada 10 × 10 cm), QR error correction H. Layout A3+ 329 × 483 mm pada 300 DPI: 12 kartu per lembar (3 × 4), ukuran potong 10 × 10 cm dengan jarak 5 mm dan crop marks.</p>
