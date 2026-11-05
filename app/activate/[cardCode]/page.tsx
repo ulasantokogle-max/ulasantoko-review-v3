@@ -22,6 +22,9 @@ export default function ActivateCardPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [authError, setAuthError] = useState("");
   const [authMessage, setAuthMessage] = useState("");
   const [authLoading, setAuthLoading] = useState(false);
@@ -88,6 +91,7 @@ export default function ActivateCardPage() {
   async function handleAuth(event: FormEvent) {
     event.preventDefault();
     if (authLoading) return;
+    if (mode === "signup" && password !== confirmPassword) { setAuthError("Konfirmasi password tidak cocok."); return; }
     setAuthLoading(true); setAuthError(""); setAuthMessage("");
     try {
       if (mode === "login") {
@@ -100,11 +104,25 @@ export default function ActivateCardPage() {
       const { data, error } = await supabase.auth.signUp({ email, password, options: { emailRedirectTo } });
       if (error) { setAuthError("Akun belum dapat dibuat. Periksa data lalu coba lagi."); return; }
       setPassword("");
+      setConfirmPassword("");
       setAuthMessage(!data.session
         ? tr("Akun berhasil dibuat. Cek email untuk konfirmasi. Setelah diklik, Anda akan kembali ke halaman aktivasi kartu ini.")
         : tr("Akun berhasil dibuat dan Anda sudah masuk.", "Account created and you are signed in."));
     } catch {
       setAuthError(tr("Koneksi belum berhasil. Silakan coba lagi.", "Connection failed. Please try again."));
+    } finally { setAuthLoading(false); }
+  }
+
+  async function handleGoogleLogin() {
+    if (authLoading) return;
+    setAuthError("");
+    setAuthLoading(true);
+    try {
+      const redirectTo = new URL("/activate/" + encodeURIComponent(cardCode), "https://yukreview.id").toString();
+      const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo } });
+      if (error) setAuthError("Login Google belum tersedia. Silakan gunakan email.");
+    } catch {
+      setAuthError("Login Google gagal. Silakan coba lagi.");
     } finally { setAuthLoading(false); }
   }
 
@@ -129,6 +147,7 @@ export default function ActivateCardPage() {
       setActivationError("");
       setEmail("");
       setPassword("");
+      setConfirmPassword("");
       setAuthMessage("");
       setMode("signup");
 
@@ -256,61 +275,88 @@ export default function ActivateCardPage() {
     <main
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg,#f8fafc 0%,#eef2f7 100%)",
+        background: "radial-gradient(circle at 12% 12%, #e9f2ff 0, transparent 32%), radial-gradient(circle at 90% 6%, #fff0ee 0, transparent 28%), #f8fafc",
         padding: "28px 16px",
         fontFamily:
           "Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
         color: "#111827",
       }}
     >
-      <div style={{ maxWidth: 520, margin: "0 auto 10px", display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ maxWidth: 560, margin: "0 auto 10px", display: "flex", justifyContent: "flex-end" }}>
         <LanguageSwitcher />
       </div>
       <section
         style={{
-          maxWidth: 520,
+          maxWidth: 560,
           margin: "0 auto",
           background: "#ffffff",
           border: "1px solid #e5e7eb",
-          borderRadius: 24,
-          padding: 24,
-          boxShadow: "0 18px 60px rgba(15,23,42,.08)",
+          borderRadius: 26,
+          padding: "clamp(20px,4vw,32px)",
+          boxShadow: "0 24px 72px rgba(15,23,42,.09)",
         }}
       >
-        <div style={{ fontSize: 12, fontWeight: 900, color: "#6b7280", letterSpacing: .7 }}>
-          YUKREVIEW
-        </div>
-        <h1 style={{ marginBottom: 8 }}>{tr("Aktivasi Kartu", "Activate Card")}</h1>
-        <p style={{ marginTop: 0, color: "#6b7280", lineHeight: 1.6 }}>
-          {tr("Kartu", "Card")} <strong>{cardCode}</strong> {tr("belum diaktifkan. Aktivasi sekali, lalu QR dan NFC ini akan otomatis menjadi halaman publik bisnis Anda.", "has not been activated yet. Activate it once and this QR/NFC will automatically become your business public page.")}
-        </p>
 
-        <aside style={{ padding: 16, borderRadius: 16, background: "#f5f3ff", border: "1px solid #ede9fe", marginTop: 20 }}>
-          <h2 style={{ fontSize: 17, margin: "0 0 8px" }}>{tr("Akun Dashboard", "Dashboard Account")}</h2>
-          <p style={{ fontSize: 14, lineHeight: 1.6, color: "#6b7280", margin: "0 0 12px" }}>
-            {userEmail
-              ? tr("Kelola bisnis dengan akun yang sedang masuk. Untuk mendaftarkan email lain, Anda akan keluar dari akun ini terlebih dahulu.", "Manage your business with the signed-in account. Registering another email will sign you out of this account first.")
-              : tr("Daftar akun untuk mengaktifkan kartu dan mengelola halaman bisnis, kartu, serta feedback pelanggan dari satu dashboard.", "Create an account to activate your card and manage your business page, cards, and customer feedback from one dashboard.")}
-          </p>
-          <div style={{ display: "grid", gap: 10 }}>
-            {userEmail && (
-              <a href="/dashboard" style={{ ...buttonStyle, display: "block", textAlign: "center", textDecoration: "none", boxSizing: "border-box" }}>
-                {tr("Kelola Dashboard", "Manage Dashboard")}
-              </a>
-            )}
-            <button type="button" onClick={registerDashboardAccount} disabled={switchingAccount || activating || authLoading || resendLoading}
-              style={{ ...buttonStyle, background: "#fff", color: "#111827", border: "1px solid #d1d5db" }}>
-              {switchingAccount ? tr("Memproses...") : userEmail
-                ? tr("Daftar dengan Email Lain", "Register with Another Email")
-                : tr("Daftar Akun Dashboard", "Register Dashboard Account")}
-            </button>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+          <div style={{ fontSize: 21, fontWeight: 900, letterSpacing: "-.8px", color: "#15346b" }}>
+            <span style={{ color: "#e33447" }}>Yuk</span>Review<span style={{ color: "#e33447" }}>✦</span>
           </div>
-          {userEmail && authError && <p role="alert" style={{ color: "#b91c1c", fontSize: 14 }}>{tr(authError)}</p>}
-        </aside>
+          <span style={{ fontSize: 12, fontWeight: 800, borderRadius: 999, padding: "8px 12px", color: "#166534", background: "#ecfdf3" }}>
+            ● {tr("Siap diaktifkan", "Ready to activate")}
+          </span>
+        </div>
+        <h1 style={{ margin: "23px 0 8px", fontSize: "clamp(26px, 5vw, 34px)", letterSpacing: "-1.2px", lineHeight: 1.16 }}>
+          {tr("Aktivasi Kartu YukReview", "Activate Your YukReview Card")}
+        </h1>
+        <p style={{ margin: "0 0 18px", color: "#64748b", lineHeight: 1.6, fontSize: 14 }}>
+          {userEmail
+            ? tr("Lengkapi data bisnis dan PIN agar kartu siap digunakan pelanggan.", "Enter your business details and PIN to make the card ready for customers.")
+            : tr("Masuk atau daftar untuk menghubungkan kartu ke bisnis Anda. Prosesnya hanya beberapa langkah.", "Sign in or register to connect the card to your business in a few steps.")}
+        </p>
+        <div style={{ padding: "12px 14px", borderRadius: 14, background: "#f1f5ff", border: "1px solid #dce7ff", display: "flex", justifyContent: "space-between", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: "#475569" }}>{tr("KODE KARTU", "CARD CODE")}</span>
+          <strong style={{ fontSize: 14, color: "#1e40af", overflowWrap: "anywhere" }}>{cardCode}</strong>
+        </div>
+        <div aria-label={tr("Tahapan aktivasi", "Activation steps")} style={{ margin: "22px 0 20px", display: "flex", alignItems: "flex-start", gap: 6 }}>
+          {[
+            [tr("Akun", "Account"), true],
+            [tr("Data bisnis", "Business"), Boolean(userEmail)],
+            [tr("PIN & aktif", "PIN & activate"), false],
+          ].map(([label, active], idx) => (
+            <div key={String(label)} style={{ flex: 1, minWidth: 0, textAlign: "center" }}>
+              <div style={{ height: 5, borderRadius: 999, background: active ? "#2563eb" : "#e2e8f0", marginBottom: 8 }} />
+              <span style={{ color: active ? "#1d4ed8" : "#64748b", fontSize: 11, fontWeight: 800 }}>
+                {idx + 1}. {label}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div style={{ borderTop: "1px solid #edf2f7", paddingTop: 17 }}>
+          <h2 style={{ margin: "0 0 6px", fontSize: 18, letterSpacing: "-.3px" }}>
+            {userEmail ? tr("Hubungkan ke bisnis Anda", "Connect your business") : tr("Mulai dengan akun Anda", "Start with your account")}
+          </h2>
+          <p style={{ margin: 0, color: "#64748b", fontSize: 13, lineHeight: 1.5 }}>
+            {userEmail
+              ? tr("Akun sudah masuk. Pilih bisnis yang ada atau daftarkan bisnis baru.", "You're signed in. Select an existing business or create a new one.")
+              : tr("Punya akun? Pilih Masuk. Customer baru bisa memilih Buat Akun atau Google.", "Have an account? Choose Sign In. New customers can register or use Google.")}
+          </p>
+        </div>
+        {userEmail && (
+          <div style={{ marginTop: 14, display: "grid", gap: 8 }}>
+            <a href="/dashboard" style={{ ...buttonStyle, display: "block", textAlign: "center", textDecoration: "none", boxSizing: "border-box", background: "#eef4ff", color: "#1d4ed8" }}>
+              {tr("Buka Dashboard", "Open Dashboard")}
+            </a>
+            <button type="button" onClick={registerDashboardAccount} disabled={switchingAccount || activating || authLoading || resendLoading}
+              style={{ ...buttonStyle, background: "#fff", color: "#334155", border: "1px solid #e2e8f0" }}>
+              {switchingAccount ? tr("Memproses...", "Processing...") : tr("Ganti / Daftar Akun Lain", "Switch / Register Another Account")}
+            </button>
+            {authError && <p role="alert" style={{ color: "#b91c1c", fontSize: 13 }}>{tr(authError)}</p>}
+          </div>
+        )}
 
         {!userEmail ? (
           <>
-            <div style={{ display: "flex", gap: 8, margin: "20px 0 14px" }}>
+            <div style={{ display: "flex", gap: 8, margin: "18px 0 14px" }}>
               <button
                 type="button"
                 onClick={() => setMode("login")}
@@ -347,16 +393,56 @@ export default function ActivateCardPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
-              <input
-                style={inputStyle}
-                type="password"
-                autoComplete={mode === "signup" ? "new-password" : "current-password"}
-                placeholder={tr("Password minimal 6 karakter")}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={6}
-                required
-              />
+              <div style={{ position: "relative" }}>
+                <input
+                  style={{ ...inputStyle, paddingRight: 52 }}
+                  type={showPassword ? "text" : "password"}
+                  autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                  placeholder={tr("Password minimal 6 karakter")}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button type="button"
+                  aria-label={showPassword ? tr("Sembunyikan password", "Hide password") : tr("Lihat password", "Show password")}
+                  title={showPassword ? tr("Sembunyikan password", "Hide password") : tr("Lihat password", "Show password")}
+                  aria-pressed={showPassword}
+                  onClick={() => setShowPassword(v => !v)}
+                  style={{ position: "absolute", right: 5, top: "50%", transform: "translateY(-50%)", width: 40, height: 40, border: 0, background: "transparent", color: "#64748b", display: "grid", placeItems: "center", cursor: "pointer", borderRadius: 10 }}>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                      {showPassword && <path d="M3 3l18 18" />}
+                    </svg>
+                </button>
+              </div>
+              {mode === "signup" && (
+              <div style={{ position: "relative" }}>
+                <input
+                  style={{ ...inputStyle, paddingRight: 52 }}
+                  type={showConfirmPassword ? "text" : "password"}
+                  autoComplete="new-password"
+                  placeholder={"Konfirmasi password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  minLength={6}
+                  required
+                />
+                <button type="button"
+                  aria-label={showConfirmPassword ? tr("Sembunyikan konfirmasi password", "Hide konfirmasi password") : tr("Lihat konfirmasi password", "Show konfirmasi password")}
+                  title={showConfirmPassword ? tr("Sembunyikan konfirmasi password", "Hide konfirmasi password") : tr("Lihat konfirmasi password", "Show konfirmasi password")}
+                  aria-pressed={showConfirmPassword}
+                  onClick={() => setShowConfirmPassword(v => !v)}
+                  style={{ position: "absolute", right: 5, top: "50%", transform: "translateY(-50%)", width: 40, height: 40, border: 0, background: "transparent", color: "#64748b", display: "grid", placeItems: "center", cursor: "pointer", borderRadius: 10 }}>
+                  <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                      {showConfirmPassword && <path d="M3 3l18 18" />}
+                    </svg>
+                </button>
+              </div>
+              )}
               <button style={buttonStyle} type="submit" disabled={authLoading}>
                 {authLoading
                   ? tr("Memproses...")
@@ -366,6 +452,18 @@ export default function ActivateCardPage() {
               </button>
             </form>
 
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 16 }}>
+              <span style={{ height: 1, flex: 1, background: "#e2e8f0" }} />
+              <span style={{ fontSize: 12, color: "#64748b" }}>{tr("atau", "or")}</span>
+              <span style={{ height: 1, flex: 1, background: "#e2e8f0" }} />
+            </div>
+            <button type="button" disabled={authLoading} onClick={handleGoogleLogin}
+              style={{ ...buttonStyle, width: "100%", marginTop: 12, background: "#ffffff", color: "#111827", border: "1px solid #d1d5db" }}>
+              <span style={{ color: "#4285f4", fontWeight: 900, marginRight: 8 }}>G</span>{tr("Lanjutkan dengan Google", "Continue with Google")}
+            </button>
+            <p style={{ fontSize: 12, color: "#64748b", textAlign: "center", margin: "12px 0 0" }}>
+              {tr("Akun digunakan untuk mengelola kartu dan halaman bisnis.", "Your account manages your cards and business page.")}
+            </p>
             {mode === "login" && <a href="/forgot-password" style={{display:"block",textAlign:"right",marginTop:10,color:"#2563eb",fontSize:14,fontWeight:700,textDecoration:"none"}}>{tr("Lupa Password?", "Forgot Password?")}</a>}
             {authError && <p style={{ color: "#b91c1c" }}>{tr(authError)}</p>}
             {authMessage && (
@@ -393,15 +491,8 @@ export default function ActivateCardPage() {
           </>
         ) : (
           <form onSubmit={activateCard} style={{ display: "grid", gap: 12, marginTop: 20 }}>
-            <div
-              style={{
-                padding: 12,
-                borderRadius: 12,
-                background: "#f9fafb",
-                fontSize: 14,
-              }}
-            >
-              {tr("Akun:")} <strong>{userEmail}</strong>
+            <div style={{ padding: 13, borderRadius: 12, background: "#ecfdf3", color: "#166534", fontSize: 13, overflowWrap: "anywhere" }}>
+              ✓ {tr("Masuk sebagai", "Signed in as")} <strong>{userEmail}</strong>
             </div>
 
             {businessLoading && <p role="status">{tr("Memuat daftar bisnis…", "Loading businesses…")}</p>}
@@ -472,6 +563,9 @@ export default function ActivateCardPage() {
               </>
             )}
 
+            <label style={{ display: "block", fontSize: 13, fontWeight: 800, color: "#334155", marginTop: 5 }}>
+              {tr("PIN Aktivasi", "Activation PIN")}
+            </label>
             <input
               style={inputStyle}
               type="password"
@@ -482,8 +576,11 @@ export default function ActivateCardPage() {
               required
             />
 
+            <p style={{ fontSize: 12, color: "#64748b", margin: "-4px 0 4px" }}>
+              {tr("Masukkan PIN 6 digit yang diberikan bersama kartu. Jangan bagikan PIN kepada orang lain.", "Enter the six-digit PIN supplied with your card. Keep it private.")}
+            </p>
             <button style={buttonStyle} type="submit" disabled={activating || switchingAccount || businessLoading || !!businessError}>
-              {activating ? tr("Mengaktifkan...") : tr("Aktifkan Kartu")}
+              {activating ? tr("Mengaktifkan...", "Activating...") : tr("Aktifkan Kartu Sekarang", "Activate Card Now")}
             </button>
 
             </fieldset>
@@ -501,6 +598,9 @@ export default function ActivateCardPage() {
             )}
           </form>
         )}
+        <p style={{ textAlign: "center", color: "#94a3b8", fontSize: 11, margin: "22px 0 0" }}>
+          {tr("Butuh bantuan? Hubungi tim YukReview melalui website resmi.", "Need help? Contact YukReview through the official website.")}
+        </p>
       </section>
     </main>
   );
