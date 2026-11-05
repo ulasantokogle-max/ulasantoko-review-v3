@@ -53,9 +53,9 @@ export function canEditSupportScope(context: SupportAuthorization, scope: unknow
   if (context.sessionStartedAtMs > context.nowMs) return false;
   if (context.sessionExpiresAtMs <= context.sessionStartedAtMs) return false;
   if (context.sessionExpiresAtMs - context.sessionStartedAtMs > 30 * 60 * 1000) return false;
-  return context.providerActive && context.providerAal2 && context.ownerApproved &&
-    context.providerMatches && context.businessMatches && context.sessionActive &&
-    !context.revoked && context.sessionExpiresAtMs > context.nowMs &&
-    context.businessActive && context.businessTermWritable &&
+  return context.providerActive === true && context.providerAal2 === true && context.ownerApproved === true &&
+    context.providerMatches === true && context.businessMatches === true && context.sessionActive === true &&
+    context.revoked === false && context.sessionExpiresAtMs > context.nowMs &&
+    context.businessActive === true && context.businessTermWritable === true &&
     isApprovedScope(context.requestedScopes, context.approvedScopes, scope);
 }
