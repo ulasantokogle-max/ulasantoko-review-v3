@@ -170,7 +170,11 @@ async function renderSheet(cards: Card[], render: (card:Card)=>Promise<HTMLCanva
 }
 function download(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob), a = document.createElement("a");
-  a.href = url; a.download = filename; a.click(); setTimeout(() => URL.revokeObjectURL(url), 3000);
+  a.href = url; a.download = filename; a.style.display = "none";
+  document.body.appendChild(a);
+  a.click();
+  // Keep the object URL alive long enough for browsers to start large ZIP downloads.
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60_000);
 }
 // Write PNG pHYs metadata so print software recognizes the intended physical DPI.
 function setPngDpi(png: Uint8Array, dpi: number): Uint8Array {
