@@ -2,6 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import BulkCreateCards from "./BulkCreateCards";
 
 type ProviderCard = {
   id: string;
@@ -412,6 +413,8 @@ export default function ProviderCardsPage() {
                 </div>
               ))}
             </section>
+
+            <BulkCreateCards onCreated={loadCards} />
 
             <section
               style={{
