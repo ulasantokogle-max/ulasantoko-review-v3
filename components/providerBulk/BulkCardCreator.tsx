@@ -41,23 +41,38 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
   const [error, setError] = useState("");
   const [completed, setCompleted] = useState(0);
   const busy = useRef(false);
+  const exported = useRef(false);
   const mounted = useRef(true);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    const warn = (event: BeforeUnloadEvent) => {
+      if (!running && (cards.length === 0 || exported.current)) return;
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [running, cards.length]);
 
   async function createBatch() {
     if (busy.current || !Number.isInteger(quantity) || quantity < 1 || quantity > MAX_BATCH) return;
-    if (cards.length > 0 && !window.confirm("Hasil batch sebelumnya akan diganti dari layar. Sudah ekspor CSV berisi PIN?")) return;
+    if (cards.length > 0 && !exported.current && !window.confirm("PIN batch sebelumnya belum diekspor melalui tombol CSV. Membuat batch baru akan menghilangkan PIN tersebut dari layar. Tetap lanjut?")) return;
+    if (cards.length > 0 && exported.current && !window.confirm("Mulai batch baru? Pastikan CSV batch sebelumnya sudah tersimpan.")) return;
     if (!window.confirm("Buat " + quantity + " kartu baru? Setiap kartu memiliki PIN rahasia berbeda. Proses tidak dapat dibatalkan setelah RPC terkirim.")) return;
     busy.current = true;
+    exported.current = false;
     setRunning(true); setError(""); setCompleted(0); setCards([]);
     const created: CreatedCard[] = [];
+    const batchLabel = label.trim();
+    const batchArea = area.trim();
+    const batchInternalCode = internalCode.trim();
     try {
       for (let i = 0; i < quantity; i++) {
         // Do not automatically retry ambiguous network failures: a card may already have been created.
         const { data, error: rpcError } = await supabase.rpc("v3_provider_create_card", {
-          p_label: label.trim() || null,
-          p_area: area.trim() || null,
-          p_internal_code: internalCode.trim() || null,
+          p_label: batchLabel || null,
+          p_area: batchArea || null,
+          p_internal_code: batchInternalCode || null,
         });
         if (!mounted.current) break;
         if (rpcError || data?.success !== true || !data.card_code || !data.activation_pin || !data.qr_url) {
@@ -68,7 +83,7 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
         created.push({
           card_code: data.card_code, activation_pin: data.activation_pin,
           qr_url: url, nfc_url: url,
-          label: label.trim(), area: area.trim(), internal_code: internalCode.trim(),
+          label: batchLabel, area: batchArea, internal_code: batchInternalCode,
         });
         setCards([...created]); setCompleted(created.length);
       }
@@ -106,7 +121,10 @@ export default function BulkCardCreator({ onComplete }: { onComplete?: () => voi
           {running ? "Memproses " + completed + "/" + quantity : "Buat " + quantity + " Kartu"}
         </button>
         <button type="button" disabled={running || cards.length === 0} onClick={() => {
-          if (window.confirm("Ekspor CSV berisi PIN aktivasi rahasia? Simpan di tempat aman dan jangan bagikan secara publik.")) exportCsv(cards);
+          if (window.confirm("Ekspor CSV berisi PIN aktivasi rahasia? Simpan di tempat aman dan jangan bagikan secara publik.")) {
+            exportCsv(cards);
+            exported.current = true;
+          }
         }} style={{ border: "1px solid #cbd5e1", borderRadius: 10, padding: "11px 16px" }}>
           Ekspor CSV ({cards.length})
         </button>
