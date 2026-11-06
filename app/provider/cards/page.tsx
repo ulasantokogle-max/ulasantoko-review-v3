@@ -12,6 +12,7 @@ import DownloadCardQr from "../../components/DownloadCardQr";
 import WriteCardNfc from "../../components/WriteCardNfc";
 import GoogleQuotaPanel from "../../components/GoogleQuotaPanel";
 import DeleteProviderCard from "../../components/DeleteProviderCard";
+import ProviderBulkCreateCards from "../../components/ProviderBulkCreateCards";
 
 type ProviderCard = {
   id: string;
@@ -728,6 +729,8 @@ function ProviderCardsPageContent() {
                 </div>
               )}
             </section>
+
+            <ProviderBulkCreateCards onComplete={loadCards} />
 
             <section
               style={{
