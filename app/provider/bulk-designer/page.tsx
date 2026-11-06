@@ -139,50 +139,60 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.drawImage(artwork,0,0,SIDE,SIDE);
  const k=SIDE/1254;
  const x=p.x*k,y=p.y*k,w=p.size*k;
- // Remove the old template QR (including irregular white corners and the
- // right-edge strip) before drawing a compact, symmetrical new panel.
- // Reconstruct the local navy background from all four outer boundaries,
- // so shrinking the white border does not expose parts of the old QR.
- // Clean the ENTIRE preprinted sample QR, including its protruding outer
- // edge. The old 30-unit inner margin stopped inside the original white
- // panel and left a visible ghost. Stay outside the protected center column.
- const qrOnLeft=design===0||design===3;
- const outerMargin=105*k;
- const innerMargin=85*k;
- const leftLimit=600*k, rightLimit=650*k;
- const left=Math.max(1,Math.floor(qrOnLeft?x-outerMargin:Math.max(x-innerMargin,rightLimit)));
- const right=Math.min(SIDE-2,Math.ceil(qrOnLeft?Math.min(x+w+innerMargin,leftLimit):x+w+outerMargin));
- const top=Math.max(1,Math.floor(y-outerMargin));
- const bottom=Math.min(SIDE-2,Math.ceil(y+w+outerMargin));
- const ww=right-left, hh=bottom-top;
- const source=g.getImageData(left,top,ww+1,hh+1);
- const repaired=g.createImageData(ww+1,hh+1);
- const src=source.data, out=repaired.data;
- const index=(xx:number,yy:number)=>4*(yy*(ww+1)+xx);
- for(let yy=0;yy<=hh;yy++){
-   const v=yy/hh;
-   for(let xx=0;xx<=ww;xx++){
-     const u=xx/ww;
-     const dst=index(xx,yy);
-     // Horizontal-only interpolation avoids pulling the white sample card
-     // back into the repaired area from its top/bottom edges. The two
-     // horizontal boundaries are safely OUTSIDE the template's old QR.
-     const l=index(0,yy),r=index(ww,yy);
-     for(let ch=0;ch<3;ch++){
-       out[dst+ch]=Math.round((1-u)*src[l+ch]+u*src[r+ch]);
-     }
-   out[dst+3]=255;
-   }
- }
- g.putImageData(repaired,left,top);
- // Tight white card: equal 24-unit padding on every side (~8.6% QR size).
+ // The template already contains an old sample QR. Only restore pixels in a
+ // narrow ring OUTSIDE the new compact white panel. Earlier versions repaired
+ // a whole rectangle, damaging the background, "atau", divider and QR caption.
+ // The original source for the new QR is always the card's actual URL.
  const panelPadding=24*k;
  const panelSize=w+panelPadding*2;
  const panelX=x-panelPadding,panelY=y-panelPadding;
+ const panelRadius=14*k;
+ const outerPadding=70*k;
+ const left=Math.max(1,Math.floor(x-outerPadding));
+ const top=Math.max(1,Math.floor(y-outerPadding));
+ const right=Math.min(SIDE-2,Math.ceil(x+w+outerPadding));
+ const bottom=Math.min(SIDE-2,Math.ceil(y+w+outerPadding));
+ const width=right-left+1,height=bottom-top+1;
+ const original=g.getImageData(left,top,width,height);
+ const repair=g.createImageData(width,height);
+ repair.data.set(original.data);
+ const read=(px:number,py:number,ch:number)=>original.data[4*(py*width+px)+ch];
+ const outerRadius=12*k;
+ for(let yy=0;yy<height;yy++){
+   const py=top+yy;
+   for(let xx=0;xx<width;xx++){
+     const px=left+xx;
+     // Inside the new panel no restoration is necessary: fresh opaque white
+     // and the new Rainbow QR are drawn over it immediately afterwards.
+     if(px>=panelX&&px<=panelX+panelSize&&py>=panelY&&py<=panelY+panelSize)continue;
+     // Do not touch the far corners of the cleanup rectangle.
+     const nearX=Math.max(panelX-px,px-(panelX+panelSize),0);
+     const nearY=Math.max(panelY-py,py-(panelY+panelSize),0);
+     if(nearX>outerPadding-panelPadding||nearY>outerPadding-panelPadding)continue;
+     const dst=4*(yy*width+xx);
+     const u=xx/(width-1),v=yy/(height-1);
+     // Rebuild the nearby navy texture from all four CLEAN outer boundaries.
+     // The ring is small, so the rest of the original artwork is untouched.
+     for(let ch=0;ch<3;ch++){
+       const horizontal=(1-u)*read(0,yy,ch)+u*read(width-1,yy,ch);
+       const vertical=(1-v)*read(xx,0,ch)+v*read(xx,height-1,ch);
+       const corners=(1-u)*(1-v)*read(0,0,ch)+u*(1-v)*read(width-1,0,ch)+
+         (1-u)*v*read(0,height-1,ch)+u*v*read(width-1,height-1,ch);
+       const reconstructed=horizontal+vertical-corners;
+       // Feather the outside of the mask into the untouched template to
+       // prevent the obvious blue/yellow rectangular bands seen previously.
+       const fade=Math.min(1,Math.max(0,(outerPadding-panelPadding-Math.max(nearX,nearY))/(outerRadius)));
+       repair.data[dst+ch]=Math.round(original.data[dst+ch]*(1-fade)+
+         Math.max(0,Math.min(255,reconstructed))*fade);
+     }
+   }
+ }
+ g.putImageData(repair,left,top);
+ // Compact, perfectly symmetrical QR backing: 24 design units on each side.
  g.save();
  g.fillStyle="#ffffff";
  g.beginPath();
- g.roundRect(panelX,panelY,panelSize,panelSize,14*k);
+ g.roundRect(panelX,panelY,panelSize,panelSize,panelRadius);
  g.fill();
  g.restore();
  const qr=document.createElement("canvas");
