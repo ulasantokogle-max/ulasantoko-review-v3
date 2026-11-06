@@ -143,16 +143,17 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  // right-edge strip) before drawing a compact, symmetrical new panel.
  // Reconstruct the local navy background from all four outer boundaries,
  // so shrinking the white border does not expose parts of the old QR.
- // The center "atau" badge and vertical divider are part of the template,
- // not part of the QR placeholder. Keep an untouched center safety zone.
- const qrOnLeft = design === 0 || design === 3;
- const cleanup=70*k;
- const innerMargin=30*k;
- const centerLeftLimit=565*k, centerRightLimit=690*k;
- const left=Math.max(1,Math.floor(qrOnLeft ? x-cleanup : Math.max(x-innerMargin,centerRightLimit)));
- const top=Math.max(1,Math.floor(y-cleanup));
- const right=Math.min(SIDE-2,Math.ceil(qrOnLeft ? Math.min(x+w+innerMargin,centerLeftLimit) : x+w+cleanup));
- const bottom=Math.min(SIDE-2,Math.ceil(y+w+cleanup));
+ // Clean the ENTIRE preprinted sample QR, including its protruding outer
+ // edge. The old 30-unit inner margin stopped inside the original white
+ // panel and left a visible ghost. Stay outside the protected center column.
+ const qrOnLeft=design===0||design===3;
+ const outerMargin=105*k;
+ const innerMargin=85*k;
+ const leftLimit=600*k, rightLimit=650*k;
+ const left=Math.max(1,Math.floor(qrOnLeft?x-outerMargin:Math.max(x-innerMargin,rightLimit)));
+ const right=Math.min(SIDE-2,Math.ceil(qrOnLeft?Math.min(x+w+innerMargin,leftLimit):x+w+outerMargin));
+ const top=Math.max(1,Math.floor(y-outerMargin));
+ const bottom=Math.min(SIDE-2,Math.ceil(y+w+outerMargin));
  const ww=right-left, hh=bottom-top;
  const source=g.getImageData(left,top,ww+1,hh+1);
  const repaired=g.createImageData(ww+1,hh+1);
@@ -163,16 +164,14 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
    for(let xx=0;xx<=ww;xx++){
      const u=xx/ww;
      const dst=index(xx,yy);
-     const tl=index(0,0),tr=index(ww,0),bl=index(0,hh),br=index(ww,hh);
-     const l=index(0,yy),r=index(ww,yy),t=index(xx,0),b=index(xx,hh);
+     // Horizontal-only interpolation avoids pulling the white sample card
+     // back into the repaired area from its top/bottom edges. The two
+     // horizontal boundaries are safely OUTSIDE the template's old QR.
+     const l=index(0,yy),r=index(ww,yy);
      for(let ch=0;ch<3;ch++){
-       const horiz=(1-u)*src[l+ch]+u*src[r+ch];
-       const vert=(1-v)*src[t+ch]+v*src[b+ch];
-       const corners=(1-u)*(1-v)*src[tl+ch]+u*(1-v)*src[tr+ch]+
-         (1-u)*v*src[bl+ch]+u*v*src[br+ch];
-       out[dst+ch]=Math.max(0,Math.min(255,Math.round(horiz+vert-corners)));
+       out[dst+ch]=Math.round((1-u)*src[l+ch]+u*src[r+ch]);
      }
-     out[dst+3]=255;
+   out[dst+3]=255;
    }
  }
  g.putImageData(repaired,left,top);
