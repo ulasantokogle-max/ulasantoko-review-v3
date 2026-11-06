@@ -139,17 +139,19 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.drawImage(artwork,0,0,SIDE,SIDE);
  const k=SIDE/1254;
  const x=p.x*k,y=p.y*k,w=p.size*k;
- // Old artwork contains a sample QR with a tall black strip on the outer edge.
- // Remove the whole sample QR footprint (including the strip), not just the
- // replacement QR square. Keep the patch within the QR panel so the caption
- // and NFC artwork remain unchanged on front and back templates.
- const padLeft=18*k, padRight=56*k, padTop=10*k, padBottom=12*k;
- const maskX=x-padLeft, maskY=y-padTop;
- const maskW=w+padLeft+padRight, maskH=w+padTop+padBottom;
+ // The original artwork contains a QR placeholder and side artifacts.
+ // A single, symmetric WHITE square fully covers the old QR + its right-edge
+ // strip. This panel is centered on the replacement QR, on BOTH card sides.
+ // Keep square dimensions and the same radius for every corner.
+ const panelPadding=56*k;
+ const panelSize=w+panelPadding*2;
+ const panelX=x-panelPadding;
+ const panelY=y-panelPadding;
+ const panelRadius=18*k;
  g.save();
  g.fillStyle="#ffffff";
  g.beginPath();
- g.roundRect(maskX,maskY,maskW,maskH,11*k);
+ g.roundRect(panelX,panelY,panelSize,panelSize,panelRadius);
  g.fill();
  g.restore();
  const qr=document.createElement("canvas");
