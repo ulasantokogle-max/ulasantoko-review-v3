@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import Link from "next/link";
 import { supabase } from "../../lib/supabase";
 import { getCardPublicUrl } from "../../lib/cardPublicId";
 
@@ -167,7 +168,12 @@ export default function ProviderBulkCreateCards({ onComplete }: { onComplete: ()
     <section style={{ background: "#fff", border: "1px solid #e2e8f0", borderRadius: 18, padding: 20, marginBottom: 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <h2 style={{ margin: 0, fontSize: 20 }}>Buat Kartu Massal (Bulk Create)</h2>
-        <span style={{ background: "#eaf2ff", color: "#1d4ed8", padding: "7px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800 }}>Google Sheets Auto Sync</span>
+        <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+          <span style={{ background: "#eaf2ff", color: "#1d4ed8", padding: "7px 10px", borderRadius: 999, fontSize: 12, fontWeight: 800 }}>Google Sheets Auto Sync</span>
+          <Link href="/provider/bulk-designer" style={{ display: "inline-flex", alignItems: "center", padding: "9px 12px", border: "1px solid #1d4ed8", borderRadius: 9, background: "#eff6ff", color: "#1d4ed8", textDecoration: "none", fontWeight: 800, fontSize: 13 }}>
+            <span>Bulk Editing Designer →</span>
+          </Link>
+        </div>
       </div>
       <p style={{ color: "#64748b", fontSize: 13, lineHeight: 1.6 }}>
         Buat 1–30 kartu sekaligus. Setiap kartu langsung dicatat ke tab <strong>Kartu Otomatis</strong> dalam spreadsheet master yang sama.
