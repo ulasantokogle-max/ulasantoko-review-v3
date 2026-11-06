@@ -139,7 +139,19 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.drawImage(artwork,0,0,SIDE,SIDE);
  const k=SIDE/1254;
  const x=p.x*k,y=p.y*k,w=p.size*k;
- g.fillStyle="#fff";g.fillRect(x-4*k,y-4*k,w+8*k,w+8*k);
+ // Old artwork contains a sample QR with a tall black strip on the outer edge.
+ // Remove the whole sample QR footprint (including the strip), not just the
+ // replacement QR square. Keep the patch within the QR panel so the caption
+ // and NFC artwork remain unchanged on front and back templates.
+ const padLeft=18*k, padRight=56*k, padTop=10*k, padBottom=12*k;
+ const maskX=x-padLeft, maskY=y-padTop;
+ const maskW=w+padLeft+padRight, maskH=w+padTop+padBottom;
+ g.save();
+ g.fillStyle="#ffffff";
+ g.beginPath();
+ g.roundRect(maskX,maskY,maskW,maskH,11*k);
+ g.fill();
+ g.restore();
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
  g.imageSmoothingEnabled=false;g.drawImage(qrStyle==="rainbow"?rainbowQr(qr):qr,x,y,w,w);g.imageSmoothingEnabled=true;
