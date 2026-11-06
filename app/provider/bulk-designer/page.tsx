@@ -143,9 +143,15 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  // right-edge strip) before drawing a compact, symmetrical new panel.
  // Reconstruct the local navy background from all four outer boundaries,
  // so shrinking the white border does not expose parts of the old QR.
+ // The center "atau" badge and vertical divider are part of the template,
+ // not part of the QR placeholder. Keep an untouched center safety zone.
+ const qrOnLeft = design === 0 || design === 3;
  const cleanup=70*k;
- const left=Math.max(1,Math.floor(x-cleanup)), top=Math.max(1,Math.floor(y-cleanup));
- const right=Math.min(SIDE-2,Math.ceil(x+w+cleanup));
+ const innerMargin=30*k;
+ const centerLeftLimit=565*k, centerRightLimit=690*k;
+ const left=Math.max(1,Math.floor(qrOnLeft ? x-cleanup : Math.max(x-innerMargin,centerRightLimit)));
+ const top=Math.max(1,Math.floor(y-cleanup));
+ const right=Math.min(SIDE-2,Math.ceil(qrOnLeft ? Math.min(x+w+innerMargin,centerLeftLimit) : x+w+cleanup));
  const bottom=Math.min(SIDE-2,Math.ceil(y+w+cleanup));
  const ww=right-left, hh=bottom-top;
  const source=g.getImageData(left,top,ww+1,hh+1);
