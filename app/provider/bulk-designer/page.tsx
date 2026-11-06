@@ -139,19 +139,45 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.drawImage(artwork,0,0,SIDE,SIDE);
  const k=SIDE/1254;
  const x=p.x*k,y=p.y*k,w=p.size*k;
- // The original artwork contains a QR placeholder and side artifacts.
- // A single, symmetric WHITE square fully covers the old QR + its right-edge
- // strip. This panel is centered on the replacement QR, on BOTH card sides.
- // Keep square dimensions and the same radius for every corner.
- const panelPadding=56*k;
+ // Remove the old template QR (including irregular white corners and the
+ // right-edge strip) before drawing a compact, symmetrical new panel.
+ // Reconstruct the local navy background from all four outer boundaries,
+ // so shrinking the white border does not expose parts of the old QR.
+ const cleanup=70*k;
+ const left=Math.max(1,Math.floor(x-cleanup)), top=Math.max(1,Math.floor(y-cleanup));
+ const right=Math.min(SIDE-2,Math.ceil(x+w+cleanup));
+ const bottom=Math.min(SIDE-2,Math.ceil(y+w+cleanup));
+ const ww=right-left, hh=bottom-top;
+ const source=g.getImageData(left,top,ww+1,hh+1);
+ const repaired=g.createImageData(ww+1,hh+1);
+ const src=source.data, out=repaired.data;
+ const index=(xx:number,yy:number)=>4*(yy*(ww+1)+xx);
+ for(let yy=0;yy<=hh;yy++){
+   const v=yy/hh;
+   for(let xx=0;xx<=ww;xx++){
+     const u=xx/ww;
+     const dst=index(xx,yy);
+     const tl=index(0,0),tr=index(ww,0),bl=index(0,hh),br=index(ww,hh);
+     const l=index(0,yy),r=index(ww,yy),t=index(xx,0),b=index(xx,hh);
+     for(let ch=0;ch<3;ch++){
+       const horiz=(1-u)*src[l+ch]+u*src[r+ch];
+       const vert=(1-v)*src[t+ch]+v*src[b+ch];
+       const corners=(1-u)*(1-v)*src[tl+ch]+u*(1-v)*src[tr+ch]+
+         (1-u)*v*src[bl+ch]+u*v*src[br+ch];
+       out[dst+ch]=Math.max(0,Math.min(255,Math.round(horiz+vert-corners)));
+     }
+     out[dst+3]=255;
+   }
+ }
+ g.putImageData(repaired,left,top);
+ // Tight white card: equal 24-unit padding on every side (~8.6% QR size).
+ const panelPadding=24*k;
  const panelSize=w+panelPadding*2;
- const panelX=x-panelPadding;
- const panelY=y-panelPadding;
- const panelRadius=18*k;
+ const panelX=x-panelPadding,panelY=y-panelPadding;
  g.save();
  g.fillStyle="#ffffff";
  g.beginPath();
- g.roundRect(panelX,panelY,panelSize,panelSize,panelRadius);
+ g.roundRect(panelX,panelY,panelSize,panelSize,14*k);
  g.fill();
  g.restore();
  const qr=document.createElement("canvas");
