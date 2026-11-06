@@ -156,11 +156,11 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.restore();
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
- // The uploaded back template has a fairly wide preprinted white QR plate.
- // Keep that plate fully covered, but enlarge ONLY the back QR artwork inside
- // the same plate. This removes the excessive white wall without exposing the
- // old QR or touching the center "atau" and its separator.
- const qrSize=isBack ? w+62*k : w;
+ // Match front and back precisely: identical QR scale, white inset,
+ // rounded panel and center alignment. Only the template slot changes sides.
+ // The compact white margin remains (42-31)=11 design units per edge,
+ // while the original template's QR is fully covered by the white panel.
+ const qrSize=w+62*k;
  const qrX=x-(qrSize-w)/2;
  const qrY=y-(qrSize-w)/2;
  g.imageSmoothingEnabled=false;
