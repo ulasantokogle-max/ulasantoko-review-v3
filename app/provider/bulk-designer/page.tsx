@@ -139,78 +139,24 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.drawImage(artwork,0,0,SIDE,SIDE);
  const k=SIDE/1254;
  const x=p.x*k,y=p.y*k,w=p.size*k;
- // The template already contains an old sample QR. Only restore pixels in a
- // narrow ring OUTSIDE the new compact white panel. Earlier versions repaired
- // a whole rectangle, damaging the background, "atau", divider and QR caption.
- // The original source for the new QR is always the card's actual URL.
- const panelPadding=24*k;
+ // Keep the original uploaded Navy artwork completely untouched.
+ // All prior gradient/ghost artifacts were caused by rectangular pixel
+ // reconstruction outside the QR slot. Cover the old sample QR with one
+ // clean, symmetrical panel instead of attempting to repaint its background.
+ // Padding 42 covers the original template's white QR backing while staying
+ // away from the central "atau" badge and divider on either side.
+ const panelPadding=42*k;
  const panelSize=w+panelPadding*2;
  const panelX=x-panelPadding,panelY=y-panelPadding;
- const panelRadius=14*k;
- const outerPadding=70*k;
- const left=Math.max(1,Math.floor(x-outerPadding));
- const top=Math.max(1,Math.floor(y-outerPadding));
- const right=Math.min(SIDE-2,Math.ceil(x+w+outerPadding));
- const bottom=Math.min(SIDE-2,Math.ceil(y+w+outerPadding));
- const width=right-left+1,height=bottom-top+1;
- const original=g.getImageData(left,top,width,height);
- const repair=g.createImageData(width,height);
- repair.data.set(original.data);
- const read=(px:number,py:number,ch:number)=>original.data[4*(py*width+px)+ch];
- const outerRadius=12*k;
- for(let yy=0;yy<height;yy++){
-   const py=top+yy;
-   for(let xx=0;xx<width;xx++){
-     const px=left+xx;
-     // Inside the new panel no restoration is necessary: fresh opaque white
-     // and the new Rainbow QR are drawn over it immediately afterwards.
-     if(px>=panelX&&px<=panelX+panelSize&&py>=panelY&&py<=panelY+panelSize)continue;
-     // The central divider and "atau" badge belong to the original artwork.
-     // Never inpaint them, regardless of which side contains the QR.
-     if(px>=560*k&&px<=705*k)continue;
-     // Do not touch the far corners of the cleanup rectangle.
-     const nearX=Math.max(panelX-px,px-(panelX+panelSize),0);
-     const nearY=Math.max(panelY-py,py-(panelY+panelSize),0);
-     if(nearX>outerPadding-panelPadding||nearY>outerPadding-panelPadding)continue;
-     const dst=4*(yy*width+xx);
-     const u=xx/(width-1),v=yy/(height-1);
-     // Rebuild the nearby navy texture from all four CLEAN outer boundaries.
-     // The ring is small, so the rest of the original artwork is untouched.
-     for(let ch=0;ch<3;ch++){
-       const horizontal=(1-u)*read(0,yy,ch)+u*read(width-1,yy,ch);
-       const vertical=(1-v)*read(xx,0,ch)+v*read(xx,height-1,ch);
-       const corners=(1-u)*(1-v)*read(0,0,ch)+u*(1-v)*read(width-1,0,ch)+
-         (1-u)*v*read(0,height-1,ch)+u*v*read(width-1,height-1,ch);
-       const reconstructed=horizontal+vertical-corners;
-       // Feather the outside of the mask into the untouched template to
-       // prevent the obvious blue/yellow rectangular bands seen previously.
-       const fade=Math.min(1,Math.max(0,(outerPadding-panelPadding-Math.max(nearX,nearY))/(outerRadius)));
-       repair.data[dst+ch]=Math.round(original.data[dst+ch]*(1-fade)+
-         Math.max(0,Math.min(255,reconstructed))*fade);
-     }
-   }
- }
- g.putImageData(repair,left,top);
- // Compact, perfectly symmetrical QR backing: 24 design units on each side.
  g.save();
  g.fillStyle="#ffffff";
  g.beginPath();
- g.roundRect(panelX,panelY,panelSize,panelSize,panelRadius);
+ g.roundRect(panelX,panelY,panelSize,panelSize,14*k);
  g.fill();
  g.restore();
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
  g.imageSmoothingEnabled=false;g.drawImage(qrStyle==="rainbow"?rainbowQr(qr):qr,x,y,w,w);g.imageSmoothingEnabled=true;
- // Pixel-exact restoration from the untouched uploaded template. The region
- // is between the two QR slots (left panel ends at ~545, right starts ~717),
- // so this never covers the new QR. Keep it after ALL QR overlay processing
- // to guarantee the "atau" badge and both halves of the separator stay sharp.
- g.save();
- g.beginPath();
- g.rect(560*k,450*k,145*k,380*k);
- g.clip();
- g.drawImage(artwork,0,0,SIDE,SIDE);
- g.restore();
  return c;
 }
 async function renderCard(card: Card): Promise<HTMLCanvasElement> {
