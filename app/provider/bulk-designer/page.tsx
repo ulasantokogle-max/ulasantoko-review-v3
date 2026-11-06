@@ -133,7 +133,7 @@ function rainbowQr(source: HTMLCanvasElement): HTMLCanvasElement {
  return out;
 }
 const names=["Navy QR kiri","Navy QR kanan","Putih QR kanan","Putih QR kiri"];
-async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design, p:{x:number;y:number;size:number}, qrStyle:QrStyle):Promise<HTMLCanvasElement>{
+async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design, p:{x:number;y:number;size:number}, qrStyle:QrStyle, isBack:boolean):Promise<HTMLCanvasElement>{
  const c=document.createElement("canvas");c.width=SIDE;c.height=SIDE;
  const g=c.getContext("2d");if(!g)throw Error("Canvas gagal");
  g.drawImage(artwork,0,0,SIDE,SIDE);
@@ -156,7 +156,16 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  g.restore();
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
- g.imageSmoothingEnabled=false;g.drawImage(qrStyle==="rainbow"?rainbowQr(qr):qr,x,y,w,w);g.imageSmoothingEnabled=true;
+ // The uploaded back template has a fairly wide preprinted white QR plate.
+ // Keep that plate fully covered, but enlarge ONLY the back QR artwork inside
+ // the same plate. This removes the excessive white wall without exposing the
+ // old QR or touching the center "atau" and its separator.
+ const qrSize=isBack ? w+62*k : w;
+ const qrX=x-(qrSize-w)/2;
+ const qrY=y-(qrSize-w)/2;
+ g.imageSmoothingEnabled=false;
+ g.drawImage(qrStyle==="rainbow"?rainbowQr(qr):qr,qrX,qrY,qrSize,qrSize);
+ g.imageSmoothingEnabled=true;
  return c;
 }
 async function renderCard(card: Card): Promise<HTMLCanvasElement> {
@@ -291,7 +300,7 @@ function Designer() {
   }
   const missingArtworks=[front,...(duplex?[back]:[])].filter(i=>!artworks[i]);
   const readyToExport=cards.length>0 && missingArtworks.length===0 && !busy;
-  const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design],qrStyle);};
+  const draw=(card:Card,design:Design)=>{const img=artworks[design];if(!img)throw Error("Upload desain "+names[design]);return renderArtwork(card,img,design,positions[design],qrStyle,design===back && duplex);};
   useEffect(()=>{if(!cards.length||!artworks[front]){setPreview("");setBackPreview("");return;}
     let live=true;
     draw(cards[0],front).then(c=>{if(live)setPreview(c.toDataURL("image/png"));}).catch(()=>{});
