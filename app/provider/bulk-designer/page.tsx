@@ -9,33 +9,84 @@ type Card = { card_code: string; qr_url: string; internal_code: string; label: s
 const SIDE = 1417; // 12 cm @ 300 DPI; actual 10 cm export at ~360 DPI
 const clean = (s: string) => s.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64);
 function parseCSV(source: string): string[][] {
+  // Accept standard CSV, Excel's semicolon-delimited CSV, and TSV.
+  const text = source.replace(/^\uFEFF/, "");
+  const firstLine = text.split(/\r?\n/, 1)[0] || "";
+  const count = (sep: string) => {
+    let inQuote = false, found = 0;
+    for (let i = 0; i < firstLine.length; i++) {
+      if (firstLine[i] === '"') {
+        if (inQuote && firstLine[i + 1] === '"') i++;
+        else inQuote = !inQuote;
+      } else if (!inQuote && firstLine[i] === sep) found++;
+    }
+    return found;
+  };
+  const sep = count("\t") > count(",") && count("\t") > count(";") ? "\t"
+    : count(";") > count(",") ? ";" : ",";
   const rows: string[][] = []; let row: string[] = [], field = "", quote = false;
-  for (let i = 0; i < source.length; i++) {
-    const c = source[i];
-    if (c === '"') { if (quote && source[i + 1] === '"') { field += '"'; i++; } else quote = !quote; }
-    else if (!quote && c === ",") { row.push(field); field = ""; }
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === '"') {
+      if (quote && text[i + 1] === '"') { field += '"'; i++; } else quote = !quote;
+    } else if (!quote && c === sep) { row.push(field); field = ""; }
     else if (!quote && (c === "\n" || c === "\r")) {
-      if (c === "\r" && source[i + 1] === "\n") i++;
-      row.push(field); if (row.some(Boolean)) rows.push(row); row = []; field = "";
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); if (row.some(v => v.trim())) rows.push(row); row = []; field = "";
     } else field += c;
   }
-  row.push(field); if (row.some(Boolean)) rows.push(row);
+  row.push(field); if (row.some(v => v.trim())) rows.push(row);
   return rows;
 }
 function getCards(csv: string): Card[] {
-  const rows = parseCSV(csv); const head = (rows.shift() || []).map(x => x.trim().toLowerCase().replace(/^\uFEFF/, ""));
-  const col = (key: string) => head.indexOf(key);
-  if (col("card_code") < 0 || col("qr_url") < 0) throw Error("CSV wajib memiliki kolom card_code dan qr_url.");
+  const rows = parseCSV(csv);
+  const normalize = (s: string) => s.toLowerCase().trim().replace(/^\uFEFF/, "")
+    .replace(/[\s_\-./()]+/g, "").replace(/&/g, "dan");
+  const aliases = {
+    code: ["card_code", "kode kartu", "kode_kartu", "card code", "kode", "cardcode"],
+    url: ["qr_url", "url qr", "url qr/nfc", "qr / nfc url", "urlqrnfc", "qr/nfc url", "qr nfc url", "url kartu", "url nfc", "nfc_url", "link qr", "link kartu", "link"],
+    label: ["label", "nama label"],
+    internal: ["internal_code", "kode internal", "kode internal / sku", "sku", "internal code"],
+  };
+  const findColumn = (headers: string[], choices: string[]) =>
+    headers.findIndex(h => choices.map(normalize).includes(normalize(h)));
+  // Some spreadsheets have a title row before the real header.
+  const headerRow = rows.findIndex(r => findColumn(r, aliases.code) >= 0 &&
+    findColumn(r, aliases.url) >= 0);
+  if (headerRow < 0) {
+    throw Error("Kolom kartu tidak ditemukan. CSV perlu kolom 'Kode Kartu' dan 'URL QR/NFC' (atau 'card_code' dan 'qr_url').");
+  }
+  const head = rows[headerRow];
+  const codeCol = findColumn(head, aliases.code);
+  const urlCol = findColumn(head, aliases.url);
+  const labelCol = findColumn(head, aliases.label);
+  const internalCol = findColumn(head, aliases.internal);
   const seen = new Set<string>();
-  return rows.map(r => {
-    const card_code = (r[col("card_code")] || "").trim();
-    const qr_url = (r[col("qr_url")] || "").trim();
-    if (!/^ULAS-[A-Z0-9-]+$/i.test(card_code) || seen.has(card_code)) throw Error("Kode kartu kosong, duplikat, atau tidak valid: " + card_code);
+  const cards: Card[] = [];
+  for (const r of rows.slice(headerRow + 1)) {
+    const card_code = (r[codeCol] || "").trim().toUpperCase();
+    const qr_url = (r[urlCol] || "").trim();
+    if (!card_code && !qr_url) continue;
+    if (!/^ULAS-[A-Z0-9-]+$/.test(card_code)) {
+      throw Error("Kode kartu tidak valid pada baris " + (headerRow + cards.length + 2) + ": " + card_code);
+    }
+    if (seen.has(card_code)) throw Error("Kode kartu duplikat di CSV: " + card_code);
     seen.add(card_code);
-    const url = new URL(qr_url);
-    if (url.protocol !== "https:" || url.hostname !== "yukreview.id") throw Error("URL QR tidak valid untuk " + card_code);
-    return { card_code, qr_url: url.href, internal_code: (r[col("internal_code")] || "").trim(), label: (r[col("label")] || "").trim() };
-  }).filter(x => x.card_code);
+    let url: URL;
+    try { url = new URL(qr_url); }
+    catch { throw Error("URL QR kosong atau tidak valid untuk " + card_code); }
+    if (url.protocol !== "https:" || !["yukreview.id", "www.yukreview.id"].includes(url.hostname) ||
+        url.username || url.password) {
+      throw Error("URL QR harus menggunakan domain yukreview.id untuk " + card_code);
+    }
+    cards.push({
+      card_code,
+      qr_url: url.href,
+      internal_code: internalCol >= 0 ? (r[internalCol] || "").trim() : "",
+      label: labelCol >= 0 ? (r[labelCol] || "").trim() : "",
+    });
+  }
+  return cards;
 }
 function templateDb():Promise<IDBDatabase>{
  return new Promise((resolve,reject)=>{const q=indexedDB.open("yukreview-print-artworks",1);
@@ -301,7 +352,8 @@ function Designer() {
       <section style={{padding:24,border:"1px solid #cbd5e1",borderRadius:18}}>
         <h2>1. Upload CSV</h2>
         <input aria-label="Upload CSV Bulk Creator" type="file" accept=".csv,text/csv" onChange={importFile} disabled={busy}/>
-        <p>Kolom wajib: <code>card_code</code> dan <code>qr_url</code>. Mendukung hingga 500 kartu per batch.</p>
+        <p>CSV dari <strong>Bulk Create</strong> atau <strong>Master Kartu</strong> dapat dipakai langsung. Kolom wajib: <code>Kode Kartu</code> + <code>URL QR/NFC</code> (atau <code>card_code</code> + <code>qr_url</code>). Mendukung hingga 500 kartu per batch.</p>
+        {error && <p role="alert" style={{color:"#9a3412",background:"#fff7ed",border:"1px solid #fdba74",borderRadius:8,padding:10}}>{error}</p>}
         <p><strong>{cards.length} kartu</strong> siap diproses.</p>
         {cards.length > 0 && <p>Contoh: {cards[0].card_code} → {cards[cards.length - 1].card_code}</p>}
         <h2>2. Pilih desain kartu</h2>
