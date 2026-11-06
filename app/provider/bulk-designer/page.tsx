@@ -165,6 +165,9 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
      // Inside the new panel no restoration is necessary: fresh opaque white
      // and the new Rainbow QR are drawn over it immediately afterwards.
      if(px>=panelX&&px<=panelX+panelSize&&py>=panelY&&py<=panelY+panelSize)continue;
+     // The central divider and "atau" badge belong to the original artwork.
+     // Never inpaint them, regardless of which side contains the QR.
+     if(px>=560*k&&px<=705*k)continue;
      // Do not touch the far corners of the cleanup rectangle.
      const nearX=Math.max(panelX-px,px-(panelX+panelSize),0);
      const nearY=Math.max(panelY-py,py-(panelY+panelSize),0);
@@ -198,6 +201,16 @@ async function renderArtwork(card:Card, artwork:HTMLImageElement, design:Design,
  const qr=document.createElement("canvas");
  await QRCode.toCanvas(qr,card.qr_url,{width:900,margin:2,errorCorrectionLevel:"H",color:{dark:"#000000",light:"#ffffff"}});
  g.imageSmoothingEnabled=false;g.drawImage(qrStyle==="rainbow"?rainbowQr(qr):qr,x,y,w,w);g.imageSmoothingEnabled=true;
+ // Pixel-exact restoration from the untouched uploaded template. The region
+ // is between the two QR slots (left panel ends at ~545, right starts ~717),
+ // so this never covers the new QR. Keep it after ALL QR overlay processing
+ // to guarantee the "atau" badge and both halves of the separator stay sharp.
+ g.save();
+ g.beginPath();
+ g.rect(560*k,450*k,145*k,380*k);
+ g.clip();
+ g.drawImage(artwork,0,0,SIDE,SIDE);
+ g.restore();
  return c;
 }
 async function renderCard(card: Card): Promise<HTMLCanvasElement> {
