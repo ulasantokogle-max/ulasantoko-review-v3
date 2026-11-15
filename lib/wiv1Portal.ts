@@ -10,7 +10,7 @@ export function wiv1Portal(): { providerUrl: string; clientUrl: string } | null 
     // No implicit redirect to a random or unsafe host.
     if (candidate.protocol !== "https:" || candidate.username || candidate.password ||
       candidate.search || candidate.hash || (candidate.pathname !== "/" && candidate.pathname !== "") ||
-      !(hostname === "wifi.yukreview.id" || hostname.endsWith(".vercel.app"))) {
+      !(hostname === "wifi.yukreview.id" || (hostname.startsWith("wi-v1-") && hostname.endsWith("-mjh10.vercel.app")))) {
       return null;
     }
     const origin = candidate.origin;
