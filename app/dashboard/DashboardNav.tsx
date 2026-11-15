@@ -12,6 +12,11 @@ const items = [
     description: "Ringkasan bisnis & setup",
   },
   {
+    href: "/bisnis/wifi",
+    label: "WiFi NFC + QR",
+    description: "Produk bisnis WiV1 · dashboard terpisah",
+  },
+  {
     href: "/dashboard/cards",
     label: "Card Management",
     description: "QR/NFC, status & area kartu",
