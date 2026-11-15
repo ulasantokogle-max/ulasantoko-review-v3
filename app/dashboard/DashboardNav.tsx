@@ -15,6 +15,11 @@ export default function DashboardNav() {
       description: tr("Ringkasan bisnis & pengaturan", "Business & setup summary"),
     },
     {
+      href: "/bisnis/wifi",
+      label: tr("WiFi NFC + QR", "WiFi NFC + QR"),
+      description: tr("Layanan WiFi bisnis terpisah", "Separate business WiFi service"),
+    },
+    {
       href: "/dashboard/cards",
       label: tr("Kartu & QR/NFC", "Cards & QR/NFC"),
       description: tr("Kelola kartu, status & area", "Manage cards, status & area"),
