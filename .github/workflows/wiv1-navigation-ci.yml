@@ -1,0 +1,39 @@
+name: YukReview WiV1 navigation safety
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app/page.tsx"
+      - "app/bisnis/wifi/**"
+      - "app/dashboard/DashboardNav.tsx"
+      - "lib/wiv1Portal.ts"
+      - "docs/wiv1-business-integration.md"
+      - "tests/wiv1-navigation.test.mjs"
+      - ".github/workflows/wiv1-navigation-ci.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-navigation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+      NEXT_PUBLIC_WIV1_PORTAL_URL: https://wifi.yukreview.id
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install isolated dependencies
+        run: npm install --no-audit --no-fund --package-lock=false
+      - name: Navigation isolation regression
+        run: node --test tests/wiv1-navigation.test.mjs
+      - name: TypeScript validation
+        run: npx tsc --noEmit
+      - name: Next.js production build with CI placeholders
+        run: npm run build
