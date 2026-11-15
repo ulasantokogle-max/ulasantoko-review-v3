@@ -30,3 +30,19 @@ test("existing Google Review dashboard routes remain intact", () => {
     assert.ok(nav.includes('href: "' + url + '"'), url + " was removed");
   }
 });
+
+test("live YukReview homepage product, pricing and customer access remain intact", () => {
+  const home = read("app/page.tsx");
+  assert.match(home, /Ulasan Google jadi/);
+  assert.match(home, /Rp65\.000/);
+  assert.match(home, /Rp125\.000/);
+  assert.match(home, /href="\/dashboard"/);
+  assert.match(home, /YUKREVIEW_SEARCH_TITLE/);
+});
+test("live dashboard keeps language switching and existing auth guard", () => {
+  const nav = read("app/dashboard/DashboardNav.tsx");
+  const layout = read("app/dashboard/layout.tsx");
+  assert.match(nav, /useLanguage/);
+  assert.match(nav, /auth\.getSession/);
+  assert.match(layout, /ProviderMfaGate/);
+});
