@@ -45,6 +45,7 @@ jobs:
           grep -qi "Bisnis\|Client\|Masuk" /tmp/wiv1-client.html
           grep -qi "Provider\|Masuk" /tmp/wiv1-provider.html
           grep -qi "WiFi\|NFC" /tmp/yukreview-wifi.html
+          grep -Fq "wi-v1-git-fix-wiv1-v06-security-stability-mjh10.vercel.app" /tmp/yukreview-wifi.html
           echo "Public route responses verified (no login or QR hardware test)."
       - name: TypeScript validation
         run: npx tsc --noEmit
