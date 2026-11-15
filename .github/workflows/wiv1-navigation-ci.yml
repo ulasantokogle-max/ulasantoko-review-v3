@@ -1,7 +1,7 @@
 name: YukReview WiV1 navigation safety
 on:
   pull_request:
-    branches: [main]
+    branches: [main, fix/bulk-designer-match-front-back-20261106]
     paths:
       - "app/page.tsx"
       - "app/bisnis/wifi/**"
